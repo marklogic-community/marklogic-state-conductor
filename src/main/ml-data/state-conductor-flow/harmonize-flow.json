@@ -1,0 +1,52 @@
+{
+  "flowName": "harmonize-flow",
+  "description": "makes things",
+  "contentDatabase": "state-conductor-content",
+  "modulesDatabase": "state-conductor-modules",
+  "context": [
+    {
+      "domain": "collection",
+      "value": "flow-time"
+    }
+  ],
+  "initialState": "make-envelope",
+  "states": [
+    {
+      "stateName": "make-envelope",
+      "description": "makes the envelope",
+      "actions": [
+        {
+          "actionModule": "/state-conductor/actions/make-envelope.sjs"
+        }
+      ],
+      "transitions": [
+        {
+          "targetState": "make-headers"
+        }
+      ]
+    },
+    {
+      "stateName": "make-headers",
+      "description": "makes the envelope's headers",
+      "actions": [
+        {
+          "actionModule": "/state-conductor/actions/make-headers.sjs"
+        }
+      ],
+      "transitions": [
+        {
+          "targetState": "make-triples"
+        }
+      ]
+    },
+    {
+      "stateName": "make-triples",
+      "description": "makes the envelope's triples",
+      "actions": [
+        {
+          "actionModule": "/state-conductor/actions/make-triples.sjs"
+        }
+      ]
+    }
+  ]      
+}

@@ -1,0 +1,5 @@
+{
+  "user-name" : "state-conductor-reader",
+  "password" : "state-conductor-reader",
+  "role" : [ "state-conductor-reader" ]
+}

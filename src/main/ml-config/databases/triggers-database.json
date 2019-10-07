@@ -1,0 +1,4 @@
+{
+  "database-name": "%%TRIGGERS_DATABASE%%",
+  "enabled": true
+}

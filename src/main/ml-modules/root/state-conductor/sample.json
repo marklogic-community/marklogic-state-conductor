@@ -1,0 +1,90 @@
+{
+  "flowName": "test flow",
+  "description": "does things",
+  "contentDatabase": "content-db",
+  "modulesDatabase": "modules-db",
+  "context": [
+    {
+      "domain": "collection",
+      "value": "my-cool-doc"
+    },
+    {
+      "domain": "directory",
+      "value": "/my/cool/doc/"
+    },
+    {
+      "domain": "custom",
+      "value": "cts.andQuery([cts.collectionQuery(\"my-cool-doc\"), cts.elementValueQuery(fn.QName(\"\",\"test\"), \"foo\", [\"lang=en\"], 1)], [])"
+    }
+  ],
+  "initialState": "A",
+  "states": [
+    {
+      "stateName": "A",
+      "description": "initial state of the flow",
+      "actions": [
+        {
+          "actionModule": "/uri/to/action1.sjs",
+          "description": "sends post message to kafka",
+          "priority": 100
+        },
+        {
+          "actionModule": "/uri/to/action2.sjs"
+        }
+      ],
+      "transitions": [
+        {
+          "conditionModule": "/uri/to/condition.sjs",
+          "targetState": "B",
+          "priority": 100
+        },
+        {
+          "condition": "root.code==053",
+          "targetState": "C",
+          "priority": 50
+        },
+        {
+          "targetState": "D"
+        }
+      ]
+    },
+    {
+      "stateName": "B",
+      "description": "updates a property",
+      "actions": [
+        {
+          "actionModule": "/uri/to/action3.sjs"
+        }
+      ],
+      "transitions": [
+        {
+          "targetState": "C"
+        }
+      ]
+    },
+    {
+      "stateName": "C",
+      "actions": [
+        {
+          "actionModule": "/uri/to/action3.sjs"
+        },
+        {
+          "actionModule": "/uri/to/action4.sjs"
+        }
+      ],
+      "transitions": [
+        {
+          "targetState": "D"
+        }
+      ]
+    },
+    {
+      "stateName": "D",
+      "actions": [
+        {
+          "actionModule": "/uri/to/action3.sjs"
+        }
+      ]
+    }
+  ]      
+}

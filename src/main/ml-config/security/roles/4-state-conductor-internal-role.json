@@ -1,0 +1,5 @@
+{
+  "role-name" : "state-conductor-internal",
+  "description" : "Internal role used for amping",
+  "role" : [ "state-conductor-writer" ]
+}

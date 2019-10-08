@@ -12,6 +12,10 @@ const sortFn = (prop, dir = 'desc') => ((a, b) => {
   return (dir === 'desc') ? p2 - p1 : p1 - p2;
 });
 
+const parseSerializedQuery = (serializedQuery) => {
+  return cts.query(fn.head(xdmp.fromJsonString(serializedQuery)));
+};
+
 /**
  * Gets a flow definition by flowName
  *
@@ -162,12 +166,15 @@ function checkFlowContext(uri, { context = [] }) {
       } else if (ctx.domain === 'directory') {
         // is this document within the proper directory
         isMatch = fn.head(cts.uris('', null, cts.andQuery([
-          cts.directoryQuery(ctx.value, 'infinity'),
-          cts.documentQuery(uri)
+          cts.documentQuery(uri),
+          cts.directoryQuery(ctx.value, 'infinity')
         ]))) === uri;
-        // TODO
       } else if (ctx.domain === 'query') {
-        // TODO
+        let query = parseSerializedQuery(ctx.value);
+        isMatch = fn.head(cts.uris('', null, cts.andQuery([
+          cts.documentQuery(uri),
+          query
+        ]))) === uri;
       }
       return acc || isMatch;
     }, false);

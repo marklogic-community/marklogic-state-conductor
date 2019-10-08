@@ -14,7 +14,7 @@
     },
     {
       "domain": "custom",
-      "value": "cts.andQuery([cts.collectionQuery(\"my-cool-doc\"), cts.elementValueQuery(fn.QName(\"\",\"test\"), \"foo\", [\"lang=en\"], 1)], [])"
+      "value": "{\"andQuery\":{\"queries\":[{\"collectionQuery\":{\"uris\":[\"flow-time\"]}}, {\"elementValueQuery\":{\"element\":[\"name\"], \"text\":[\"Cobb Pauley\"], \"options\":[\"lang=en\"]}}]}}"
     }
   ],
   "initialState": "A",

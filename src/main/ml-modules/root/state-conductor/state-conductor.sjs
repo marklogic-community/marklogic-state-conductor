@@ -211,7 +211,7 @@ function performStateActions(uri, flow, stateName) {
   const state = flow.states.filter(state => state.stateName === stateName)[0];
   if (state) {
     xdmp.log(`executing actions for state: ${stateName}`);
-    state.actions.sortFn('priority').forEach(action => {
+    state.actions.sort(sortFn('priority')).forEach(action => {
       executeModule(action.actionModule, uri, flow);
     });
   } else {
@@ -221,7 +221,7 @@ function performStateActions(uri, flow, stateName) {
 
 function executeModule(modulePath, uri, flow) {
   try {
-    xdmp.invoke(modulePath, {
+    return xdmp.invoke(modulePath, {
       uri: uri,
       flow: flow
     }, {
@@ -254,7 +254,7 @@ function executeStateTransition(uri, flow) {
     transitions.forEach(trans => {
       if (!target) {
         if (trans.conditionModule) {
-          let resp = executeModule(trans.conditionModule, uri, flow);
+          let resp = fn.head(executeModule(trans.conditionModule, uri, flow));
           target = resp ? trans.targetState : null;
         } else {
           target = trans.targetState;

@@ -1,0 +1,60 @@
+{
+  "flowName": "branching-test-flow",
+  "description": "does things",
+  "contentDatabase": "state-conductor-content",
+  "modulesDatabase": "state-conductor-modules",
+  "context": [
+    {
+      "domain": "collection",
+      "value": "enrollee"
+    }
+  ],
+  "initialState": "find-gender",
+  "states": [
+    {
+      "stateName": "find-gender",
+      "description": "determine's enrollee's gender",
+      "actions": [],
+      "transitions": [
+        {
+          "conditionModule": "/state-conductor/actions/branching-test-flow/gender-is-male.sjs",
+          "targetState": "enroll-in-mens-health"
+        },
+        {
+          "conditionModule": "/state-conductor/actions/branching-test-flow/gender-is-female.sjs",
+          "targetState": "enroll-in-womens-health"
+        }, 
+        {
+          "targetState": "has-undetermined-gender"
+        }
+      ]
+    },
+    {
+      "stateName": "enroll-in-mens-health",
+      "description": "adds enrollee to the men's health program",
+      "actions": [
+        {
+          "actionModule": "/state-conductor/actions/branching-test-flow/enroll-in-mens-health.sjs"
+        }
+      ]
+    },
+    {
+      "stateName": "enroll-in-womens-health",
+      "description": "adds enrollee to the womens's health program",
+      "actions": [
+        {
+          "actionModule": "/state-conductor/actions/branching-test-flow/enroll-in-womens-health.sjs"
+        }
+      ]
+    },
+    {
+      "stateName": "has-undetermined-gender",
+      "description": "flags enrollee for follow-up",
+      "actions": [
+        {
+          "actionModule": "/state-conductor/actions/branching-test-flow/flag-for-follow-up.sjs"
+        }
+      ]
+    }
+  ]      
+}

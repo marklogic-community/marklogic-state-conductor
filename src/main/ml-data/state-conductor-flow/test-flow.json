@@ -33,18 +33,6 @@
           "actionModule": "/state-conductor/actions/set-prop2.sjs"
         }
       ]
-    },
-    {
-      "stateName": "set-prop3",
-      "description": "updates both properties",
-      "actions": [
-        {
-          "actionModule": "/state-conductor/actions/set-prop1.sjs"
-        },
-        {
-          "actionModule": "/state-conductor/actions/set-prop2.sjs"
-        }
-      ]
     }
   ]      
 }

@@ -1,0 +1,24 @@
+{
+  "flowName": "kafka-data-flow",
+  "description": "processes data from the MarkLogic Kafka Connector",
+  "contentDatabase": "state-conductor-content",
+  "modulesDatabase": "state-conductor-modules",
+  "context": [
+    {
+      "domain": "collection",
+      "value": "kafka-data"
+    }
+  ],
+  "initialState": "needs-envelope",
+  "states": [
+    {
+      "stateName": "needs-envelope",
+      "description": "wraps the content in an envelope",
+      "actions": [
+        {
+          "actionModule": "/state-conductor/actions/make-envelope.sjs"
+        }
+      ]
+    }
+  ]      
+}

@@ -200,6 +200,39 @@ function getApplicableFlows(uri) {
   return flows;
 }
 
+function getFlowContextQuery({context = []}) {
+  let queries = context.map(ctx => {
+    if (ctx.domain === 'collection') {
+      return cts.collectionQuery(ctx.value);
+    } else if (ctx.domain === 'directory') {
+      return cts.directoryQuery(ctx.value, 'infinity');
+    } else if (ctx.domain === 'query') {
+      return parseSerializedQuery(ctx.value);
+    }
+    return cts.falseQuery();
+  });
+
+  if (queries.length > 1) {
+    queries = cts.orQuery(queries);
+  } else {
+    queries = queries.pop();
+  }
+
+  return queries;
+}
+
+function getAllFlowsContextQuery() {
+  let queries = getFlowDocuments().toArray().map(flow => getFlowContextQuery(flow.toObject()));
+
+  if (queries.length > 1) {
+    queries = cts.orQuery(queries);
+  } else {
+    queries = queries.pop();
+  }
+
+  return queries;
+}
+
 /**
  * Give a document, a flow, and the state in that flow, perform all actions for that state.
  *
@@ -212,17 +245,18 @@ function performStateActions(uri, flow, stateName) {
   if (state) {
     xdmp.log(`executing actions for state: ${stateName}`);
     state.actions.sort(sortFn('priority')).forEach(action => {
-      executeModule(action.actionModule, uri, flow);
+      executeModule(action.actionModule, uri, action.options, flow);
     });
   } else {
     fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
   }
 }
 
-function executeModule(modulePath, uri, flow) {
+function executeModule(modulePath, uri, options, flow) {
   try {
     return xdmp.invoke(modulePath, {
       uri: uri,
+      options: options,
       flow: flow
     }, {
       database: xdmp.database(flow.contentDatabase),
@@ -306,5 +340,7 @@ module.exports = {
   inTerminalState,
   isDocumentInProcess,
   performStateActions,
-  setFlowStatus
+  setFlowStatus,
+  getAllFlowsContextQuery,
+  getFlowContextQuery
 };

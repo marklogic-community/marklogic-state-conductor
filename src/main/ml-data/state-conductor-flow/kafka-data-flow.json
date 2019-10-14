@@ -18,6 +18,24 @@
         {
           "actionModule": "/state-conductor/actions/make-envelope.sjs"
         }
+      ],
+      "transitions": [
+        {
+          "targetState": "run-dhf5-flow"
+        }
+      ]
+    },
+    {
+      "stateName": "run-dhf5-flow",
+      "description": "runs a dhf 5 flow",
+      "actions": [
+        {
+          "actionModule": "/state-conductor/actions/dhf5RunFlowStepAction.sjs",
+          "options": {
+            "flowName": "testFlow",
+            "step": 1
+          }
+        }
       ]
     }
   ]      

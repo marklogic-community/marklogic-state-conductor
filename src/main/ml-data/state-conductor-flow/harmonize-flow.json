@@ -1,6 +1,6 @@
 {
   "flowName": "harmonize-flow",
-  "description": "makes things",
+  "Comment": "makes things",
   "contentDatabase": "state-conductor-content",
   "modulesDatabase": "state-conductor-modules",
   "context": [
@@ -9,11 +9,12 @@
       "value": "flow-time"
     }
   ],
-  "initialState": "needs-envelope",
+  "StartAt": "needs-envelope",
   "states": [
     {
       "stateName": "needs-envelope",
-      "description": "makes the envelope",
+      "Type": "Task",
+      "Comment": "makes the envelope",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/make-envelope.sjs"
@@ -21,13 +22,14 @@
       ],
       "transitions": [
         {
-          "targetState": "needs-headers"
+          "Next": "needs-headers"
         }
       ]
     },
     {
       "stateName": "needs-headers",
-      "description": "makes the envelope's headers",
+      "Type": "Task",
+      "Comment": "makes the envelope's headers",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/make-headers.sjs"
@@ -35,18 +37,28 @@
       ],
       "transitions": [
         {
-          "targetState": "needs-triples"
+          "Next": "needs-triples"
         }
       ]
     },
     {
       "stateName": "needs-triples",
-      "description": "makes the envelope's triples",
+      "Type": "Task",
+      "Comment": "makes the envelope's triples",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/make-triples.sjs"
         }
+      ],
+      "transitions": [
+        {
+          "Next": "success"
+        }
       ]
+    }, 
+    {
+      "stateName": "success",
+      "Type": "Succeed"
     }
   ]      
 }

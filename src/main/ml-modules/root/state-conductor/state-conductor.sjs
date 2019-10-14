@@ -3,8 +3,10 @@
 const FLOW_COLLECTION           = 'state-conductor-flow';
 const FLOW_STATE_PROP_NAME      = 'state-conductor-status';
 const FLOW_PROVENANCE_PROP_NAME = 'state-conductor-status-event';
-const FLOW_STATE_WORKING        = 'working';
-const FLOW_STATE_COMPLETE       = 'complete';
+const FLOW_STATUS_WORKING       = 'working';
+const FLOW_STATUS_COMPLETE      = 'complete';
+
+const SUPPORTED_STATE_TYPES = ['task', 'succeed', 'fail'];
 
 const sortFn = (prop, dir = 'desc') => ((a, b) => {
   let p1 = a[prop] || 0;
@@ -64,7 +66,7 @@ function getFlowStatusProperty(uri, flowName) {
 function isDocumentInProcess(uri) {
   return cts.contains(
     xdmp.documentProperties(uri), 
-    cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATE_WORKING)
+    cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATUS_WORKING)
   );
 }
 
@@ -79,7 +81,7 @@ function getInProcessFlows(uri) {
   if (fn.docAvailable(uri)) {
     return xdmp.documentGetProperties(uri, fn.QName('', FLOW_STATE_PROP_NAME))
       .toArray()
-      .filter(prop => prop.firstChild.nodeValue === FLOW_STATE_WORKING)
+      .filter(prop => prop.firstChild.nodeValue === FLOW_STATUS_WORKING)
       .map(prop => prop.getAttributeNode('flow-name').nodeValue);
   }
 }
@@ -92,7 +94,7 @@ function getInProcessFlows(uri) {
  * @param {*} stateName
  * @param {*} status
  */
-function setFlowStatus(uri, flowName, stateName, status = FLOW_STATE_WORKING) {
+function setFlowStatus(uri, flowName, stateName, status = FLOW_STATUS_WORKING) {
   declareUpdate();
   const existingStatusProp = getFlowStatusProperty(uri, flowName);
   const builder = new NodeBuilder();
@@ -221,10 +223,12 @@ function getFlowContextQuery({context = []}) {
 function getAllFlowsContextQuery() {
   let queries = getFlowDocuments().toArray().map(flow => getFlowContextQuery(flow.toObject()));
 
-  if (queries.length > 1) {
-    queries = cts.orQuery(queries);
-  } else {
+  if (queries.length === 0) {
+    queries = cts.falseQuery();
+  } else if (queries.length === 1) {
     queries = queries.pop();
+  } else {
+    queries = cts.orQuery(queries);
   }
 
   return queries;
@@ -241,9 +245,11 @@ function performStateActions(uri, flow, stateName) {
   const state = flow.states.filter(state => state.stateName === stateName)[0];
   if (state) {
     xdmp.log(`executing actions for state: ${stateName}`);
-    state.actions.sort(sortFn('priority')).forEach(action => {
-      executeModule(action.actionModule, uri, action.options, flow);
-    });
+    if (state.actions) {
+      state.actions.sort(sortFn('priority')).forEach(action => {
+        executeModule(action.actionModule, uri, action.options, flow);
+      });
+    }    
   } else {
     fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
   }
@@ -275,10 +281,17 @@ function executeModule(modulePath, uri, options, flow) {
  */
 function executeStateTransition(uri, flow) {
   const currStateName = getFlowState(uri, flow.flowName);
+  xdmp.log(`executing transtions for state: ${currStateName}`);
 
   if (!inTerminalState(uri, flow)) {
     let currState = flow.states.filter(state => state.stateName === currStateName)[0];  
-    let transitions = currState.transitions.sort(sortFn('priority'));
+    let transitions; 
+    
+    if (currState.transitions && currState.transitions.length > 0) {
+      transitions = currState.transitions.sort(sortFn('priority'));
+    } else {
+      fn.error(null, 'INVALID-STATE-DEFINITION', `no "Next" defined for non-terminal state "${currStateName}"`);
+    }    
 
     // find the target transition
     let target = null;
@@ -286,9 +299,9 @@ function executeStateTransition(uri, flow) {
       if (!target) {
         if (trans.conditionModule) {
           let resp = fn.head(executeModule(trans.conditionModule, uri, trans.options, flow));
-          target = resp ? trans.targetState : null;
+          target = resp ? trans.Next : null;
         } else {
-          target = trans.targetState;
+          target = trans.Next;
         }
       }
     });
@@ -305,7 +318,7 @@ function executeStateTransition(uri, flow) {
       ]));
     }
   } else {
-    setFlowStatus(uri, flow.flowName, currStateName, FLOW_STATE_COMPLETE);
+    setFlowStatus(uri, flow.flowName, currStateName, FLOW_STATUS_COMPLETE);
     addProvenanceEvent(uri, flow.flowName, currStateName, 'COMPLETED');
   }
 }
@@ -320,7 +333,17 @@ function executeStateTransition(uri, flow) {
 function inTerminalState(uri, flow) {
   const currStateName = getFlowState(uri, flow.flowName);
   let currState = flow.states.filter(state => state.stateName === currStateName)[0];
-  return !currState || !currState.transitions || currState.transitions.length === 0;
+  
+  if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
+    fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported state type: "${currState.Type}"`);
+  }
+  //return !currState || !currState.transitions || currState.transitions.length === 0;
+  return (
+    !currState || 
+    currState.Type.toLowerCase() === 'succeed' ||
+    currState.Type.toLowerCase() === 'fail' ||
+    (currState.Type.toLowerCase() === 'task' && currState.End === true)
+  );
 }
 
 

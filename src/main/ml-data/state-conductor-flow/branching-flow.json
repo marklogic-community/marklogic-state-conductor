@@ -1,6 +1,6 @@
 {
   "flowName": "branching-test-flow",
-  "description": "does things",
+  "Comment": "does things",
   "contentDatabase": "state-conductor-content",
   "modulesDatabase": "state-conductor-modules",
   "context": [
@@ -9,29 +9,32 @@
       "value": "enrollee"
     }
   ],
-  "initialState": "find-gender",
+  "StartAt": "find-gender",
   "states": [
     {
       "stateName": "find-gender",
-      "description": "determine's enrollee's gender",
+      "Type": "Task",
+      "Comment": "determine's enrollee's gender",
       "actions": [],
       "transitions": [
         {
           "conditionModule": "/state-conductor/actions/branching-test-flow/gender-is-male.sjs",
-          "targetState": "enroll-in-mens-health"
+          "Next": "enroll-in-mens-health"
         },
         {
           "conditionModule": "/state-conductor/actions/branching-test-flow/gender-is-female.sjs",
-          "targetState": "enroll-in-womens-health"
+          "Next": "enroll-in-womens-health"
         }, 
         {
-          "targetState": "has-undetermined-gender"
+          "Next": "has-undetermined-gender"
         }
       ]
     },
     {
       "stateName": "enroll-in-mens-health",
-      "description": "adds enrollee to the men's health program",
+      "Type": "Task",
+      "End": true,
+      "Comment": "adds enrollee to the men's health program",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/branching-test-flow/enroll-in-mens-health.sjs"
@@ -40,7 +43,9 @@
     },
     {
       "stateName": "enroll-in-womens-health",
-      "description": "adds enrollee to the womens's health program",
+      "Type": "Task",
+      "End": true,
+      "Comment": "adds enrollee to the womens's health program",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/branching-test-flow/enroll-in-womens-health.sjs"
@@ -49,7 +54,9 @@
     },
     {
       "stateName": "has-undetermined-gender",
-      "description": "flags enrollee for follow-up",
+      "Type": "Task",
+      "End": true,
+      "Comment": "flags enrollee for follow-up",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/branching-test-flow/flag-for-follow-up.sjs"

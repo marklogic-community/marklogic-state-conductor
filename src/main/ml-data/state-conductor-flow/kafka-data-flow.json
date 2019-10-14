@@ -1,6 +1,6 @@
 {
   "flowName": "kafka-data-flow",
-  "description": "processes data from the MarkLogic Kafka Connector",
+  "Comment": "processes data from the MarkLogic Kafka Connector",
   "contentDatabase": "state-conductor-content",
   "modulesDatabase": "state-conductor-modules",
   "context": [
@@ -9,11 +9,12 @@
       "value": "kafka-data"
     }
   ],
-  "initialState": "needs-envelope",
+  "StartAt": "needs-envelope",
   "states": [
     {
       "stateName": "needs-envelope",
-      "description": "wraps the content in an envelope",
+      "Type": "Task",
+      "Comment": "wraps the content in an envelope",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/make-envelope.sjs"
@@ -21,13 +22,15 @@
       ],
       "transitions": [
         {
-          "targetState": "run-dhf5-flow"
+          "Next": "run-dhf5-flow"
         }
       ]
     },
     {
       "stateName": "run-dhf5-flow",
-      "description": "runs a dhf 5 flow",
+      "Type": "Task",
+      "End": true,
+      "Comment": "runs a dhf 5 flow",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/dhf5RunFlowStepAction.sjs",

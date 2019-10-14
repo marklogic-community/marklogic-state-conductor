@@ -2,6 +2,7 @@
 declareUpdate();
 
 const cpf = require('/MarkLogic/cpf/cpf.xqy');
+const json = require('/MarkLogic/json/json.xqy');
 const sc  = require('/state-conductor/state-conductor.sjs');
 
 var uri;
@@ -32,7 +33,7 @@ if (cpf.checkTransition(uri, transition)) {
         // put the document into the flows intial state
         const currFlow = flows[0].toObject();
         const currFlowName = currFlow.flowName;
-        const currFlowState = currFlow.initialState;
+        const currFlowState = currFlow.StartAt;
         xdmp.log(`adding document to flow: "${currFlowName}" in state: "${currFlowState}"`);
         sc.setFlowStatus(uri, currFlowName, currFlowState);
         sc.addProvenanceEvent(uri, currFlowName, 'NEW', currFlowState);
@@ -46,6 +47,7 @@ if (cpf.checkTransition(uri, transition)) {
     }
 
   } catch (e) {
-    cpf.failure(uri, transition, e, null);
+    xdmp.log(e, 'error');
+    cpf.failure(uri, transition, json.transformFromJson(e), null);
   }
 }

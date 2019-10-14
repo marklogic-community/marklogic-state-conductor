@@ -1,6 +1,6 @@
 {
   "flowName": "test flow",
-  "description": "does things",
+  "Comment": "does things",
   "contentDatabase": "state-conductor-content",
   "modulesDatabase": "state-conductor-modules",
   "context": [
@@ -9,11 +9,12 @@
       "value": "/test/"
     }
   ],
-  "initialState": "set-prop1",
+  "StartAt": "set-prop1",
   "states": [
     {
       "stateName": "set-prop1",
-      "description": "initial state of the flow",
+      "Type": "Task",
+      "Comment": "initial state of the flow",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/set-prop1.sjs"
@@ -21,13 +22,15 @@
       ],
       "transitions": [
         {
-          "targetState": "set-prop2"
+          "Next": "set-prop2"
         }
       ]
     },
     {
       "stateName": "set-prop2",
-      "description": "updates a property",
+      "Type": "Task",
+      "End": true,
+      "Comment": "updates a property",
       "actions": [
         {
           "actionModule": "/state-conductor/actions/set-prop2.sjs"

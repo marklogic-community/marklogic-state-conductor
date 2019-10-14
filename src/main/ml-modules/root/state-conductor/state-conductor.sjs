@@ -155,30 +155,14 @@ function getFlowStatus(uri, flowName) {
  * @param {*} flow
  * @returns
  */
-function checkFlowContext(uri, { context = [] }) {
+function checkFlowContext(uri, flow) {
   if (fn.docAvailable(uri)) {
-    const cols = xdmp.documentGetCollections(uri);
-    const match = context.reduce((acc, ctx) => {
-      let isMatch = false;
-      if (ctx.domain === 'collection') {
-        // does this document have the proper collection
-        isMatch = cols.includes(ctx.value);
-      } else if (ctx.domain === 'directory') {
-        // is this document within the proper directory
-        isMatch = fn.head(cts.uris('', null, cts.andQuery([
-          cts.documentQuery(uri),
-          cts.directoryQuery(ctx.value, 'infinity')
-        ]))) === uri;
-      } else if (ctx.domain === 'query') {
-        let query = parseSerializedQuery(ctx.value);
-        isMatch = fn.head(cts.uris('', null, cts.andQuery([
-          cts.documentQuery(uri),
-          query
-        ]))) === uri;
-      }
-      return acc || isMatch;
-    }, false);
-    return match;
+    const query = getFlowContextQuery(flow);
+    const uris = cts.uris('', null, cts.andQuery([
+      cts.documentQuery(uri),
+      query
+    ]));
+    return uri === fn.string(fn.head(uris));
   }
 
   return false;
@@ -200,6 +184,13 @@ function getApplicableFlows(uri) {
   return flows;
 }
 
+
+/**
+ * Given a flow, generate a cts query for it's context
+ *
+ * @param {*} {context = []}
+ * @returns
+ */
 function getFlowContextQuery({context = []}) {
   let queries = context.map(ctx => {
     if (ctx.domain === 'collection') {
@@ -221,6 +212,12 @@ function getFlowContextQuery({context = []}) {
   return queries;
 }
 
+
+/**
+ * Generate a cts query matching the context of all flows
+ *
+ * @returns
+ */
 function getAllFlowsContextQuery() {
   let queries = getFlowDocuments().toArray().map(flow => getFlowContextQuery(flow.toObject()));
 
@@ -234,7 +231,7 @@ function getAllFlowsContextQuery() {
 }
 
 /**
- * Give a document, a flow, and the state in that flow, perform all actions for that state.
+ * Given a document, a flow, and the state in that flow, perform all actions for that state.
  *
  * @param {*} uri
  * @param {*} flow
@@ -264,7 +261,7 @@ function executeModule(modulePath, uri, options, flow) {
       isolation: 'same-statement'
     });
   } catch (err) {
-    xdmp.log([`An error occured invoking module "${modulePath}"`, err]);
+    xdmp.log(Sequence.from([`An error occured invoking module "${modulePath}"`, err]), 'error');
   }
 }
 
@@ -288,7 +285,7 @@ function executeStateTransition(uri, flow) {
     transitions.forEach(trans => {
       if (!target) {
         if (trans.conditionModule) {
-          let resp = fn.head(executeModule(trans.conditionModule, uri, flow));
+          let resp = fn.head(executeModule(trans.conditionModule, uri, trans.options, flow));
           target = resp ? trans.targetState : null;
         } else {
           target = trans.targetState;

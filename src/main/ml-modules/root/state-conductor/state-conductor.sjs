@@ -366,6 +366,49 @@ function inTerminalState(uri, flow) {
   );
 }
 
+function getFlowCounts(flowName) {
+  const flow = getFlowDocument(flowName).toObject();
+  const states = Object.keys(flow.States);
+
+  let numComplete = fn.count(
+    cts.uris('', 'properties', 
+      cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
+        cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
+        cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATUS_COMPLETE)
+      ]))
+    )
+  );
+  let numWorking = fn.count(
+    cts.uris('', 'properties', 
+      cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
+        cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
+        cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATUS_WORKING)
+      ]))
+    )
+  );
+
+  const status = {
+    flowName: flowName,
+    complete: numComplete,
+    working: numWorking
+  };
+
+  states.forEach(state => {
+    let numInState = fn.count(
+      cts.uris('', 'properties', 
+        cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
+          cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
+          cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'state-name'), state),
+          cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATUS_WORKING)
+        ]))
+      )
+    );
+    status[state] = numInState;
+  });
+
+  return status;
+}
+
 
 module.exports = {
   addProvenanceEvent,
@@ -374,6 +417,7 @@ module.exports = {
   getApplicableFlows,
   getInitialState,
   getInProcessFlows,
+  getFlowCounts,
   getFlowDocument,
   getFlowDocuments,
   getFlowState,

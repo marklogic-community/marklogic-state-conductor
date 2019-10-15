@@ -14,14 +14,14 @@
     "needs-envelope": {
       "Type": "Task",
       "Comment": "wraps the content in an envelope",
-      "Resource": "/state-conductor/actions/make-envelope.sjs",
+      "Resource": "/state-conductor/actions/common/examples/make-envelope.sjs",
       "Next": "run-dhf5-flow"
     },
     "run-dhf5-flow": {
       "Type": "Task",
       "End": true,
       "Comment": "runs a dhf 5 flow",
-      "Resource": "/state-conductor/actions/dhf5RunFlowStepAction.sjs",
+      "Resource": "/state-conductor/actions/common/dhf/dhf5RunFlowStepAction.sjs",
       "Parameters": {
         "flowName": "testFlow",
         "step": 1

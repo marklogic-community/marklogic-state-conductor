@@ -1,6 +1,6 @@
 {
   "flowName": "test flow",
-  "description": "does things",
+  "Comment": "does things",
   "contentDatabase": "content-db",
   "modulesDatabase": "modules-db",
   "context": [
@@ -17,74 +17,43 @@
       "value": "{\"andQuery\":{\"queries\":[{\"collectionQuery\":{\"uris\":[\"flow-time\"]}}, {\"elementValueQuery\":{\"element\":[\"name\"], \"text\":[\"Cobb Pauley\"], \"options\":[\"lang=en\"]}}]}}"
     }
   ],
-  "initialState": "A",
-  "states": [
+  "StartAt": "A",
+  "States": [
     {
       "stateName": "A",
-      "description": "initial state of the flow",
-      "actions": [
+      "Type": "Choice",
+      "Comment": "initial state of the flow",
+      "Resource": "/uri/to/action1.sjs",
+      "Choices": [
         {
-          "actionModule": "/uri/to/action1.sjs",
-          "description": "sends post message to kafka",
-          "priority": 100
+          "Resource": "/uri/to/condition.sjs",
+          "Next": "B"
         },
         {
-          "actionModule": "/uri/to/action2.sjs"
+          "Resource": "/uri/to/condition2.sjs",
+          "Next": "C"
         }
       ],
-      "transitions": [
-        {
-          "conditionModule": "/uri/to/condition.sjs",
-          "targetState": "B",
-          "priority": 100
-        },
-        {
-          "condition": "root.code==053",
-          "targetState": "C",
-          "priority": 50
-        },
-        {
-          "targetState": "D"
-        }
-      ]
+      "Default": "D"
     },
     {
       "stateName": "B",
-      "description": "updates a property",
-      "actions": [
-        {
-          "actionModule": "/uri/to/action3.sjs"
-        }
-      ],
-      "transitions": [
-        {
-          "targetState": "C"
-        }
-      ]
+      "Type": "Task",
+      "Comment": "updates a property",
+      "Resource": "/uri/to/action3.sjs",
+      "Next": "C"
     },
     {
       "stateName": "C",
-      "actions": [
-        {
-          "actionModule": "/uri/to/action3.sjs"
-        },
-        {
-          "actionModule": "/uri/to/action4.sjs"
-        }
-      ],
-      "transitions": [
-        {
-          "targetState": "D"
-        }
-      ]
+      "Type": "Task",
+      "Resource": "/uri/to/action4.sjs",
+      "Next": "D"
     },
     {
       "stateName": "D",
-      "actions": [
-        {
-          "actionModule": "/uri/to/action3.sjs"
-        }
-      ]
+      "Type": "Task",
+      "End": true,
+      "Resource": "/uri/to/action3.sjs"
     }
   ]      
 }

@@ -33,7 +33,7 @@ if (cpf.checkTransition(uri, transition)) {
         // put the document into the flows intial state
         const currFlow = flows[0].toObject();
         const currFlowName = currFlow.flowName;
-        const currFlowState = currFlow.StartAt;
+        const currFlowState = sc.getInitialState(currFlow);
         xdmp.log(`adding document to flow: "${currFlowName}" in state: "${currFlowState}"`);
         sc.setFlowStatus(uri, currFlowName, currFlowState);
         sc.addProvenanceEvent(uri, currFlowName, 'NEW', currFlowState);

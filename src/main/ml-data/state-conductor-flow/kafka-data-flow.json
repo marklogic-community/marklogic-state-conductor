@@ -10,36 +10,24 @@
     }
   ],
   "StartAt": "needs-envelope",
-  "states": [
+  "States": [
     {
       "stateName": "needs-envelope",
       "Type": "Task",
       "Comment": "wraps the content in an envelope",
-      "actions": [
-        {
-          "actionModule": "/state-conductor/actions/make-envelope.sjs"
-        }
-      ],
-      "transitions": [
-        {
-          "Next": "run-dhf5-flow"
-        }
-      ]
+      "Resource": "/state-conductor/actions/make-envelope.sjs",
+      "Next": "run-dhf5-flow"
     },
     {
       "stateName": "run-dhf5-flow",
       "Type": "Task",
       "End": true,
       "Comment": "runs a dhf 5 flow",
-      "actions": [
-        {
-          "actionModule": "/state-conductor/actions/dhf5RunFlowStepAction.sjs",
-          "options": {
-            "flowName": "testFlow",
-            "step": 1
-          }
-        }
-      ]
+      "Resource": "/state-conductor/actions/dhf5RunFlowStepAction.sjs",
+      "Parameters": {
+        "flowName": "testFlow",
+        "step": 1
+      }
     }
   ]      
 }

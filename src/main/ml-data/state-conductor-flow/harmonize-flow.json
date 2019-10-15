@@ -10,51 +10,27 @@
     }
   ],
   "StartAt": "needs-envelope",
-  "states": [
+  "States": [
     {
       "stateName": "needs-envelope",
       "Type": "Task",
       "Comment": "makes the envelope",
-      "actions": [
-        {
-          "actionModule": "/state-conductor/actions/make-envelope.sjs"
-        }
-      ],
-      "transitions": [
-        {
-          "Next": "needs-headers"
-        }
-      ]
+      "Resource": "/state-conductor/actions/make-envelope.sjs",
+      "Next": "needs-headers"
     },
     {
       "stateName": "needs-headers",
       "Type": "Task",
       "Comment": "makes the envelope's headers",
-      "actions": [
-        {
-          "actionModule": "/state-conductor/actions/make-headers.sjs"
-        }
-      ],
-      "transitions": [
-        {
-          "Next": "needs-triples"
-        }
-      ]
+      "Resource": "/state-conductor/actions/make-headers.sjs",
+      "Next": "needs-triples"
     },
     {
       "stateName": "needs-triples",
       "Type": "Task",
       "Comment": "makes the envelope's triples",
-      "actions": [
-        {
-          "actionModule": "/state-conductor/actions/make-triples.sjs"
-        }
-      ],
-      "transitions": [
-        {
-          "Next": "success"
-        }
-      ]
+      "Resource": "/state-conductor/actions/make-triples.sjs",
+      "Next": "success"
     }, 
     {
       "stateName": "success",

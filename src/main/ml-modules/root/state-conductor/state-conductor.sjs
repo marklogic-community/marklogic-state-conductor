@@ -6,7 +6,13 @@ const FLOW_PROVENANCE_PROP_NAME = 'state-conductor-status-event';
 const FLOW_STATUS_WORKING       = 'working';
 const FLOW_STATUS_COMPLETE      = 'complete';
 
-const SUPPORTED_STATE_TYPES = ['task', 'succeed', 'fail'];
+const SUPPORTED_STATE_TYPES = [
+  'choice',
+  'fail', 
+  'pass', 
+  'succeed', 
+  'task'
+];
 
 const sortFn = (prop, dir = 'desc') => ((a, b) => {
   let p1 = a[prop] || 0;
@@ -41,6 +47,20 @@ function getFlowDocument(name) {
 function getFlowDocuments() {
   return fn.collection('state-conductor-flow');
 }
+
+
+/**
+ * Returns the initial state for the given state machine definition
+ *
+ * @param {*} { flowName, StartAt }
+ * @returns
+ */
+function getInitialState({ flowName, StartAt }) {
+  if (!StartAt || StartAt.length === 0) {
+    fn.error(null, 'INVALID-STATE-DEFINITION', `no "StartAt" defined for state machine"${flowName}"`);
+  }
+  return StartAt;
+};
 
 /**
  * Gets the flow-conductor-status property for the given flowName
@@ -242,14 +262,17 @@ function getAllFlowsContextQuery() {
  * @param {*} stateName
  */
 function performStateActions(uri, flow, stateName) {
-  const state = flow.states.filter(state => state.stateName === stateName)[0];
+  const state = flow.States.filter(state => state.stateName === stateName)[0];
   if (state) {
-    xdmp.log(`executing actions for state: ${stateName}`);
-    if (state.actions) {
-      state.actions.sort(sortFn('priority')).forEach(action => {
-        executeModule(action.actionModule, uri, action.options, flow);
-      });
-    }    
+    if (state.Type && state.Type.toLowerCase() === 'task') {
+      xdmp.log(`executing action for state: ${stateName}`);
+
+      if (state.Resource) {
+        executeModule(state.Resource, uri, state.Parameters, flow);
+      } else {
+        fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
+      }
+    }
   } else {
     fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
   }
@@ -284,38 +307,41 @@ function executeStateTransition(uri, flow) {
   xdmp.log(`executing transtions for state: ${currStateName}`);
 
   if (!inTerminalState(uri, flow)) {
-    let currState = flow.states.filter(state => state.stateName === currStateName)[0];  
-    let transitions; 
+    let currState = flow.States.filter(state => state.stateName === currStateName)[0];  
     
-    if (currState.transitions && currState.transitions.length > 0) {
-      transitions = currState.transitions.sort(sortFn('priority'));
-    } else {
-      fn.error(null, 'INVALID-STATE-DEFINITION', `no "Next" defined for non-terminal state "${currStateName}"`);
-    }    
-
     // find the target transition
     let target = null;
-    transitions.forEach(trans => {
-      if (!target) {
-        if (trans.conditionModule) {
-          let resp = fn.head(executeModule(trans.conditionModule, uri, trans.options, flow));
-          target = resp ? trans.Next : null;
-        } else {
-          target = trans.Next;
-        }
+    
+    if ('task' === currState.Type.toLowerCase()) {
+      target = currState.Next;
+    } else if ('pass' === currState.Type.toLowerCase()) {
+      target = currState.Next;
+    } else if ('choice' === currState.Type.toLowerCase()) {
+      if (currState.Choices && currState.Choices.length > 0) {
+        currState.Choices.forEach(choice => {
+          if (!target) {
+            if (choice.Resource) {
+              let resp = fn.head(executeModule(choice.Resource, uri, choice.Parameters, flow));
+              target = resp ? choice.Next : null;
+            } else {
+              fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${currStateName}"`);  
+            }
+          }
+        });
+        target = target || currState.Default;
+      } else {
+        fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${currStateName}"`);  
       }
-    });
+    } else {
+      fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${currState.Type}"`);
+    }
 
     // perform the transition
     if (target) {
       setFlowStatus(uri, flow.flowName, target);
       addProvenanceEvent(uri, flow.flowName, currStateName, target);
     } else {
-      fn.error(null, 'No conditional or default transtion performed', Sequence.from([
-        `uri:"${uri}"`,
-        `flow:"${flow.flowName}"`,
-        `state:"${currStateName}"`
-      ]));
+      fn.error(null, 'INVALID-STATE-DEFINITION', `No suitable transition found in non-terminal state "${currStateName}"`);
     }
   } else {
     setFlowStatus(uri, flow.flowName, currStateName, FLOW_STATUS_COMPLETE);
@@ -332,7 +358,7 @@ function executeStateTransition(uri, flow) {
  */
 function inTerminalState(uri, flow) {
   const currStateName = getFlowState(uri, flow.flowName);
-  let currState = flow.states.filter(state => state.stateName === currStateName)[0];
+  let currState = flow.States.filter(state => state.stateName === currStateName)[0];
   
   if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
     fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported state type: "${currState.Type}"`);
@@ -352,6 +378,7 @@ module.exports = {
   checkFlowContext,
   executeStateTransition,
   getApplicableFlows,
+  getInitialState,
   getInProcessFlows,
   getFlowDocument,
   getFlowDocuments,

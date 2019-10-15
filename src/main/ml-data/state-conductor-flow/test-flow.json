@@ -10,32 +10,20 @@
     }
   ],
   "StartAt": "set-prop1",
-  "states": [
+  "States": [
     {
       "stateName": "set-prop1",
       "Type": "Task",
       "Comment": "initial state of the flow",
-      "actions": [
-        {
-          "actionModule": "/state-conductor/actions/set-prop1.sjs"
-        }
-      ],
-      "transitions": [
-        {
-          "Next": "set-prop2"
-        }
-      ]
+      "Resource": "/state-conductor/actions/set-prop1.sjs",
+      "Next": "set-prop2"
     },
     {
       "stateName": "set-prop2",
       "Type": "Task",
       "End": true,
       "Comment": "updates a property",
-      "actions": [
-        {
-          "actionModule": "/state-conductor/actions/set-prop2.sjs"
-        }
-      ]
+      "Resource": "/state-conductor/actions/set-prop2.sjs"
     }
   ]      
 }

@@ -10,20 +10,18 @@
     }
   ],
   "StartAt": "set-prop1",
-  "States": [
-    {
-      "stateName": "set-prop1",
+  "States": {
+    "set-prop1": {
       "Type": "Task",
       "Comment": "initial state of the flow",
       "Resource": "/state-conductor/actions/set-prop1.sjs",
       "Next": "set-prop2"
     },
-    {
-      "stateName": "set-prop2",
+    "set-prop2": {
       "Type": "Task",
       "End": true,
       "Comment": "updates a property",
       "Resource": "/state-conductor/actions/set-prop2.sjs"
     }
-  ]      
+  }
 }

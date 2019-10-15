@@ -14,12 +14,6 @@ const SUPPORTED_STATE_TYPES = [
   'task'
 ];
 
-const sortFn = (prop, dir = 'desc') => ((a, b) => {
-  let p1 = a[prop] || 0;
-  let p2 = b[prop] || 0;
-  return (dir === 'desc') ? p2 - p1 : p1 - p2;
-});
-
 const parseSerializedQuery = (serializedQuery) => {
   return cts.query(fn.head(xdmp.fromJsonString(serializedQuery)));
 };
@@ -60,7 +54,7 @@ function getInitialState({ flowName, StartAt }) {
     fn.error(null, 'INVALID-STATE-DEFINITION', `no "StartAt" defined for state machine"${flowName}"`);
   }
   return StartAt;
-};
+}
 
 /**
  * Gets the flow-conductor-status property for the given flowName
@@ -262,7 +256,7 @@ function getAllFlowsContextQuery() {
  * @param {*} stateName
  */
 function performStateActions(uri, flow, stateName) {
-  const state = flow.States.filter(state => state.stateName === stateName)[0];
+  const state = flow.States[stateName];
   if (state) {
     if (state.Type && state.Type.toLowerCase() === 'task') {
       xdmp.log(`executing action for state: ${stateName}`);
@@ -307,7 +301,7 @@ function executeStateTransition(uri, flow) {
   xdmp.log(`executing transtions for state: ${currStateName}`);
 
   if (!inTerminalState(uri, flow)) {
-    let currState = flow.States.filter(state => state.stateName === currStateName)[0];  
+    let currState = flow.States[currStateName];  
     
     // find the target transition
     let target = null;
@@ -358,7 +352,7 @@ function executeStateTransition(uri, flow) {
  */
 function inTerminalState(uri, flow) {
   const currStateName = getFlowState(uri, flow.flowName);
-  let currState = flow.States.filter(state => state.stateName === currStateName)[0];
+  let currState = flow.States[currStateName];
   
   if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
     fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported state type: "${currState.Type}"`);

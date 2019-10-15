@@ -18,9 +18,8 @@
     }
   ],
   "StartAt": "A",
-  "States": [
-    {
-      "stateName": "A",
+  "States": {
+    "A": {
       "Type": "Choice",
       "Comment": "initial state of the flow",
       "Resource": "/uri/to/action1.sjs",
@@ -36,24 +35,21 @@
       ],
       "Default": "D"
     },
-    {
-      "stateName": "B",
+    "B": {
       "Type": "Task",
       "Comment": "updates a property",
       "Resource": "/uri/to/action3.sjs",
       "Next": "C"
     },
-    {
-      "stateName": "C",
+    "C": {
       "Type": "Task",
       "Resource": "/uri/to/action4.sjs",
       "Next": "D"
     },
-    {
-      "stateName": "D",
+    "D": {
       "Type": "Task",
       "End": true,
       "Resource": "/uri/to/action3.sjs"
     }
-  ]      
+  }  
 }

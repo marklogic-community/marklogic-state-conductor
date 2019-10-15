@@ -10,9 +10,8 @@
     }
   ],
   "StartAt": "find-gender",
-  "States": [
-    {
-      "stateName": "find-gender",
+  "States": {
+    "find-gender": {
       "Type": "Choice",
       "Comment": "determine's enrollee's gender",
       "Choices": [
@@ -27,26 +26,23 @@
       ],
       "Default": "has-undetermined-gender"
     },
-    {
-      "stateName": "enroll-in-mens-health",
+    "enroll-in-mens-health": {
       "Type": "Task",
       "End": true,
       "Comment": "adds enrollee to the men's health program",
       "Resource": "/state-conductor/actions/branching-test-flow/enroll-in-mens-health.sjs"
     },
-    {
-      "stateName": "enroll-in-womens-health",
+    "enroll-in-womens-health": {
       "Type": "Task",
       "End": true,
       "Comment": "adds enrollee to the womens's health program",
       "Resource": "/state-conductor/actions/branching-test-flow/enroll-in-womens-health.sjs"
     },
-    {
-      "stateName": "has-undetermined-gender",
+    "has-undetermined-gender": {
       "Type": "Task",
       "End": true,
       "Comment": "flags enrollee for follow-up",
       "Resource": "/state-conductor/actions/branching-test-flow/flag-for-follow-up.sjs"
     }
-  ]      
+  }  
 }

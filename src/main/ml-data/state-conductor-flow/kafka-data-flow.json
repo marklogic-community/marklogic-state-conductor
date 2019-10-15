@@ -10,16 +10,14 @@
     }
   ],
   "StartAt": "needs-envelope",
-  "States": [
-    {
-      "stateName": "needs-envelope",
+  "States": {
+    "needs-envelope": {
       "Type": "Task",
       "Comment": "wraps the content in an envelope",
       "Resource": "/state-conductor/actions/make-envelope.sjs",
       "Next": "run-dhf5-flow"
     },
-    {
-      "stateName": "run-dhf5-flow",
+    "run-dhf5-flow": {
       "Type": "Task",
       "End": true,
       "Comment": "runs a dhf 5 flow",
@@ -29,5 +27,5 @@
         "step": 1
       }
     }
-  ]      
+  }
 }

@@ -32,7 +32,7 @@ function getCtxRegQueryId() {
   let curr = (new Date()).getTime();
   
   if (!regCtxQueryId || curr > (timestamp + FIELD_CTX_QUERY_TIMEOUT)) {
-    xdmp.log('registered context query not found or timestamp expired - registering new context query');
+    xdmp.trace(sc.TRACE_EVENT, 'registered context query not found or timestamp expired - registering new context query');
     regCtxQueryId = registerCtxQuery();
   }
 
@@ -48,7 +48,7 @@ function checkUriAgainstContext(uri) {
     resp = executeContextRegQuery(uri, regCtxQueryId);
   } catch (err) {
     if (err.name === 'XDMP-UNREGISTERED') {
-      xdmp.log('registered query not found - reregistering context query');
+      xdmp.trace(sc.TRACE_EVENT, 'registered query not found - reregistering context query');
       // need to register a new query
       regCtxQueryId = registerCtxQuery();
       // execute the query
@@ -63,6 +63,6 @@ function checkUriAgainstContext(uri) {
 }
 
 
-xdmp.log(`state-conductor-condition check for "${uri}"`);
+xdmp.trace(sc.TRACE_EVENT, `state-conductor-condition check for "${uri}"`);
 
 checkUriAgainstContext(uri);

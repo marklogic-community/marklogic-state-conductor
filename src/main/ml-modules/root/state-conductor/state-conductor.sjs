@@ -1,5 +1,7 @@
 'use strict';
 
+const TRACE_EVENT = 'state-conductor';
+
 const FLOW_FILE_EXTENSION       = '.asl.json';
 const FLOW_COLLECTION           = 'state-conductor-flow';
 const FLOW_STATE_PROP_NAME      = 'state-conductor-status';
@@ -278,7 +280,7 @@ function performStateActions(uri, flow, stateName) {
   const state = flow.States[stateName];
   if (state) {
     if (state.Type && state.Type.toLowerCase() === 'task') {
-      xdmp.log(`executing action for state: ${stateName}`);
+      xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
 
       if (state.Resource) {
         executeModule(state.Resource, uri, state.Parameters, flow);
@@ -313,7 +315,7 @@ function executeModule(modulePath, uri, options, flow) {
  */
 function executeStateTransition(uri, flowName, flow) {
   const currStateName = getFlowState(uri, flowName);
-  xdmp.log(`executing transtions for state: ${currStateName}`);
+  xdmp.trace(TRACE_EVENT, `executing transtions for state: ${currStateName}`);
 
   if (!inTerminalState(uri, flowName, flow)) {
     let currState = flow.States[currStateName];  
@@ -360,7 +362,7 @@ function executeStateTransition(uri, flowName, flow) {
 
 function handleStateFailure(uri, flowName, flow, stateName, err) {
   const currState = flow.States[stateName];
-  xdmp.log(`handling state failures for state: ${stateName}`);
+  xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
 
   if ('task' === currState.Type.toLowerCase() || 'choice' === currState.Type.toLowerCase()) {
     if (currState.Catch && currState.Catch.length > 0) {
@@ -379,7 +381,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
       }, null);
       
       if (target) {
-        xdmp.log(`transitioning to fallback state "${target}"`);
+        xdmp.trace(TRACE_EVENT, `transitioning to fallback state "${target}"`);
         setFlowStatus(uri, flowName, target);
         addProvenanceEvent(uri, flowName, stateName, target);
         return;
@@ -387,7 +389,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
     }
   }
   // unhandled exception
-  xdmp.log(`no Catch defined for error "${err.name}" in state "${stateName}"`, 'error');
+  xdmp.trace(TRACE_EVENT, `no Catch defined for error "${err.name}" in state "${stateName}"`);
   fn.error(null, 'INVALID-STATE-DEFINITION', Sequence.from([
     `Unhandled exception of type ${err.name} in state "${stateName}`,
     err
@@ -468,6 +470,7 @@ function getFlowCounts(flowName) {
 
 
 module.exports = {
+  TRACE_EVENT,
   addProvenanceEvent,
   checkFlowContext,
   executeStateTransition,

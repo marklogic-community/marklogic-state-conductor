@@ -10,14 +10,14 @@ var transition;
 
 if (cpf.checkTransition(uri, transition)) {
   try {
-    xdmp.log(`state-conductor-work-action for "${uri}"`);
+    xdmp.trace(sc.TRACE_EVENT, `state-conductor-work-action for "${uri}"`);
 
     if (sc.isDocumentInProcess(uri)) {
       // document is being processed by a flow, continue that flow
       const currFlowName = sc.getInProcessFlows(uri)[0];
-      xdmp.log(`executing flow "${currFlowName}"`);
+      xdmp.trace(sc.TRACE_EVENT, `executing flow "${currFlowName}"`);
       const currFlowState = sc.getFlowState(uri, currFlowName);
-      xdmp.log(`flow state "${currFlowState}"`);
+      xdmp.trace(sc.TRACE_EVENT, `flow state "${currFlowState}"`);
       const currFlow = sc.getFlowDocument(currFlowName).toObject();
       try {
         // execute state actions
@@ -32,13 +32,13 @@ if (cpf.checkTransition(uri, transition)) {
     } else {
       // document is not being processed, see if any flows apply
       const flows = sc.getApplicableFlows(uri);
-      xdmp.log(`found ${flows.length} matching state-conductor flows`);
+      xdmp.trace(sc.TRACE_EVENT, `found ${flows.length} matching state-conductor flows`);
       if (flows.length > 0) {
         // put the document into the flow's intial state
         const currFlow = flows[0].toObject();
         const currFlowName = sc.getFlowNameFromUri(fn.documentUri(flows[0]));
         const currFlowState = sc.getInitialState(currFlow);
-        xdmp.log(`adding document to flow: "${currFlowName}" in state: "${currFlowState}"`);
+        xdmp.trace(sc.TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${currFlowState}"`);
         sc.setFlowStatus(uri, currFlowName, currFlowState);
         sc.addProvenanceEvent(uri, currFlowName, 'NEW', currFlowState);
         // continue cpf processing - continuing the current flow or any others that apply

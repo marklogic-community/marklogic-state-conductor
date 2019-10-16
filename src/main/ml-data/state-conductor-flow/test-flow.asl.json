@@ -1,14 +1,19 @@
 {
-  "flowName": "test flow",
   "Comment": "does things",
-  "contentDatabase": "state-conductor-content",
-  "modulesDatabase": "state-conductor-modules",
-  "context": [
-    {
-      "domain": "directory",
-      "value": "/test/"
-    }
-  ],
+  "mlDomain": {
+    "contentDatabase": "state-conductor-content",
+    "modulesDatabase": "state-conductor-modules",
+    "context": [
+      {
+        "scope": "directory",
+        "value": "/test/"
+      },
+      {
+        "scope": "collection",
+        "value": "test"
+      }
+    ]
+  },
   "StartAt": "set-prop1",
   "States": {
     "set-prop1": {

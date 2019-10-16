@@ -19,10 +19,14 @@ if (cpf.checkTransition(uri, transition)) {
       const currFlowState = sc.getFlowState(uri, currFlowName);
       xdmp.log(`flow state "${currFlowState}"`);
       const currFlow = sc.getFlowDocument(currFlowName).toObject();
-      // execute state actions
-      sc.performStateActions(uri, currFlow, currFlowState);
-      // execute state transition
-      sc.executeStateTransition(uri, currFlow);
+      try {
+        // execute state actions
+        sc.performStateActions(uri, currFlow, currFlowState);
+        // execute state transition
+        sc.executeStateTransition(uri, currFlowName, currFlow);
+      } catch (err) {
+        sc.handleStateFailure(uri, currFlowName, currFlow, currFlowState, err);
+      }      
       // continue cpf processing - continuing the current flow or any others that apply
       cpf.success(uri, transition, 'http://marklogic.com/states/working');
     } else {
@@ -30,9 +34,9 @@ if (cpf.checkTransition(uri, transition)) {
       const flows = sc.getApplicableFlows(uri);
       xdmp.log(`found ${flows.length} matching state-conductor flows`);
       if (flows.length > 0) {
-        // put the document into the flows intial state
+        // put the document into the flow's intial state
         const currFlow = flows[0].toObject();
-        const currFlowName = currFlow.flowName;
+        const currFlowName = sc.getFlowNameFromUri(fn.documentUri(flows[0]));
         const currFlowState = sc.getInitialState(currFlow);
         xdmp.log(`adding document to flow: "${currFlowName}" in state: "${currFlowState}"`);
         sc.setFlowStatus(uri, currFlowName, currFlowState);

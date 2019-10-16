@@ -1,5 +1,6 @@
 'use strict';
 
+const FLOW_FILE_EXTENSION       = '.asl.json';
 const FLOW_COLLECTION           = 'state-conductor-flow';
 const FLOW_STATE_PROP_NAME      = 'state-conductor-status';
 const FLOW_PROVENANCE_PROP_NAME = 'state-conductor-status-event';
@@ -25,12 +26,15 @@ const parseSerializedQuery = (serializedQuery) => {
  * @returns
  */
 function getFlowDocument(name) {
-  return fn.head(cts.search(
-    cts.andQuery([
-      cts.collectionQuery(FLOW_COLLECTION),
-      cts.jsonPropertyValueQuery('flowName', name)
-    ])
+  name = fn.normalizeSpace(name) + FLOW_FILE_EXTENSION;
+  const uri = fn.head(cts.uriMatch('*' + name,
+    [
+      'document',
+      'case-sensitive'
+    ],
+    cts.collectionQuery(FLOW_COLLECTION)
   ));
+  return uri ? cts.doc(uri) : null;
 }
 
 /**
@@ -44,6 +48,18 @@ function getFlowDocuments() {
 
 
 /**
+ * Given a flow definition URI, determine it's flow name
+ *
+ * @param {*} uri
+ * @returns
+ */
+function getFlowNameFromUri(uri) {
+  uri = uri.toString(); 
+  uri = uri.slice(uri.lastIndexOf('/') + 1);
+  return uri.lastIndexOf(FLOW_FILE_EXTENSION) !== -1 ? uri.slice(0, uri.lastIndexOf(FLOW_FILE_EXTENSION)) : uri;
+}
+
+/**
  * Returns the initial state for the given state machine definition
  *
  * @param {*} { flowName, StartAt }
@@ -51,7 +67,7 @@ function getFlowDocuments() {
  */
 function getInitialState({ flowName, StartAt }) {
   if (!StartAt || StartAt.length === 0) {
-    fn.error(null, 'INVALID-STATE-DEFINITION', `no "StartAt" defined for state machine"${flowName}"`);
+    fn.error(null, 'INVALID-STATE-DEFINITION', `no "StartAt" defined for state machine "${flowName}"`);
   }
   return StartAt;
 }
@@ -193,8 +209,9 @@ function checkFlowContext(uri, flow) {
  */
 function getApplicableFlows(uri) {
   const flows = getFlowDocuments().toArray().filter(flow => {
+    let flowName = getFlowNameFromUri(fn.documentUri(flow));
     let flowOjb = flow.toObject();
-    return !getFlowStatus(uri, flowOjb.flowName) && checkFlowContext(uri, flowOjb);
+    return !getFlowStatus(uri, flowName) && checkFlowContext(uri, flowOjb);
   });
 
   return flows;
@@ -204,16 +221,18 @@ function getApplicableFlows(uri) {
 /**
  * Given a flow, generate a cts query for it's context
  *
- * @param {*} {context = []}
+ * @param {*} flow
  * @returns
  */
-function getFlowContextQuery({context = []}) {
+function getFlowContextQuery(flow) {
+  const domain = flow.mlDomain;
+  const context = domain.context || [];
   let queries = context.map(ctx => {
-    if (ctx.domain === 'collection') {
+    if (ctx.scope === 'collection') {
       return cts.collectionQuery(ctx.value);
-    } else if (ctx.domain === 'directory') {
+    } else if (ctx.scope === 'directory') {
       return cts.directoryQuery(ctx.value, 'infinity');
-    } else if (ctx.domain === 'query') {
+    } else if (ctx.scope === 'query') {
       return parseSerializedQuery(ctx.value);
     }
     return cts.falseQuery();
@@ -273,19 +292,15 @@ function performStateActions(uri, flow, stateName) {
 }
 
 function executeModule(modulePath, uri, options, flow) {
-  try {
-    return xdmp.invoke(modulePath, {
-      uri: uri,
-      options: options,
-      flow: flow
-    }, {
-      database: xdmp.database(flow.contentDatabase),
-      modules: xdmp.database(flow.modulesDatabase),
-      isolation: 'same-statement'
-    });
-  } catch (err) {
-    xdmp.log(Sequence.from([`An error occured invoking module "${modulePath}"`, err]), 'error');
-  }
+  return xdmp.invoke(modulePath, {
+    uri: uri,
+    options: options,
+    flow: flow
+  }, {
+    database: xdmp.database(flow.mlDomain.contentDatabase),
+    modules: xdmp.database(flow.mlDomain.modulesDatabase),
+    isolation: 'same-statement'
+  });
 }
 
 /**
@@ -296,11 +311,11 @@ function executeModule(modulePath, uri, options, flow) {
  * @param {*} uri
  * @param {*} flow
  */
-function executeStateTransition(uri, flow) {
-  const currStateName = getFlowState(uri, flow.flowName);
+function executeStateTransition(uri, flowName, flow) {
+  const currStateName = getFlowState(uri, flowName);
   xdmp.log(`executing transtions for state: ${currStateName}`);
 
-  if (!inTerminalState(uri, flow)) {
+  if (!inTerminalState(uri, flowName, flow)) {
     let currState = flow.States[currStateName];  
     
     // find the target transition
@@ -332,15 +347,51 @@ function executeStateTransition(uri, flow) {
 
     // perform the transition
     if (target) {
-      setFlowStatus(uri, flow.flowName, target);
-      addProvenanceEvent(uri, flow.flowName, currStateName, target);
+      setFlowStatus(uri, flowName, target);
+      addProvenanceEvent(uri, flowName, currStateName, target);
     } else {
       fn.error(null, 'INVALID-STATE-DEFINITION', `No suitable transition found in non-terminal state "${currStateName}"`);
     }
   } else {
-    setFlowStatus(uri, flow.flowName, currStateName, FLOW_STATUS_COMPLETE);
-    addProvenanceEvent(uri, flow.flowName, currStateName, 'COMPLETED');
+    setFlowStatus(uri, flowName, currStateName, FLOW_STATUS_COMPLETE);
+    addProvenanceEvent(uri, flowName, currStateName, 'COMPLETED');
   }
+}
+
+function handleStateFailure(uri, flowName, flow, stateName, err) {
+  const currState = flow.States[stateName];
+  xdmp.log(`handling state failures for state: ${stateName}`);
+
+  if ('task' === currState.Type.toLowerCase() || 'choice' === currState.Type.toLowerCase()) {
+    if (currState.Catch && currState.Catch.length > 0) {
+      // find a matching fallback state
+      let target = currState.Catch.reduce((acc, fallback) => {
+        if (!acc) {
+          if (
+            fallback.ErrorEquals.includes(err.name) ||
+            fallback.ErrorEquals.includes('States.ALL') ||
+            fallback.ErrorEquals.includes('*')
+          ) {
+            acc = fallback.Next;
+          }
+        }
+        return acc;
+      }, null);
+      
+      if (target) {
+        xdmp.log(`transitioning to fallback state "${target}"`);
+        setFlowStatus(uri, flowName, target);
+        addProvenanceEvent(uri, flowName, stateName, target);
+        return;
+      }
+    }
+  }
+  // unhandled exception
+  xdmp.log(`no Catch defined for error "${err.name}" in state "${stateName}"`, 'error');
+  fn.error(null, 'INVALID-STATE-DEFINITION', Sequence.from([
+    `Unhandled exception of type ${err.name} in state "${stateName}`,
+    err
+  ]));
 }
 
 /**
@@ -350,8 +401,8 @@ function executeStateTransition(uri, flow) {
  * @param {*} flow
  * @returns
  */
-function inTerminalState(uri, flow) {
-  const currStateName = getFlowState(uri, flow.flowName);
+function inTerminalState(uri, flowName, flow) {
+  const currStateName = getFlowState(uri, flowName);
   let currState = flow.States[currStateName];
   
   if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
@@ -366,6 +417,12 @@ function inTerminalState(uri, flow) {
   );
 }
 
+/**
+ * Calculates the state of documents being processed by, and completed through this flow
+ *
+ * @param {*} flowName
+ * @returns
+ */
 function getFlowCounts(flowName) {
   const flow = getFlowDocument(flowName).toObject();
   const states = Object.keys(flow.States);
@@ -420,8 +477,10 @@ module.exports = {
   getFlowCounts,
   getFlowDocument,
   getFlowDocuments,
+  getFlowNameFromUri,
   getFlowState,
   getFlowStatus,
+  handleStateFailure,
   inTerminalState,
   isDocumentInProcess,
   performStateActions,

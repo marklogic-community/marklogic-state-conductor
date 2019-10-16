@@ -1,0 +1,34 @@
+{
+  "Comment": "processes data from the MarkLogic Kafka Connector",
+  "mlDomain": {
+    "contentDatabase": "state-conductor-content",
+    "modulesDatabase": "state-conductor-modules",
+    "context": [
+      {
+        "scope": "collection",
+        "value": "kafka-data"
+      }
+    ]
+  },
+  "StartAt": "runDhf5MakeEnvelopeStep",
+  "States": {
+    "runDhf5MakeEnvelopeStep": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "runs a dhf 5 flow",
+      "Resource": "/state-conductor/actions/common/dhf/dhf5MakeEnvelopeStep.sjs",
+      "Parameters": {
+        "collections": ["dhf5MakeEnvelopeStep"]
+      },
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "FailState"
+        }
+      ]
+    },
+    "FailState": {
+      "Type": "Fail"
+    }
+  }
+}

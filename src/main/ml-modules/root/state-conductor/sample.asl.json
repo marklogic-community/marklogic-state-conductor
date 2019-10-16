@@ -1,22 +1,23 @@
 {
-  "flowName": "test flow",
   "Comment": "does things",
-  "contentDatabase": "content-db",
-  "modulesDatabase": "modules-db",
-  "context": [
-    {
-      "domain": "collection",
-      "value": "my-cool-doc"
-    },
-    {
-      "domain": "directory",
-      "value": "/my/cool/doc/"
-    },
-    {
-      "domain": "custom",
-      "value": "{\"andQuery\":{\"queries\":[{\"collectionQuery\":{\"uris\":[\"flow-time\"]}}, {\"elementValueQuery\":{\"element\":[\"name\"], \"text\":[\"Cobb Pauley\"], \"options\":[\"lang=en\"]}}]}}"
-    }
-  ],
+  "mlDomain": {
+    "contentDatabase": "content-db",
+    "modulesDatabase": "modules-db",
+    "context": [
+      {
+        "scope": "collection",
+        "value": "my-cool-doc"
+      },
+      {
+        "scope": "directory",
+        "value": "/my/cool/doc/"
+      },
+      {
+        "scope": "custom",
+        "value": "{\"andQuery\":{\"queries\":[{\"collectionQuery\":{\"uris\":[\"flow-time\"]}}, {\"elementValueQuery\":{\"element\":[\"name\"], \"text\":[\"Cobb Pauley\"], \"options\":[\"lang=en\"]}}]}}"
+      }
+    ]
+  },
   "StartAt": "A",
   "States": {
     "A": {

@@ -1,14 +1,15 @@
 {
-  "flowName": "harmonize-flow",
   "Comment": "makes things",
-  "contentDatabase": "state-conductor-content",
-  "modulesDatabase": "state-conductor-modules",
-  "context": [
-    {
-      "domain": "collection",
-      "value": "flow-time"
-    }
-  ],
+  "mlDomain": {
+    "contentDatabase": "state-conductor-content",
+    "modulesDatabase": "state-conductor-modules",
+    "context": [
+      {
+        "scope": "collection",
+        "value": "flow-time"
+      }
+    ]
+  },
   "StartAt": "needs-envelope",
   "States": {
     "needs-envelope": {

@@ -1,14 +1,15 @@
 {
-  "flowName": "branching-test-flow",
   "Comment": "does things",
-  "contentDatabase": "state-conductor-content",
-  "modulesDatabase": "state-conductor-modules",
-  "context": [
-    {
-      "domain": "collection",
-      "value": "enrollee"
-    }
-  ],
+  "mlDomain": {
+    "contentDatabase": "state-conductor-content",
+    "modulesDatabase": "state-conductor-modules",
+    "context": [
+      {
+        "scope": "collection",
+        "value": "enrollee"
+      }
+    ]
+  },
   "StartAt": "find-gender",
   "States": {
     "find-gender": {

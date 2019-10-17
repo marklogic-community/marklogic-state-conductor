@@ -1,0 +1,25 @@
+{
+  "Comment": "Adds documents to a batch file",
+  "mlDomain": {
+    "contentDatabase": "state-conductor-content",
+    "modulesDatabase": "state-conductor-modules",
+    "context": [
+      {
+        "scope": "directory",
+        "value": "/abc/"
+      }
+    ]
+  },
+  "StartAt": "Batcher",
+  "States": {
+    "Batcher": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "generates a batch processor file",
+      "Resource": "/state-conductor/actions/common/examples/batchOfOne.sjs",
+      "Parameters": {
+        "collections": ["batch"]
+      }
+    }
+  }
+}

@@ -360,6 +360,18 @@ function executeStateTransition(uri, flowName, flow) {
   }
 }
 
+
+/**
+ * Processes a caught error for "Task" and "Choice" states
+ * Uses "Choices" to transition to a failure state
+ *
+ * @param {*} uri
+ * @param {*} flowName
+ * @param {*} flow
+ * @param {*} stateName
+ * @param {*} err
+ * @returns
+ */
 function handleStateFailure(uri, flowName, flow, stateName, err) {
   const currState = flow.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
@@ -429,50 +441,82 @@ function getFlowCounts(flowName) {
   const flow = getFlowDocument(flowName).toObject();
   const states = Object.keys(flow.States);
 
-  let numComplete = fn.count(
+  const numInStatus = (status) => fn.count(
     cts.uris('', 'properties', 
       cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
         cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
-        cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATUS_COMPLETE)
-      ]))
-    )
-  );
-  let numWorking = fn.count(
-    cts.uris('', 'properties', 
-      cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
-        cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
-        cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATUS_WORKING)
+        cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), status)
       ]))
     )
   );
 
-  const status = {
+  const numInState = (status, state) => fn.count(
+    cts.uris('', 'properties', 
+      cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
+        cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
+        cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'state-name'), state),
+        cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), status)
+      ]))
+    )
+  );
+
+  let numComplete = numInStatus(FLOW_STATUS_COMPLETE);
+  let numWorking = numInStatus(FLOW_STATUS_WORKING);
+
+  const resp = {
     flowName: flowName,
-    complete: numComplete,
-    working: numWorking
+    totalComplete: numComplete,
+    totalWorking: numWorking
   };
 
-  states.forEach(state => {
-    let numInState = fn.count(
-      cts.uris('', 'properties', 
-        cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
-          cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
-          cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'state-name'), state),
-          cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATUS_WORKING)
-        ]))
-      )
-    );
-    status[state] = numInState;
-  });
+  resp[FLOW_STATUS_WORKING] = {};
+  resp[FLOW_STATUS_COMPLETE] = {};
 
-  return status;
+  [FLOW_STATUS_WORKING, FLOW_STATUS_COMPLETE].forEach(status => {
+    states.forEach(state => {
+      resp[status][state] = numInState(status, state);
+    });
+  });  
+
+  return resp;
 }
 
+
+/**
+ * Convienence function to create a json record for a batch of documents to be
+ * processed by state conductor flows.  The created document contains a "uris"
+ * array, and context object.  The document is created in the "/batch"
+ * directory with the "stateConductorBatch" collection
+ *
+ * @param {*} [uris=[]]
+ * @param {*} [context={}]
+ * @param {*} [options={}]
+ */
+function createBatchRecord(uris = [], context = {}, options = {}) {
+  const collections = ['stateConductorBatch'].concat(options.collections || []);
+  const directory = options.directory || '/batch/';
+  
+  const id = sem.uuidString();
+  const batchUri = directory + id + '.json';
+
+  const batch = {
+    id: id,
+    uris: uris,
+    createdDate: (new Date()).getTime(),
+    context: context
+  };
+
+  xdmp.log(`inserting batch document: ${batchUri}`);
+  xdmp.documentInsert(batchUri, batch, {
+    collections: collections
+  });
+}
 
 module.exports = {
   TRACE_EVENT,
   addProvenanceEvent,
   checkFlowContext,
+  createBatchRecord,
   executeStateTransition,
   getApplicableFlows,
   getInitialState,

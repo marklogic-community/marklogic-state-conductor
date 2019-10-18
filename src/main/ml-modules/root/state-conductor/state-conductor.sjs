@@ -4,6 +4,7 @@ const TRACE_EVENT = 'state-conductor';
 
 const FLOW_FILE_EXTENSION       = '.asl.json';
 const FLOW_COLLECTION           = 'state-conductor-flow';
+const FLOW_DIRECTORY            = '/state-conductor-flow/';
 const FLOW_STATE_PROP_NAME      = 'state-conductor-status';
 const FLOW_PROVENANCE_PROP_NAME = 'state-conductor-status-event';
 const FLOW_STATUS_WORKING       = 'working';
@@ -45,7 +46,7 @@ function getFlowDocument(name) {
  * @returns
  */
 function getFlowDocuments() {
-  return fn.collection('state-conductor-flow');
+  return fn.collection(FLOW_COLLECTION);
 }
 
 
@@ -514,6 +515,8 @@ function createBatchRecord(uris = [], context = {}, options = {}) {
 
 module.exports = {
   TRACE_EVENT,
+  FLOW_COLLECTION,
+  FLOW_DIRECTORY,
   addProvenanceEvent,
   checkFlowContext,
   createBatchRecord,

@@ -1,4 +1,71 @@
 plugins {
+  id "java"
+  id "maven-publish"
+  id "com.jfrog.bintray" version "1.5"
   id "net.saliman.properties" version "1.5.1"
   id "com.marklogic.ml-gradle" version "3.16.1"
+}
+
+group = "com.marklogic"
+version = "1.0.0"
+
+configurations {
+  modules
+}
+
+task sourcesJar(type: Jar) {
+  description = "Creates a jar of the modules"
+  classifier "sources"
+  from "src/main/ml-modules"
+  destinationDir file("build/libs")
+}
+
+task modulesJar(type: Jar) {
+  description = "Create a jar of the source-conductor modules and configurations into a package for publishing"
+  from("src/main/ml-config") {
+    into("marklogic-state-conductor-modules/ml-config")
+  }
+  from("src/main/ml-modules") {
+    into("marklogic-state-conductor-modules/ml-modules")
+  }
+  from("src/main/ml-data") {
+    into("marklogic-state-conductor-modules/ml-data")
+  }
+  destinationDir file("build/libs")
+  baseName "marklogic-state-conductor-modules"
+}
+
+artifacts {
+  modules modulesJar
+}
+
+publishing {
+	publications {
+		sourcesJava(MavenPublication) {
+			artifactId "marklogic-state-conductor-modules"
+			artifact sourcesJar
+		}
+		mainModules(MavenPublication) {
+			artifactId "marklogic-state-conductor-modules"
+			artifact modulesJar
+		}
+	}
+}
+
+if (project.hasProperty("myBintrayUser")) {
+	bintray {
+		user = myBintrayUser
+		key = myBintrayKey
+		publications = ['mainJava', 'sourcesJava']
+		pkg {
+			repo = 'maven'
+			name = project.name
+			licenses = ['Apache-2.0']
+			vcsUrl = 'https://github.com/aclavio/' + project.name + '.git'
+			version {
+				name = project.version
+				released = new Date()
+			}
+		}
+	}
 }

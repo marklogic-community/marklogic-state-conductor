@@ -10,7 +10,7 @@ const FIELD_CTX_QUERY_TIMEOUT   = 300000; // milliseconds (5 mins)
 var uri;
 
 function executeContextRegQuery(uri, regQueryId) {
-  return cts.uris('', null, 
+  return cts.uris('', 'limit=1', 
     cts.andQuery([
       cts.documentQuery(uri),
       cts.registeredQuery(regQueryId, 'unfiltered')

@@ -193,7 +193,7 @@ function getFlowStatus(uri, flowName) {
 function checkFlowContext(uri, flow) {
   if (fn.docAvailable(uri)) {
     const query = getFlowContextQuery(flow);
-    const uris = cts.uris('', null, cts.andQuery([
+    const uris = cts.uris('', 'limit=1', cts.andQuery([
       cts.documentQuery(uri),
       query
     ]));
@@ -206,6 +206,8 @@ function checkFlowContext(uri, flow) {
 /**
  * Given a document's uri, finds all the flows whose context applies,
  * and which have not previously processed this document.
+ * 
+ * TODO: shortcut the first flow the matches
  *
  * @param {*} uri
  * @returns

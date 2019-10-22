@@ -6,8 +6,61 @@ const schema = {
   properties: {
     Comment: { type: 'string' },
     StartAt: { type: 'string' },
-    States: { 
+    States: {
       type: 'object',
+      patternProperties: {
+        '^.{1,128}$': { 
+          type: 'object',
+          oneOf: [
+            {
+              type: 'object',
+              properties: {
+                Type: {
+                  type: 'string',
+                  pattern: '^Pass$'
+                }
+              }
+            },
+            {
+              type: 'object',
+              properties: {
+                Type: {
+                  type: 'string',
+                  pattern: '^Succeed$'
+                }
+              }
+            },
+            {
+              type: 'object',
+              properties: {
+                Type: {
+                  type: 'string',
+                  pattern: '^Fail$'
+                }
+              }
+            },
+            {
+              type: 'object',
+              properties: {
+                Type: {
+                  type: 'string',
+                  pattern: '^Task$'
+                }
+              }
+            },
+            {
+              type: 'object',
+              properties: {
+                Type: {
+                  type: 'string',
+                  pattern: '^Choice$'
+                }
+              }
+            }
+          ]
+        }
+      },
+      additionalProperties: false
     },
     Version: { type: 'string' },
     mlDomain: {

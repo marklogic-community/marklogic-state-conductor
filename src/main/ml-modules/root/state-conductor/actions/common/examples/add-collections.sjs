@@ -2,9 +2,6 @@
  * adds one or more collections to the document
  */
 
-var uri;
-var options;
-
 function performAction(uri, options = {}) {
 
   // add optional collections
@@ -14,4 +11,4 @@ function performAction(uri, options = {}) {
   
 }
 
-performAction(uri, options);
+exports.performAction = performAction;

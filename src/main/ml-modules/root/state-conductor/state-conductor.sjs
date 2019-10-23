@@ -286,7 +286,7 @@ function performStateActions(uri, flow, stateName) {
       xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
 
       if (state.Resource) {
-        executeModule(state.Resource, uri, state.Parameters, flow);
+        executeActionModule(state.Resource, uri, state.Parameters, flow);
       } else {
         fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
       }
@@ -306,6 +306,24 @@ function executeModule(modulePath, uri, options, flow) {
     modules: xdmp.database(flow.mlDomain.modulesDatabase),
     isolation: 'same-statement'
   });
+}
+
+function executeActionModule(modulePath, uri, options, flow) {
+  const actionModule = require(modulePath);
+  if (typeof actionModule.performAction === 'function') {
+    return actionModule.performAction(uri, options, flow);
+  } else {
+    fn.error(null, 'INVALID-STATE-DEFINITION', `no "performAction" function defined for action module "${modulePath}"`);
+  }
+}
+
+function executeConditionModule(modulePath, uri, options, flow) {
+  const conditionModule = require(modulePath);
+  if (typeof conditionModule.checkCondition === 'function') {
+    return conditionModule.checkCondition(uri, options, flow);
+  } else {
+    fn.error(null, 'INVALID-STATE-DEFINITION', `no "checkCondition" function defined for condition module "${modulePath}"`);
+  }
 }
 
 /**
@@ -335,7 +353,7 @@ function executeStateTransition(uri, flowName, flow) {
         currState.Choices.forEach(choice => {
           if (!target) {
             if (choice.Resource) {
-              let resp = fn.head(executeModule(choice.Resource, uri, choice.Parameters, flow));
+              let resp = fn.head(executeConditionModule(choice.Resource, uri, choice.Parameters, flow));
               target = resp ? choice.Next : null;
             } else {
               fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${currStateName}"`);  

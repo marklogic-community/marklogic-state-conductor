@@ -1,11 +1,8 @@
 'use strict';
 
-declareUpdate();
-
-var uri;
-var options;
 
 function performAction(uri, options = {}) {
+  declareUpdate();
   const batchDoc = cts.doc(uri);
   const batch = batchDoc.toObject();
 
@@ -24,4 +21,4 @@ function performAction(uri, options = {}) {
   });  
 }
 
-performAction(uri, options);
+exports.performAction = performAction;

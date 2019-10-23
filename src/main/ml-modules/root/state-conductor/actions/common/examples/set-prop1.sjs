@@ -1,11 +1,8 @@
 'use strict';
 
-declareUpdate();
-
-var uri;
-var flow;
-
-function doAction(uri) {
+function performAction(uri) {
+  declareUpdate();
+  xdmp.log('performing action "set-prop1.sjs"');
   const doc = cts.doc(uri);
   const obj = doc.toObject();
 
@@ -14,5 +11,4 @@ function doAction(uri) {
   xdmp.nodeReplace(doc.root, obj);
 }
 
-xdmp.log('performing action "set-prop1.sjs"');
-doAction(uri, flow);
+exports.performAction = performAction;

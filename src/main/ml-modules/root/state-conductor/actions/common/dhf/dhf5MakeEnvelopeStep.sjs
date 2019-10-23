@@ -1,8 +1,5 @@
 const dhf5Ingestion = require('/data-hub/5/builtins/steps/ingestion/default/main.sjs');
 
-var uri;
-var options;
-
 function performAction(uri, options = {}) {
   const doc = cts.doc(uri);
 
@@ -38,4 +35,4 @@ function performAction(uri, options = {}) {
   return flowResponse.value;
 }
 
-performAction(uri, options);
+exports.performAction = performAction;

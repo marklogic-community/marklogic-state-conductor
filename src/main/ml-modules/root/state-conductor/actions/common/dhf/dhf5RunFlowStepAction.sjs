@@ -1,9 +1,6 @@
 const DataHub = require('/data-hub/5/datahub.sjs');
 const datahub = new DataHub();
 
-var uri;
-var options;
-
 // THIS OPERATES ON A BATCH OF URIS
 function performAction(uri, options = {}) {
   const doc = cts.doc(uri);
@@ -47,4 +44,4 @@ function performAction(uri, options = {}) {
   return flowResponse;
 }
 
-performAction(uri, options);
+exports.performAction = performAction;

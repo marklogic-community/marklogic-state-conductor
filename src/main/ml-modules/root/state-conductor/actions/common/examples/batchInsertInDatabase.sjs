@@ -2,9 +2,6 @@
  * inserts document(s) into the given database
  */
 
-var uri;
-var options;
-
 function performAction(uri, options = {}) {
   const doc = cts.doc(uri);
   const batch = doc.toObject();
@@ -25,4 +22,4 @@ function performAction(uri, options = {}) {
   });  
 }
 
-performAction(uri, options);
+exports.performAction = performAction;

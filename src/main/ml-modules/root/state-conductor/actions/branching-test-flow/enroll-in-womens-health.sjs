@@ -1,11 +1,7 @@
 'use strict';
 
-declareUpdate();
-
-var uri;
-var flow;
-
-function doAction(uri) {
+function performAction(uri) {
+  declareUpdate();
   const doc = cts.doc(uri);
   const obj = doc.toObject();
 
@@ -15,4 +11,4 @@ function doAction(uri) {
   xdmp.documentAddCollections(uri, 'womens-health');
 }
 
-doAction(uri, flow);
+exports.performAction = performAction;

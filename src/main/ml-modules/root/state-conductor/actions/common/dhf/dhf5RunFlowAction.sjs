@@ -1,15 +1,11 @@
 const DataHub = require('/data-hub/5/datahub.sjs');
 const datahub = new DataHub();
 
-// THIS OPERATES ON A BATCH OF URIS
 function performAction(uri, options = {}) {
-  const doc = cts.doc(uri);
-  const batch = doc.toObject();
-  const context = batch.context || {};
 
   // find the dhf flow to execute
-  const flowName = options.flowName || context.flowName || null;
-  const flowOptions = options.flowOptions || context.flowOptions || {};
+  const flowName = options.flowName || null;
+  const flowOptions = options.flowOptions || {};
   const flow = datahub.flow.getFlow(flowName);
 
   if (!flow) {
@@ -20,11 +16,9 @@ function performAction(uri, options = {}) {
   const numSteps = Object.keys(flow.steps).length;
 
   // setup the dhf runFlow content
-  const contentObjs = batch.uris.map(uri => {  
-    return {
-      uri: uri,
-    };  
-  });
+  const contentObj = {  
+    uri: uri  
+  };
 
   xdmp.log(Sequence.from([
     'Execute DHF flow:',
@@ -39,7 +33,7 @@ function performAction(uri, options = {}) {
     // execute the flows step
     let flowResponse;
     xdmp.invokeFunction(() => {
-      flowResponse = datahub.flow.runFlow(flowName, null, contentObjs, flowOptions, i);
+      flowResponse = datahub.flow.runFlow(flowName, null, contentObj, flowOptions, i);
     });
     // abort on error
     if (flowResponse.errors && flowResponse.errors.length) {

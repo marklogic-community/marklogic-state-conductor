@@ -1,8 +1,8 @@
 {
   "domain-name": "state-conductor-domain",
   "description": "State Conductor CPF domain",
-  "scope": "directory",
-  "uri": "/",
+  "scope": "collection",
+  "uri": "stateConductorJob",
   "depth": "infinity",
   "eval-module": "%%MODULES_DATABASE%%",
   "eval-root": "/",

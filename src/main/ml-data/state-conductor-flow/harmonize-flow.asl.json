@@ -1,8 +1,6 @@
 {
   "Comment": "makes things",
   "mlDomain": {
-    "contentDatabase": "state-conductor-content",
-    "modulesDatabase": "state-conductor-modules",
     "context": [
       {
         "scope": "collection",

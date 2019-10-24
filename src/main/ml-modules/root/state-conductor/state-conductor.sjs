@@ -6,6 +6,7 @@ const FLOW_FILE_EXTENSION       = '.asl.json';
 const FLOW_COLLECTION           = 'state-conductor-flow';
 const FLOW_DIRECTORY            = '/state-conductor-flow/';
 const FLOW_STATE_PROP_NAME      = 'state-conductor-status';
+const FLOW_JOBID_PROP_NAME      = 'state-conductor-job';
 const FLOW_PROVENANCE_PROP_NAME = 'state-conductor-status-event';
 const FLOW_STATUS_WORKING       = 'working';
 const FLOW_STATUS_COMPLETE      = 'complete';
@@ -90,6 +91,14 @@ function getFlowStatusProperty(uri, flowName) {
   }
 }
 
+function getJobMetadatProperty(uri, flowName) {
+  if (fn.docAvailable(uri)) {
+    return xdmp.documentGetProperties(uri, fn.QName('', FLOW_JOBID_PROP_NAME))
+      .toArray()
+      .filter(prop => prop.getAttributeNode('flow-name').nodeValue === flowName);
+  }
+}
+
 /**
  * Determines if this document is being processed by any state conductor flow
  * <state-conductor-status flow="flow-name" state="state-name">flow-status</state-conductor-status>
@@ -147,6 +156,17 @@ function setFlowStatus(uri, flowName, stateName, status = FLOW_STATUS_WORKING) {
   }
 }
 
+function addJobMetadata(uri, flowName, jobId) {
+  const builder = new NodeBuilder();
+  builder.startElement(FLOW_JOBID_PROP_NAME);
+  builder.addAttribute('flow-name', flowName);
+  builder.addAttribute('job-id', jobId);
+  builder.addAttribute('date', (new Date()).toISOString());
+  builder.endElement();
+  let jobMetaElem = builder.toNode();
+  xdmp.documentAddProperties(uri, [jobMetaElem]);
+}
+
 function addProvenanceEvent(uri, flowName, currState = '', nextState = '') {
   const builder = new NodeBuilder();
   builder.startElement(FLOW_PROVENANCE_PROP_NAME);
@@ -183,6 +203,11 @@ function getFlowStatus(uri, flowName) {
   return statusProp ? statusProp.firstChild.nodeValue : null;
 }
 
+function getJobIds(uri, flowName) {
+  const jobProps = getJobMetadatProperty(uri, flowName);
+  return jobProps.map(prop => prop.getAttributeNode('job-id').nodeValue);
+}
+
 /**
  * Determines if the given document matches the given flow's context
  *
@@ -206,8 +231,6 @@ function checkFlowContext(uri, flow) {
 /**
  * Given a document's uri, finds all the flows whose context applies,
  * and which have not previously processed this document.
- * 
- * TODO: shortcut the first flow the matches
  *
  * @param {*} uri
  * @returns
@@ -216,7 +239,7 @@ function getApplicableFlows(uri) {
   const flows = getFlowDocuments().toArray().filter(flow => {
     let flowName = getFlowNameFromUri(fn.documentUri(flow));
     let flowOjb = flow.toObject();
-    return !getFlowStatus(uri, flowName) && checkFlowContext(uri, flowOjb);
+    return getJobIds(uri, flowName).length === 0 && !getFlowStatus(uri, flowName) && checkFlowContext(uri, flowOjb);
   });
 
   return flows;
@@ -280,13 +303,14 @@ function getAllFlowsContextQuery() {
  * @param {*} stateName
  */
 function performStateActions(uri, flow, stateName) {
+  const job = cts.doc(uri).toObject();
   const state = flow.States[stateName];
   if (state) {
     if (state.Type && state.Type.toLowerCase() === 'task') {
       xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
 
       if (state.Resource) {
-        executeActionModule(state.Resource, uri, state.Parameters, flow);
+        executeActionModule(state.Resource, job.uri, state.Parameters, flow);
       } else {
         fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
       }
@@ -294,18 +318,6 @@ function performStateActions(uri, flow, stateName) {
   } else {
     fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
   }
-}
-
-function executeModule(modulePath, uri, options, flow) {
-  return xdmp.invoke(modulePath, {
-    uri: uri,
-    options: options,
-    flow: flow
-  }, {
-    database: xdmp.database(flow.mlDomain.contentDatabase),
-    modules: xdmp.database(flow.mlDomain.modulesDatabase),
-    isolation: 'same-statement'
-  });
 }
 
 function executeActionModule(modulePath, uri, options, flow) {
@@ -335,6 +347,7 @@ function executeConditionModule(modulePath, uri, options, flow) {
  * @param {*} flow
  */
 function executeStateTransition(uri, flowName, flow) {
+  const job = cts.doc(uri).toObject();
   const currStateName = getFlowState(uri, flowName);
   xdmp.trace(TRACE_EVENT, `executing transtions for state: ${currStateName}`);
 
@@ -353,7 +366,7 @@ function executeStateTransition(uri, flowName, flow) {
         currState.Choices.forEach(choice => {
           if (!target) {
             if (choice.Resource) {
-              let resp = fn.head(executeConditionModule(choice.Resource, uri, choice.Parameters, flow));
+              let resp = fn.head(executeConditionModule(choice.Resource, job.uri, choice.Parameters, flow));
               target = resp ? choice.Next : null;
             } else {
               fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${currStateName}"`);  
@@ -504,57 +517,77 @@ function getFlowCounts(flowName) {
 
 
 /**
- * Convienence function to create a json record for a batch of documents to be
- * processed by state conductor flows.  The created document contains a "uris"
- * array, and context object.  The document is created in the "/batch"
- * directory with the "stateConductorBatch" collection
+ * Convienence function to create a job record for a document to be
+ * processed by a state conductor flow.
  *
- * @param {*} [uris=[]]
+ * @param {*} flowName
+ * @param {*} uri
  * @param {*} [context={}]
  * @param {*} [options={}]
  */
-function createBatchRecord(uris = [], context = {}, options = {}) {
-  const collections = ['stateConductorBatch'].concat(options.collections || []);
-  const directory = options.directory || '/batch/';
+function createStateConductorJob(flowName, uri, context = {}, options = {}) {
+  const collections = ['stateConductorJob'].concat(options.collections || []);
+  const directory = options.directory || '/stateConductorJob/';
   
   const id = sem.uuidString();
-  const batchUri = directory + id + '.json';
+  const jobUri = directory + id + '.json';
 
-  const batch = {
+  const job = {
     id: id,
-    uris: uris,
+    flowName: flowName,
+    uri: uri,
     createdDate: (new Date()).getTime(),
     context: context
   };
 
-  xdmp.log(`inserting batch document: ${batchUri}`);
-  xdmp.documentInsert(batchUri, batch, {
+  xdmp.log(`inserting job document: ${jobUri}`);
+  xdmp.documentInsert(jobUri, job, {
     collections: collections
   });
+
+  return id;
+}
+
+/**
+ * Convienence function to create job records for a batch of documents to be
+ * processed by a state conductor flow.
+ *
+ * @param {*} flowName
+ * @param {*} [uris=[]]
+ * @param {*} [context={}]
+ * @param {*} [options={}]
+ * @returns
+ */
+function batchCreateStateConductorJob(flowName, uris = [], context = {}, options = {}) {
+  const ids = uris.map(uri => createStateConductorJob(flowName, uri, context, options));
+  return ids;
 }
 
 module.exports = {
   TRACE_EVENT,
   FLOW_COLLECTION,
   FLOW_DIRECTORY,
+  addJobMetadata,
   addProvenanceEvent,
+  batchCreateStateConductorJob,
   checkFlowContext,
-  createBatchRecord,
+  createStateConductorJob,
   executeStateTransition,
+  getAllFlowsContextQuery,
   getApplicableFlows,
-  getInitialState,
-  getInProcessFlows,
+  getFlowContextQuery,
   getFlowCounts,
   getFlowDocument,
   getFlowDocuments,
   getFlowNameFromUri,
   getFlowState,
   getFlowStatus,
+  getInitialState,
+  getInProcessFlows,
+  getJobIds,
   handleStateFailure,
   inTerminalState,
   isDocumentInProcess,
   performStateActions,
-  setFlowStatus,
-  getAllFlowsContextQuery,
-  getFlowContextQuery
+  setFlowStatus
 };

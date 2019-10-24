@@ -66,8 +66,6 @@ const schema = {
     mlDomain: {
       type: 'object',
       properties: {
-        contentDatabase: { type: 'string' },
-        modulesDatabase: { type: 'string' },
         context: {
           type: 'array',
           minItems: 1,
@@ -83,7 +81,7 @@ const schema = {
         }
       },
       additionalProperties: false,
-      required: ['contentDatabase', 'modulesDatabase', 'context']
+      required: ['context']
     }
   },
   additionalProperties: false,

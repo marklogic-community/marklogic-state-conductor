@@ -3,21 +3,16 @@ const datahub = new DataHub();
 
 // THIS OPERATES ON A BATCH OF URIS
 function performAction(uri, options = {}) {
-  const doc = cts.doc(uri);
-  const batch = doc.toObject();
-  const context = batch.context || {};
-  
+   
   // find the dhf flow and step to execute
-  const step = options.step || context.step || null;
-  const flowName = options.flowName || context.flowName || null;
-  const flowOptions = options.flowOptions || context.flowOptions || {};
+  const step = options.step || null;
+  const flowName = options.flowName || null;
+  const flowOptions = options.flowOptions || {};
 
   // setup the dhf runFlow content
-  const contentObjs = batch.uris.map(uri => {  
-    return {
-      uri: uri,
-    };  
-  });
+  const contentObjs = {
+    uri: uri,
+  };
 
   xdmp.log(Sequence.from([
     'Execute DHF flow:',

@@ -1,0 +1,23 @@
+{
+  "Comment": "does things",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "collection",
+        "value": "chain2"
+      }
+    ]
+  },
+  "StartAt": "add-collections",
+  "States": {
+    "add-collections": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "adds a collection",
+      "Resource": "/state-conductor/actions/common/examples/add-collections.sjs",
+      "Parameters": {
+        "collections": ["chain-done"]
+      }
+    }
+  }
+}

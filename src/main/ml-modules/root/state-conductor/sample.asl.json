@@ -1,8 +1,6 @@
 {
   "Comment": "does things",
   "mlDomain": {
-    "contentDatabase": "content-db",
-    "modulesDatabase": "modules-db",
     "context": [
       {
         "scope": "collection",

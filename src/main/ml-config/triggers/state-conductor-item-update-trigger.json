@@ -1,0 +1,21 @@
+{
+  "name": "state-conductor-item-update-trigger",
+  "description": "creates a batch file pointing the triggering document and applicable flows for state condutor to operate on",
+  "event": {
+    "data-event": {
+      "collection-scope": {
+        "uri": "state-conductor-item"
+      },
+      "document-content": {
+        "update-kind": "modify"
+      },
+      "when": "pre-commit"
+    }
+  },
+  "module": "state-conductor/state-conductor-item-trigger.sjs",
+  "module-db": "%%MODULES_DATABASE%%",
+  "module-root": "/",
+  "enabled": true,
+  "recursive": false,
+  "task-priority": "normal"
+}

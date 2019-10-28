@@ -12,7 +12,7 @@
       "when": "pre-commit"
     }
   },
-  "module": "state-conductor/state-conductor-item-trigger.sjs",
+  "module": "state-conductor/trigger/state-conductor-item-trigger.sjs",
   "module-db": "%%MODULES_DATABASE%%",
   "module-root": "/",
   "enabled": true,

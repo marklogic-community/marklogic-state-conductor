@@ -515,6 +515,23 @@ function getFlowCounts(flowName) {
   return resp;
 }
 
+// checks if its a temporal document and if its latested document
+function isLatestTemporalDocument(uri){
+  const temporal = require('/MarkLogic/temporal.xqy');
+
+  const temporalCollections = temporal.collections().toArray();
+
+  const documentCollections = xdmp.documentGetCollections(uri);
+
+  const hasTemporalCollection = temporalCollections.some(function (collection) {
+    //the temporalCollections are not strings so we need to convert them into strings
+    return documentCollections.indexOf(collection.toString()) > -1;
+  });
+  
+  return ( (hasTemporalCollection.length > 0) && documentCollections.indexOf('latest') > -1);
+
+}
+
 
 /**
  * Convienence function to create a job record for a document to be

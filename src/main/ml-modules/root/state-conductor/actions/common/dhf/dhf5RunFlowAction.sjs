@@ -33,7 +33,7 @@ function performAction(uri, options = {}) {
     // execute the flows step
     let flowResponse;
     xdmp.invokeFunction(() => {
-      flowResponse = datahub.flow.runFlow(flowName, null, contentObj, flowOptions, i);
+      flowResponse = datahub.flow.runFlow(flowName, null, [contentObj], flowOptions, i);
     });
     // abort on error
     if (flowResponse.errors && flowResponse.errors.length) {

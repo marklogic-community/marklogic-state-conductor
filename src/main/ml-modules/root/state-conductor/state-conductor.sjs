@@ -3,6 +3,7 @@
 const TRACE_EVENT = 'state-conductor';
 
 const FLOW_FILE_EXTENSION       = '.asl.json';
+const FLOW_ITEM_COLLECTION      = 'state-conductor-item';
 const FLOW_COLLECTION           = 'state-conductor-flow';
 const FLOW_DIRECTORY            = '/state-conductor-flow/';
 const FLOW_STATE_PROP_NAME      = 'state-conductor-status';
@@ -409,6 +410,7 @@ function executeStateTransition(uri, flowName, flow) {
 function handleStateFailure(uri, flowName, flow, stateName, err) {
   const currState = flow.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
+  xdmp.trace(TRACE_EVENT, Sequence.from([err]));
 
   if ('task' === currState.Type.toLowerCase() || 'choice' === currState.Type.toLowerCase()) {
     if (currState.Catch && currState.Catch.length > 0) {
@@ -584,6 +586,7 @@ module.exports = {
   TRACE_EVENT,
   FLOW_COLLECTION,
   FLOW_DIRECTORY,
+  FLOW_ITEM_COLLECTION,
   addJobMetadata,
   addProvenanceEvent,
   batchCreateStateConductorJob,

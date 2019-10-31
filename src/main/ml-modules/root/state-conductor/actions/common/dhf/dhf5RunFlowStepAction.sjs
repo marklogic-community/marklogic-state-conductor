@@ -26,7 +26,7 @@ function performAction(uri, options = {}) {
   // utilizing an invoke to avoid locking on the batched documents
   let flowResponse;
   xdmp.invokeFunction(() => {
-    flowResponse = datahub.flow.runFlow(flowName, null, contentObjs, flowOptions, step);
+    flowResponse = datahub.flow.runFlow(flowName, null, [contentObjs], flowOptions, step);
   });
 
   if (flowResponse.errors && flowResponse.errors.length) {

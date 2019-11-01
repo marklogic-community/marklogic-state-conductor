@@ -304,14 +304,19 @@ function getAllFlowsContextQuery() {
  * @param {*} stateName
  */
 function performStateActions(uri, flow, stateName) {
-  const job = cts.doc(uri).toObject();
+  const doc = cts.doc(uri);
+  const job = doc.toObject();
   const state = flow.States[stateName];
   if (state) {
     if (state.Type && state.Type.toLowerCase() === 'task') {
       xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
 
       if (state.Resource) {
-        executeActionModule(state.Resource, job.uri, state.Parameters, flow);
+        // execute the resource modules
+        let resp = executeActionModule(state.Resource, job.uri, state.Parameters, flow);
+        // update the job context with the response
+        job.context[stateName] = resp;
+        xdmp.nodeReplace(doc.root, job);
       } else {
         fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
       }
@@ -430,8 +435,15 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
       
       if (target) {
         xdmp.trace(TRACE_EVENT, `transitioning to fallback state "${target}"`);
+        // move to the target state
         setFlowStatus(uri, flowName, target);
         addProvenanceEvent(uri, flowName, stateName, target);
+        // capture error message in context
+        const doc = cts.doc(uri);
+        const job = doc.toObject();
+        job.errors = job.errors || {};
+        job.errors[stateName] = err;
+        xdmp.nodeReplace(doc.root, job);
         return;
       }
     }

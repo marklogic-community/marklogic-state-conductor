@@ -11,7 +11,7 @@
         "value": "/my/cool/doc/"
       },
       {
-        "scope": "custom",
+        "scope": "query",
         "value": "{\"andQuery\":{\"queries\":[{\"collectionQuery\":{\"uris\":[\"flow-time\"]}}, {\"elementValueQuery\":{\"element\":[\"name\"], \"text\":[\"Cobb Pauley\"], \"options\":[\"lang=en\"]}}]}}"
       }
     ]

@@ -1,5 +1,4 @@
 'use strict';
-declareUpdate();
 
 const sc = require('/state-conductor/state-conductor.sjs');
 

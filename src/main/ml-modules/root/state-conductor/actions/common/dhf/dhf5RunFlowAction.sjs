@@ -28,6 +28,8 @@ function performAction(uri, options = {}) {
     '  flowOptions: ' + flowOptions,
   ]));
 
+  const resp = {};
+
   // execute the flow's steps in sequence
   for (let i = 1; i <= numSteps; i++) {
     // execute the flows step
@@ -41,10 +43,11 @@ function performAction(uri, options = {}) {
       fn.error(null, flowResponse.errors[0].message, flowResponse.errors[0].stack);
     }
     xdmp.log(flowResponse);  
+
+    resp['' + i] = flowResponse;
   }
 
-  // TODO what to return?
-  return fn.true();
+  return resp;
 }
 
 exports.performAction = performAction;

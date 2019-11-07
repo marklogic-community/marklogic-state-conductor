@@ -32,7 +32,7 @@ function performAction(uri, options = {}) {
     xdmp.documentAddCollections(uri, options.collections);
   }
   
-  return flowResponse.value;
+  return flowResponse;
 }
 
 exports.performAction = performAction;

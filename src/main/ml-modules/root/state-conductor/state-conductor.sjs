@@ -313,7 +313,7 @@ function performStateActions(uri, flow, stateName) {
 
       if (state.Resource) {
         // execute the resource modules
-        let resp = executeActionModule(state.Resource, job.uri, state.Parameters, flow);
+        let resp = executeActionModule(state.Resource, job.uri, state.Parameters, job.context);
         // update the job context with the response
         job.context[stateName] = resp;
         xdmp.nodeReplace(doc.root, job);
@@ -326,19 +326,19 @@ function performStateActions(uri, flow, stateName) {
   }
 }
 
-function executeActionModule(modulePath, uri, options, flow) {
+function executeActionModule(modulePath, uri, options, context) {
   const actionModule = require(modulePath);
   if (typeof actionModule.performAction === 'function') {
-    return actionModule.performAction(uri, options, flow);
+    return actionModule.performAction(uri, options, context);
   } else {
     fn.error(null, 'INVALID-STATE-DEFINITION', `no "performAction" function defined for action module "${modulePath}"`);
   }
 }
 
-function executeConditionModule(modulePath, uri, options, flow) {
+function executeConditionModule(modulePath, uri, options, context) {
   const conditionModule = require(modulePath);
   if (typeof conditionModule.checkCondition === 'function') {
-    return conditionModule.checkCondition(uri, options, flow);
+    return conditionModule.checkCondition(uri, options, context);
   } else {
     fn.error(null, 'INVALID-STATE-DEFINITION', `no "checkCondition" function defined for condition module "${modulePath}"`);
   }
@@ -372,7 +372,7 @@ function executeStateTransition(uri, flowName, flow) {
         currState.Choices.forEach(choice => {
           if (!target) {
             if (choice.Resource) {
-              let resp = fn.head(executeConditionModule(choice.Resource, job.uri, choice.Parameters, flow));
+              let resp = fn.head(executeConditionModule(choice.Resource, job.uri, choice.Parameters, job.context));
               target = resp ? choice.Next : null;
             } else {
               fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${currStateName}"`);  

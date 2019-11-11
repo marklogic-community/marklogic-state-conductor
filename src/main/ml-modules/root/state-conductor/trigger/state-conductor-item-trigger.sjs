@@ -72,8 +72,7 @@ if (checkUriAgainstContext(uri)) {
   // create a state conductor job for each flow that applies
   flows.forEach(flow => {
     const flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
-    const jobId = sc.createStateConductorJob(flowName, uri);
-    sc.addJobMetadata(uri, flowName, jobId); // prevents updates from retriggering this flow
+    sc.createStateConductorJob(flowName, uri);
   });
 }
 

@@ -51,6 +51,14 @@ function getFlowDocuments() {
   return fn.collection(FLOW_COLLECTION);
 }
 
+/**
+ * Gets all flow definition names
+ *
+ * @returns
+ */
+function getFlowNames() {
+  return cts.uris('/', ['document'], cts.collectionQuery(FLOW_COLLECTION)).toArray().map(uri => getFlowNameFromUri(uri));
+}
 
 /**
  * Given a flow definition URI, determine it's flow name
@@ -571,10 +579,13 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     context: context
   };
 
+  // insert the job document
   xdmp.log(`inserting job document: ${jobUri}`);
   xdmp.documentInsert(jobUri, job, {
     collections: collections
   });
+  // add job metadata to the target document
+  addJobMetadata(uri, flowName, id); // prevents updates to the target from retriggering this flow
 
   return id;
 }
@@ -611,6 +622,7 @@ module.exports = {
   getFlowCounts,
   getFlowDocument,
   getFlowDocuments,
+  getFlowNames,
   getFlowNameFromUri,
   getFlowState,
   getFlowStatus,

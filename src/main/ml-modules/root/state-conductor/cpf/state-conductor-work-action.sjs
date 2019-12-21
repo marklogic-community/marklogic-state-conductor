@@ -18,7 +18,10 @@ if (cpf.checkTransition(uri, transition)) {
       xdmp.trace(sc.TRACE_EVENT, `executing flow "${currFlowName}"`);
       const currFlowState = sc.getFlowState(uri, currFlowName);
       xdmp.trace(sc.TRACE_EVENT, `flow state "${currFlowState}"`);
-      const currFlow = sc.getFlowDocument(currFlowName).toObject();
+      //const currFlow = sc.getFlowDocument(currFlowName).toObject();
+      // execute state actions and transition to next state
+      sc.executeState(uri, currFlowName, currFlowState);
+      /*
       try {
         // execute state actions
         sc.performStateActions(uri, currFlow, currFlowState);
@@ -26,7 +29,8 @@ if (cpf.checkTransition(uri, transition)) {
         sc.executeStateTransition(uri, currFlowName, currFlow);
       } catch (err) {
         sc.handleStateFailure(uri, currFlowName, currFlow, currFlowState, err);
-      }      
+      } 
+      */     
       // continue cpf processing - continuing the current flow or any others that apply
       cpf.success(uri, transition, 'http://marklogic.com/states/working');
     } else {

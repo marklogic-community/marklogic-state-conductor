@@ -9,8 +9,10 @@ const FLOW_DIRECTORY            = '/state-conductor-flow/';
 const FLOW_STATE_PROP_NAME      = 'state-conductor-status';
 const FLOW_JOBID_PROP_NAME      = 'state-conductor-job';
 const FLOW_PROVENANCE_PROP_NAME = 'state-conductor-status-event';
+const FLOW_STATUS_NEW           = 'new';
 const FLOW_STATUS_WORKING       = 'working';
 const FLOW_STATUS_COMPLETE      = 'complete';
+const FLOW_STATUS_FAILED        = 'failed';
 
 const SUPPORTED_STATE_TYPES = [
   'choice',
@@ -304,6 +306,94 @@ function getAllFlowsContextQuery() {
   return queries;
 }
 
+function executeState(uri, flowName, stateName) {
+  const jobDoc = cts.doc(uri);
+  const jobObj = jobDoc.toObject();
+  const flowObj = getFlowDocument(flowName).toObject();
+  const state = flowObj.States[stateName];
+
+  try {
+    if (state) {
+      // perform the actions for the "Task" state
+      if (state.Type && state.Type.toLowerCase() === 'task') {
+        xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
+  
+        if (state.Resource) {
+          // execute the resource modules
+          let resp = executeActionModule(state.Resource, jobObj.uri, state.Parameters, jobObj.context);
+          // update the job context with the response
+          jobObj.context[stateName] = resp;
+        } else {
+          fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
+        }
+      }
+
+      // determine the next target state and transition
+      let targetState = null;
+      xdmp.trace(TRACE_EVENT, `executing transtions for state: ${stateName}`);
+
+      if (!inTerminalState(uri, flowName, flowObj)) {    
+        if ('task' === state.Type.toLowerCase()) {
+          targetState = state.Next;
+        } else if ('pass' === state.Type.toLowerCase()) {
+          targetState = state.Next;
+        } else if ('choice' === state.Type.toLowerCase()) {
+          if (state.Choices && state.Choices.length > 0) {
+            state.Choices.forEach(choice => {
+              if (!targetState) {
+                if (choice.Resource) {
+                  let resp = fn.head(executeConditionModule(choice.Resource, jobObj.uri, choice.Parameters, jobObj.context));
+                  targetState = resp ? choice.Next : null;
+                } else {
+                  fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${stateName}"`);  
+                }
+              }
+            });
+            targetState = targetState || state.Default;
+          } else {
+            fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}"`);  
+          }
+        } else {
+          fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"`);
+        }
+
+        // perform the transition
+        if (targetState) {
+          setFlowStatus(uri, flowName, targetState);
+          addProvenanceEvent(uri, flowName, stateName, targetState);
+          jobObj.flowStatus = FLOW_STATUS_WORKING;
+          jobObj.flowState = targetState;
+          jobObj.provenance.push({
+            date: (new Date()).toISOString(),
+            from: stateName,
+            to: targetState
+          });
+        } else {
+          fn.error(null, 'INVALID-STATE-DEFINITION', `No suitable transition found in non-terminal state "${stateName}"`);
+        }
+      } else {
+        // terminal states have no "Next" target state
+        setFlowStatus(uri, flowName, stateName, FLOW_STATUS_COMPLETE);
+        addProvenanceEvent(uri, flowName, stateName, 'COMPLETED');
+        jobObj.flowStatus = FLOW_STATUS_COMPLETE;
+        jobObj.provenance.push({
+          date: (new Date()).toISOString(),
+          from: stateName,
+          to: 'COMPLETED'
+        });
+      }
+
+      // update the state status and provenence in the job doc
+      xdmp.nodeReplace(jobDoc.root, jobObj);
+
+    } else {
+      fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
+    }
+  } catch (err) {
+    handleStateFailure(uri, flowName, flowObj, stateName, err);
+  }
+}
+
 /**
  * Given a document, a flow, and the state in that flow, perform all actions for that state.
  *
@@ -311,6 +401,7 @@ function getAllFlowsContextQuery() {
  * @param {*} flow
  * @param {*} stateName
  */
+/*
 function performStateActions(uri, flow, stateName) {
   const doc = cts.doc(uri);
   const job = doc.toObject();
@@ -333,6 +424,7 @@ function performStateActions(uri, flow, stateName) {
     fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
   }
 }
+*/
 
 function executeActionModule(modulePath, uri, options, context) {
   const actionModule = require(modulePath);
@@ -360,6 +452,7 @@ function executeConditionModule(modulePath, uri, options, context) {
  * @param {*} uri
  * @param {*} flow
  */
+/*
 function executeStateTransition(uri, flowName, flow) {
   const job = cts.doc(uri).toObject();
   const currStateName = getFlowState(uri, flowName);
@@ -407,7 +500,7 @@ function executeStateTransition(uri, flowName, flow) {
     addProvenanceEvent(uri, flowName, currStateName, 'COMPLETED');
   }
 }
-
+*/
 
 /**
  * Processes a caught error for "Task" and "Choice" states
@@ -424,8 +517,12 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
   const currState = flow.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
+  const jobDoc = cts.doc(uri);
+  const jobObj = jobDoc.toObject();
 
-  if ('task' === currState.Type.toLowerCase() || 'choice' === currState.Type.toLowerCase()) {
+  if (currState && (
+    'task' === currState.Type.toLowerCase() || 
+    'choice' === currState.Type.toLowerCase())) {
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
       let target = currState.Catch.reduce((acc, fallback) => {
@@ -447,19 +544,26 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
         setFlowStatus(uri, flowName, target);
         addProvenanceEvent(uri, flowName, stateName, target);
         // capture error message in context
-        const doc = cts.doc(uri);
-        const job = doc.toObject();
-        job.errors = job.errors || {};
-        job.errors[stateName] = err;
-        xdmp.nodeReplace(doc.root, job);
+        jobObj.flowStatus = FLOW_STATUS_WORKING;
+        jobObj.flowState = target;
+        jobObj.provenance.push({
+          date: (new Date()).toISOString(),
+          from: stateName,
+          to: target
+        });
+        jobObj.errors = jobObj.errors || {};
+        jobObj.errors[stateName] = err;
+        xdmp.nodeReplace(jobDoc.root, jobObj);
         return;
       }
     }
   }
   // unhandled exception
   xdmp.trace(TRACE_EVENT, `no Catch defined for error "${err.name}" in state "${stateName}"`);
+  jobObj.flowStatus = FLOW_STATUS_FAILED;
+  xdmp.nodeReplace(jobDoc.root, jobObj);
   fn.error(null, 'INVALID-STATE-DEFINITION', Sequence.from([
-    `Unhandled exception of type ${err.name} in state "${stateName}`,
+    `Unhandled exception of type "${err.name}" in state "${stateName}"`,
     err
   ]));
 }
@@ -518,11 +622,15 @@ function getFlowCounts(flowName) {
 
   let numComplete = numInStatus(FLOW_STATUS_COMPLETE);
   let numWorking = numInStatus(FLOW_STATUS_WORKING);
+  let numNew = numInStatus(FLOW_STATUS_NEW);
+  let numFailed = numInStatus(FLOW_STATUS_FAILED);
 
   const resp = {
     flowName: flowName,
     totalComplete: numComplete,
-    totalWorking: numWorking
+    totalWorking: numWorking,
+    totalFailed: numFailed,
+    totalNew: numNew
   };
 
   resp[FLOW_STATUS_WORKING] = {};
@@ -540,18 +648,15 @@ function getFlowCounts(flowName) {
 // checks if its a temporal document and if its latested document
 function isLatestTemporalDocument(uri){
   const temporal = require('/MarkLogic/temporal.xqy');
-
   const temporalCollections = temporal.collections().toArray();
-
   const documentCollections = xdmp.documentGetCollections(uri);
 
-  const hasTemporalCollection = temporalCollections.some(function (collection) {
+  const hasTemporalCollection = temporalCollections.some(collection => {
     //the temporalCollections are not strings so we need to convert them into strings
-    return documentCollections.indexOf(collection.toString()) > -1;
+    return documentCollections.includes(collection.toString());
   });
   
-  return ( (hasTemporalCollection.length > 0) && documentCollections.indexOf('latest') > -1);
-
+  return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
 }
 
 
@@ -574,9 +679,12 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   const job = {
     id: id,
     flowName: flowName,
+    flowStatus: FLOW_STATUS_NEW,
+    flowState: null,
     uri: uri,
-    createdDate: (new Date()).getTime(),
-    context: context
+    createdDate: (new Date()).toISOString(),
+    context: context,
+    provenance: []
   };
 
   // insert the job document
@@ -615,7 +723,8 @@ module.exports = {
   batchCreateStateConductorJob,
   checkFlowContext,
   createStateConductorJob,
-  executeStateTransition,
+  executeState,
+  //executeStateTransition,
   getAllFlowsContextQuery,
   getApplicableFlows,
   getFlowContextQuery,
@@ -632,6 +741,6 @@ module.exports = {
   handleStateFailure,
   inTerminalState,
   isDocumentInProcess,
-  performStateActions,
+  //performStateActions,
   setFlowStatus
 };

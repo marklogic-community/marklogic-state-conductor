@@ -1,0 +1,5 @@
+{
+  "role-name" : "state-conductor-example-reader",
+  "description" : "Can view documents, but not edit",
+  "role" : [ "rest-reader", "state-conductor-example-nobody" ]
+}

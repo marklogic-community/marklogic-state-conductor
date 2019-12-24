@@ -1,0 +1,62 @@
+plugins {
+  id "java"
+  id "maven-publish"
+  id "com.jfrog.bintray" version "1.5"
+}
+
+repositories {
+	jcenter()
+}
+
+group = "com.marklogic"
+version = "0.1.5"
+
+configurations {
+  modules
+}
+
+task modulesJar(type: Jar) {
+  description = "Create a jar of the source-conductor modules and configurations into a package for publishing"
+  from("src/main/ml-config") {
+    into("marklogic-state-conductor/ml-config")
+  }
+  from("src/main/ml-modules") {
+    into("marklogic-state-conductor/ml-modules")
+  }
+  from("src/main/ml-data") {
+    into("marklogic-state-conductor/ml-data")
+  }
+  destinationDir file("build/libs")
+  baseName "marklogic-state-conductor"
+}
+
+artifacts {
+  modules modulesJar
+}
+
+publishing {
+	publications {
+		mainModules(MavenPublication) {
+			artifactId "marklogic-state-conductor"
+			artifact modulesJar
+		}
+	}
+}
+
+if (project.hasProperty("myBintrayUser")) {
+	bintray {
+		user = myBintrayUser
+		key = myBintrayKey
+		publications = ['mainModules']
+		pkg {
+			repo = 'maven'
+			name = project.name
+			licenses = ['Apache-2.0']
+			vcsUrl = 'https://github.com/aclavio/' + project.name + '.git'
+			version {
+				name = project.version
+				released = new Date()
+			}
+		}
+	}
+}

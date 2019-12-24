@@ -1,0 +1,25 @@
+buildscript {
+	repositories {
+		jcenter()
+		mavenLocal()
+	}
+	dependencies {
+		classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
+		classpath "com.marklogic:ml-gradle:3.16.1"
+	}
+}
+
+plugins {
+  id "java"
+  id "net.saliman.properties" version "1.5.1"
+  id "com.marklogic.ml-gradle" version "3.16.1"
+}
+
+repositories {
+	jcenter()
+	mavenLocal()
+}
+
+dependencies {
+	mlBundle "com.marklogic:marklogic-state-conductor:0.1.5"
+}

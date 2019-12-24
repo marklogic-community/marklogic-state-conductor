@@ -1,0 +1,5 @@
+{
+  "role-name" : "state-conductor-example-nobody",
+  "description" : "Unauthenticated user",
+  "role" : [ ]
+}

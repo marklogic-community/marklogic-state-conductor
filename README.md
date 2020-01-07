@@ -3,15 +3,19 @@
 The _MarkLogic State Conductor_ is an event-based orchestrator for manipulating MarkLogic database documents.
 State Conductor flows are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html).  State actions are defined using server-side modules.  The included driver utilizes MarkLogic's CPF and Triggers to move documents through the defined State flows.
 
-The _State Conductor_ can be used to perform an arbitrary number of contexted based, processing actions on a subset of documents.  Actions could include: invoking a [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) flow, transforming a document, applying metadata, or calling an external process.  
+The _State Conductor_ can be used to perform an arbitrary number of context-based processing actions on a subset of documents.  Actions could include: invoking a [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) flow, transforming a document, applying metadata, or calling an external process.  
 
 ## Installation
+
+Prerequisites:
+> 1. MarkLogic 9+
+> 2. [ml-gradle](https://github.com/marklogic-community/ml-gradle) 3.14.0+
 
 _TODO_
 
 ## Usage
 
-Any documents created or modified having the `state-conductor-item` collection will trigger processing by the _State Conductor_.  They will be evaluated against the context of all installed _Flow Files_.  For each matching _Flow File_ a Job document will be created corresponding to the matching flow and triggering document.  A property will be added to the triggering document's metadata indicating the Job file's id:
+Any documents created or modified having the `state-conductor-item` collection will trigger processing by the _State Conductor_.  They will be evaluated against the context of all installed _Flow Files_.  For each matching _Flow File_ a `Job` document will be created corresponding to the matching flow and triggering document.  A property will be added to the triggering document's metadata indicating the `Job` file's id:
 ```xml
 <state-conductor-job flow-name="flow-name" job-id="ec89d520-e7ec-4b6b-ba63-7ea3a85eff02" date="2019-11-08T17:34:28.529Z" />
 ```
@@ -72,7 +76,7 @@ _TODO_
 
 ## Roadmap
 
-* ml-bundle distribution
+* mlBundle distribution
 * Isolate CPF driver code from State Conductor library
 * Unit Tests
 * Move Job document properties into the base Job document

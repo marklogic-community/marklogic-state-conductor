@@ -54,7 +54,7 @@ function put(context, params, input) {
 }
 
 /**
- * Removes and installed State Conductor Flow
+ * Removes an installed State Conductor Flow
  */
 function deleteFunction(context, params) {
   const flowName = params.flowName ? params.flowName.trim() : '';

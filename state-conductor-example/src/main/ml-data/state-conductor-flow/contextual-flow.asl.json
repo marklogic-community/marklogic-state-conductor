@@ -1,5 +1,5 @@
 {
-  "Comment": "does things",
+  "Comment": "example flow that utilizes the context to create new documents",
   "mlDomain": {
     "context": [
       {

@@ -1,5 +1,5 @@
 {
-  "Comment": "processes data from the MarkLogic Kafka Connector",
+  "Comment": "bad flow demonstrating error catching",
   "mlDomain": {
     "context": [
       {

@@ -1,5 +1,5 @@
 {
-  "Comment": "processes data from the MarkLogic Kafka Connector",
+  "Comment": "processes data from the MarkLogic Kafka Connector and wraps it in an envelope",
   "mlDomain": {
     "context": [
       {

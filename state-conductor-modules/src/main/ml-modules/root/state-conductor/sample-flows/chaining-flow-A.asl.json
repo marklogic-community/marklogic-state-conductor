@@ -1,5 +1,5 @@
 {
-  "Comment": "does things",
+  "Comment": "example of one flow that kicks off another",
   "mlDomain": {
     "context": [
       {

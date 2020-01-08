@@ -11,8 +11,14 @@ Prerequisites:
 > 1. MarkLogic 9+
 > 2. [ml-gradle](https://github.com/marklogic-community/ml-gradle) 3.14.0+
 
-_TODO_
+The _State Conductor_ is distributed as an [mlBundle](https://github.com/marklogic-community/ml-gradle/wiki/Bundles) for `ml-gradle` projects.  To add the State Conductor to your project, add the following dependency to your ml-gradle project:
 
+```groovy
+dependencies {
+	mlBundle "com.marklogic:marklogic-state-conductor:0.1.5"
+}
+```
+___
 ## Usage
 
 Any documents created or modified having the `state-conductor-item` collection will trigger processing by the _State Conductor_.  They will be evaluated against the context of all installed _Flow Files_.  For each matching _Flow File_ a `Job` document will be created corresponding to the matching flow and triggering document.  A property will be added to the triggering document's metadata indicating the `Job` file's id:
@@ -20,11 +26,50 @@ Any documents created or modified having the `state-conductor-item` collection w
 <state-conductor-job flow-name="flow-name" job-id="ec89d520-e7ec-4b6b-ba63-7ea3a85eff02" date="2019-11-08T17:34:28.529Z" />
 ```
 
+> NOTE: Document modifications during, or after the competion of a Flow will not cause that document to be reprocessed by that same flow.  To run a Flow on a document that it has already been processed by requires manual invokation of the [`Jobs Service`](#jobs-service).
+
 ### Flow Files
 
-Flow files define the states that documents will transition through.  States can perform actions (utilizing SJS modules in MarkLogic), and performing branching logic.
+Flow files define the states that documents will transition through.  States can perform actions (utilizing SJS modules in MarkLogic), performing branching logic, or terminate processing.  Flow files are json formatted documents within the application's content database; they should have the "state-conductor-flow" collection, and have the ".asl.json" file extension.
 
-### Flow File Scope
+Example Flow File:
+```json
+{
+  "Comment": "sets some property values",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "directory",
+        "value": "/test/"
+      },
+      {
+        "scope": "collection",
+        "value": "test"
+      }
+    ]
+  },
+  "StartAt": "set-prop1",
+  "States": {
+    "set-prop1": {
+      "Type": "Task",
+      "Comment": "initial state of the flow",
+      "Resource": "/state-conductor/actions/common/examples/set-prop1.sjs",
+      "Parameters": {
+        "foo": "bar"
+      },
+      "Next": "set-prop2"
+    },
+    "set-prop2": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "updates a property",
+      "Resource": "/state-conductor/actions/common/examples/set-prop2.sjs"
+    }
+  }
+}
+```
+
+#### Flow File Scope
 
 Flow files must define a context within an `mlDomain` property under the flow file's root.  The context defines one or more scopes for which matching documents will have this State Conductor flow automatically applied.
 
@@ -50,38 +95,81 @@ Example:
 
 Valid scopes are `collection`, `directory`, and `query`.  For scopes of type `query`, the value must be a string containing the JSON serialization of a cts query.
 
-### Jobs
+#### Flow File Actions
 
-_TODO_
+Flow File States of the type "Task" can define actions to perform on in-process documents.  These actions take the form of Server-Side Javascript modules referenced by the "Resource" property. Action modules can perform custom activities such as updating the in-process document, performing a query, invoking an external service, etc.  Action modules should export a "performAction" function with the following signature:
+
+```javascript
+'use strict';
+
+function performAction(uri, parameters = {}, context = {}) {
+  // do something
+}
+
+exports.performAction = performAction;
+```
+Where `uri` is the document being processed by the flow; `parameters` is a json object configured via this State's Flow File "Parameters" property; and `context` contains the current in-process Flow's context.  Any data returned by the performAction function will be stored in the in-process flow's context object.
+
+### Job Documents
+
+For every document processed by a _State Conductor_ flow there is a corresponding `Job` document.  Job documents are stored in the content database, in the `/stateConductorJob/` folder.  These documents track the in-process document, and flow; they also store the flow's context and provenance information.
 
 ### Provenance
 
-_TODO_
+Every time a document starts, stops, or transitions from one state to another within a Flow, the Provenance information stored in the Job document is updated.
 
+___
 ## Services
 
-_TODO_
+The _State Conductor_ includes MarkLogic REST service extensions for managing Flow files and State Conductor Jobs.
 
-### Flows
+### Jobs Service
 
-_TODO_
+Create one or more _State Conductor_ Jobs:
+```
+PUT /v1/resources/state-conductor-jobs?rs:uris=</my/documents/uri>&rs:flowName=<my-flow-name>
+```
 
-### Jobs
+Get the job id for the given document and flow:
+```
+GET /v1/resources/state-conductor-jobs?rs:uri=</my/documents/uri>&rs:flowName=<my-flow-name>
+```
 
-_TODO_
+### Flows Service
 
-### Status
+List the installed _State Conductor_ Flows:
+```
+GET /v1/resources/state-conductor-flows?rs:flowName=<my-flow-name>
+```
 
-_TODO_
+Install a _State Conductor_ Flow:
+```
+PUT /v1/resources/state-conductor-flows?rs:flowName=<my-flow-name>
+```
 
+Remove an installed _State Conductor_ Flow:
+```
+DELETE /v1/resources/state-conductor-flows?rs:flowName=<my-flow-name>
+```
+
+### Status Service
+
+List the status of the given _State Conductor_ Flow:
+```
+GET /v1/resources/state-conductor-status?rs:flowName=<my-flow-name>
+```
+
+___
 ## Roadmap
 
-* mlBundle distribution
 * Isolate CPF driver code from State Conductor library
-* Unit Tests
+* Unit Test coverage
 * Move Job document properties into the base Job document
 * Batch support
 * Rest Services
   * Document Status
   * Error Retries
+  * Role-based access controls for CRUD operations
 * Increase ASL syntax support
+* Documentation
+  * supported ASL syntax

@@ -1,5 +1,5 @@
 {
-  "Comment": "does things",
+  "Comment": "bad flow file that references a non-existent moodule",
   "mlDomain": {
     "context": [
       {

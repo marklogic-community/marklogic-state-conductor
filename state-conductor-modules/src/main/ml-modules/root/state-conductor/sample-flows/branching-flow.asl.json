@@ -1,5 +1,5 @@
 {
-  "Comment": "does things",
+  "Comment": "example of a branching flow using a 'Choice' type state",
   "mlDomain": {
     "context": [
       {

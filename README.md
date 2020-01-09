@@ -15,7 +15,7 @@ The _State Conductor_ is distributed as an [mlBundle](https://github.com/marklog
 
 ```groovy
 dependencies {
-	mlBundle "com.marklogic:marklogic-state-conductor:0.1.5"
+	mlBundle "com.marklogic:marklogic-state-conductor:0.2.0"
 }
 ```
 ___

@@ -394,38 +394,6 @@ function executeState(uri, flowName, stateName) {
   }
 }
 
-/**
- * Given a document, a flow, and the state in that flow, perform all actions for that state.
- *
- * @param {*} uri
- * @param {*} flow
- * @param {*} stateName
- */
-/*
-function performStateActions(uri, flow, stateName) {
-  const doc = cts.doc(uri);
-  const job = doc.toObject();
-  const state = flow.States[stateName];
-  if (state) {
-    if (state.Type && state.Type.toLowerCase() === 'task') {
-      xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
-
-      if (state.Resource) {
-        // execute the resource modules
-        let resp = executeActionModule(state.Resource, job.uri, state.Parameters, job.context);
-        // update the job context with the response
-        job.context[stateName] = resp;
-        xdmp.nodeReplace(doc.root, job);
-      } else {
-        fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
-      }
-    }
-  } else {
-    fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
-  }
-}
-*/
-
 function executeActionModule(modulePath, uri, options, context) {
   const actionModule = require(modulePath);
   if (typeof actionModule.performAction === 'function') {
@@ -443,64 +411,6 @@ function executeConditionModule(modulePath, uri, options, context) {
     fn.error(null, 'INVALID-STATE-DEFINITION', `no "checkCondition" function defined for condition module "${modulePath}"`);
   }
 }
-
-/**
- * Peforms a state transition for the given flow on the given document.
- * If the document is in a terminal state, it marks the flow as complete.
- * Executes condition modules to determin which state to transition too.
- *
- * @param {*} uri
- * @param {*} flow
- */
-/*
-function executeStateTransition(uri, flowName, flow) {
-  const job = cts.doc(uri).toObject();
-  const currStateName = getFlowState(uri, flowName);
-  xdmp.trace(TRACE_EVENT, `executing transtions for state: ${currStateName}`);
-
-  if (!inTerminalState(uri, flowName, flow)) {
-    let currState = flow.States[currStateName];  
-    
-    // find the target transition
-    let target = null;
-    
-    if ('task' === currState.Type.toLowerCase()) {
-      target = currState.Next;
-    } else if ('pass' === currState.Type.toLowerCase()) {
-      target = currState.Next;
-    } else if ('choice' === currState.Type.toLowerCase()) {
-      if (currState.Choices && currState.Choices.length > 0) {
-        currState.Choices.forEach(choice => {
-          if (!target) {
-            if (choice.Resource) {
-              let resp = fn.head(executeConditionModule(choice.Resource, job.uri, choice.Parameters, job.context));
-              target = resp ? choice.Next : null;
-            } else {
-              fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${currStateName}"`);  
-            }
-          }
-        });
-        target = target || currState.Default;
-      } else {
-        fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${currStateName}"`);  
-      }
-    } else {
-      fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${currState.Type}"`);
-    }
-
-    // perform the transition
-    if (target) {
-      setFlowStatus(uri, flowName, target);
-      addProvenanceEvent(uri, flowName, currStateName, target);
-    } else {
-      fn.error(null, 'INVALID-STATE-DEFINITION', `No suitable transition found in non-terminal state "${currStateName}"`);
-    }
-  } else {
-    setFlowStatus(uri, flowName, currStateName, FLOW_STATUS_COMPLETE);
-    addProvenanceEvent(uri, flowName, currStateName, 'COMPLETED');
-  }
-}
-*/
 
 /**
  * Processes a caught error for "Task" and "Choice" states
@@ -724,7 +634,6 @@ module.exports = {
   checkFlowContext,
   createStateConductorJob,
   executeState,
-  //executeStateTransition,
   getAllFlowsContextQuery,
   getApplicableFlows,
   getFlowContextQuery,
@@ -741,6 +650,5 @@ module.exports = {
   handleStateFailure,
   inTerminalState,
   isDocumentInProcess,
-  //performStateActions,
   setFlowStatus
 };

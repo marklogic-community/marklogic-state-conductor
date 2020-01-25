@@ -8,10 +8,12 @@ function performAction(uri, options = {}) {
   const step = options.step || null;
   const flowName = options.flowName || null;
   const flowOptions = options.flowOptions || {};
+  const flowContext = options.flowContext || {};
 
   // setup the dhf runFlow content
   const contentObjs = {
     uri: uri,
+    context: flowContext
   };
 
   xdmp.log(Sequence.from([
@@ -20,6 +22,7 @@ function performAction(uri, options = {}) {
     '  flowName:    ' + flowName,
     '  step:        ' + step,
     '  flowOptions: ' + flowOptions,
+    '  flowContext: ' + flowContext
   ]));
 
   // execute the dhf flow step

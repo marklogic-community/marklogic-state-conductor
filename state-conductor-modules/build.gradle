@@ -1,6 +1,7 @@
 plugins {
   id "java"
   id "maven-publish"
+	id "com.jfrog.bintray" version "1.8.4"
 	id "net.saliman.properties" version "1.5.1"
 }
 
@@ -10,7 +11,7 @@ repositories {
 }
 
 group = "com.marklogic"
-version = "0.2.0"
+version = "0.2.1"
 
 configurations {
   modules
@@ -36,20 +37,33 @@ artifacts {
 }
 
 publishing {
-	repositories {
-		maven {
-			name = "GitHubPackages"
-			url = uri(project.findProperty("gpr.url"))
-			credentials {
-					username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-					password = project.findProperty("gpr.key") ?: System.getenv("PASSWORD")
-			}
-		}
-	}
 	publications {
 		mainModules(MavenPublication) {
 			artifactId "marklogic-state-conductor"
 			artifact modulesJar
+		}
+	}
+}
+
+if (project.hasProperty("myBintrayUser")) {
+	bintray {
+		user = project.findProperty("myBintrayUser")
+		key = project.findProperty("myBintrayKey")
+		publications = ["mainModules"]
+		pkg {
+			repo = "maven"
+			name = "marklogic-state-conductor"
+			licenses = ["Apache-2.0"]
+			websiteUrl = "https://github.com/aclavio/marklogic-state-conductor"
+			vcsUrl = "https://github.com/aclavio/marklogic-state-conductor.git"
+			issueTrackerUrl = "https://github.com/aclavio/marklogic-state-conductor/issues"
+			githubRepo = "aclavio/marklogic-state-conductor"
+			githubReleaseNotesFile = "README.md"
+			labels = ['marklogic']
+			version {
+				name = project.version
+				released = new Date()
+			}
 		}
 	}
 }

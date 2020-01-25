@@ -279,6 +279,8 @@ function getFlowContextQuery(flow) {
 
   if (queries.length > 1) {
     queries = cts.orQuery(queries);
+  } else if (queries.length < 1) {
+    queries = cts.falseQuery();
   } else {
     queries = queries.pop();
   }

@@ -6,6 +6,7 @@ function performAction(uri, options = {}) {
   // find the dhf flow to execute
   const flowName = options.flowName || null;
   const flowOptions = options.flowOptions || {};
+  const flowContext = options.flowContext || {};
   const flow = datahub.flow.getFlow(flowName);
 
   if (!flow) {
@@ -17,7 +18,8 @@ function performAction(uri, options = {}) {
 
   // setup the dhf runFlow content
   const contentObj = {  
-    uri: uri  
+    uri: uri,
+    context: flowContext
   };
 
   xdmp.log(Sequence.from([
@@ -26,6 +28,7 @@ function performAction(uri, options = {}) {
     '  flowName:    ' + flowName,
     '  numSteps:    ' + numSteps,
     '  flowOptions: ' + flowOptions,
+    '  flowContext: ' + flowContext
   ]));
 
   const resp = {};

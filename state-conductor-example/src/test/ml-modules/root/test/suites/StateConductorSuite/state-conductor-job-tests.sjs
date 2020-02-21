@@ -9,20 +9,21 @@ const doc1 = '/data/test-doc1.json';
 const doc2 = '/data/test-doc2.json';
 const doc3 = '/data/test-doc3.json';
 
-function isolate(func) {
+function isolate(func, dbId) {
   return fn.head(xdmp.invokeFunction(() => {
     declareUpdate();
     return func();
   }, {
     isolation: 'different-transaction',
-    commit: 'auto'
+    commit: 'auto',
+    database: dbId || xdmp.database()
   }));
 }
 
 // doc 1 - we manually add this to the branching flow
 const jobId1 = isolate(() => sc.createStateConductorJob('branching-flow', doc1, { collections: ['test']}));
 const jobUri1 = `/stateConductorJob/${jobId1}.json`;
-const jobDoc1 = isolate(() => cts.doc(jobUri1).toObject());
+const jobDoc1 = isolate(() => cts.doc(jobUri1).toObject(), xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB));
 
 assertions.push(
   test.assertTrue(!!jobId1),
@@ -36,7 +37,7 @@ assertions.push(
 const jobId2 = sc.getJobIds(doc2, 'test-flow')[0];
 const jobId2_2 = sc.getJobIds(doc2, 'branching-flow')[0];
 const jobUri2 = `/stateConductorJob/${jobId2}.json`;
-const jobDoc2 = cts.doc(jobUri2).toObject();
+const jobDoc2 = isolate(() => cts.doc(jobUri2).toObject(), xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB));
 
 assertions.push(
   test.assertTrue(!!jobId2),
@@ -49,7 +50,7 @@ assertions.push(
 const jobId3 = sc.getJobIds(doc3, 'branching-flow')[0];
 const jobId3_2 = sc.getJobIds(doc3, 'test-flow')[0];
 const jobUri3 = `/stateConductorJob/${jobId3}.json`;
-const jobDoc3 = cts.doc(jobUri3).toObject();
+const jobDoc3 = isolate(() => cts.doc(jobUri3).toObject(), xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB));
 
 assertions.push(
   test.assertTrue(!!jobId3),

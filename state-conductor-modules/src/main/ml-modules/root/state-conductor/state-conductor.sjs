@@ -2,6 +2,10 @@
 
 const TRACE_EVENT = 'state-conductor';
 
+const STATE_CONDUCTOR_JOBS_DB     = 'state-conductor-jobs';
+const STATE_CONDUCTOR_TRIGGERS_DB = 'state-conductor-triggers';
+const STATE_CONDUCTOR_SCHEMAS_DB  = 'state-conductor-schemas';
+
 const FLOW_FILE_EXTENSION       = '.asl.json';
 const FLOW_ITEM_COLLECTION      = 'state-conductor-item';
 const FLOW_COLLECTION           = 'state-conductor-flow';
@@ -42,6 +46,15 @@ function getFlowDocument(name) {
     cts.collectionQuery(FLOW_COLLECTION)
   ));
   return uri ? cts.doc(uri) : null;
+}
+
+function getFlowDocumentFromDatabase(name, databaseId) {
+  let resp = xdmp.invokeFunction(() => {
+    return getFlowDocument(name);
+  }, {
+    database: databaseId
+  });
+  return fn.head(resp);
 }
 
 /**
@@ -111,12 +124,12 @@ function getJobMetadatProperty(uri, flowName) {
 }
 
 /**
- * Determines if this document is being processed by any state conductor flow
+ * Determines if this job document is being processed by any state conductor flow
  * <state-conductor-status flow="flow-name" state="state-name">flow-status</state-conductor-status>
  * @param {*} uri
  * @returns
  */
-function isDocumentInProcess(uri) {
+function isJobInProcess(uri) {
   return cts.contains(
     xdmp.documentProperties(uri), 
     cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATUS_WORKING)
@@ -311,7 +324,7 @@ function getAllFlowsContextQuery() {
 function executeState(uri, flowName, stateName) {
   const jobDoc = cts.doc(uri);
   const jobObj = jobDoc.toObject();
-  const flowObj = getFlowDocument(flowName).toObject();
+  const flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
   const state = flowObj.States[stateName];
 
   try {
@@ -322,7 +335,15 @@ function executeState(uri, flowName, stateName) {
   
         if (state.Resource) {
           // execute the resource modules
-          let resp = executeActionModule(state.Resource, jobObj.uri, state.Parameters, jobObj.context);
+          let resp = executeActionModule(
+            state.Resource, 
+            jobObj.uri, 
+            state.Parameters, 
+            jobObj.context, 
+            {
+              database: jobObj.database,
+              modules: jobObj.modules
+            });
           // update the job context with the response
           jobObj.context[stateName] = resp;
         } else {
@@ -332,7 +353,7 @@ function executeState(uri, flowName, stateName) {
 
       // determine the next target state and transition
       let targetState = null;
-      xdmp.trace(TRACE_EVENT, `executing transtions for state: ${stateName}`);
+      xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName}`);
 
       if (!inTerminalState(uri, flowName, flowObj)) {    
         if ('task' === state.Type.toLowerCase()) {
@@ -344,7 +365,18 @@ function executeState(uri, flowName, stateName) {
             state.Choices.forEach(choice => {
               if (!targetState) {
                 if (choice.Resource) {
-                  let resp = fn.head(executeConditionModule(choice.Resource, jobObj.uri, choice.Parameters, jobObj.context));
+                  let resp = fn.head(
+                    executeConditionModule(
+                      choice.Resource, 
+                      jobObj.uri, 
+                      choice.Parameters, 
+                      jobObj.context, 
+                      {
+                        database: jobObj.database,
+                        modules: jobObj.modules
+                      }
+                    )
+                  );
                   targetState = resp ? choice.Next : null;
                 } else {
                   fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${stateName}"`);  
@@ -396,22 +428,36 @@ function executeState(uri, flowName, stateName) {
   }
 }
 
-function executeActionModule(modulePath, uri, options, context) {
-  const actionModule = require(modulePath);
-  if (typeof actionModule.performAction === 'function') {
-    return actionModule.performAction(uri, options, context);
-  } else {
-    fn.error(null, 'INVALID-STATE-DEFINITION', `no "performAction" function defined for action module "${modulePath}"`);
-  }
+function executeActionModule(modulePath, uri, params, context, { database, modules }) {
+  xdmp.log('executeActionModule:');
+  xdmp.log(arguments);
+  let resp = xdmp.invokeFunction(() => {
+    const actionModule = require(modulePath);
+    if (typeof actionModule.performAction === 'function') {
+      return actionModule.performAction(uri, params, context);
+    } else {
+      fn.error(null, 'INVALID-STATE-DEFINITION', `no "performAction" function defined for action module "${modulePath}"`);
+    }
+  }, {
+    database: database ? database : xdmp.database(),
+    modules: modules ? modules : xdmp.modulesDatabase()
+  });
+  return fn.head(resp);
 }
 
-function executeConditionModule(modulePath, uri, options, context) {
-  const conditionModule = require(modulePath);
-  if (typeof conditionModule.checkCondition === 'function') {
-    return conditionModule.checkCondition(uri, options, context);
-  } else {
-    fn.error(null, 'INVALID-STATE-DEFINITION', `no "checkCondition" function defined for condition module "${modulePath}"`);
-  }
+function executeConditionModule(modulePath, uri, params, context, { database, modules }) {
+  let resp = xdmp.invokeFunction(() => {
+    const conditionModule = require(modulePath);
+    if (typeof conditionModule.checkCondition === 'function') {
+      return conditionModule.checkCondition(uri, params, context);
+    } else {
+      fn.error(null, 'INVALID-STATE-DEFINITION', `no "checkCondition" function defined for condition module "${modulePath}"`);
+    }
+  }, {
+    database: database ? database : xdmp.database(),
+    modules: modules ? modules : xdmp.modulesDatabase()
+  });
+  return fn.head(resp);
 }
 
 /**
@@ -472,8 +518,13 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
   }
   // unhandled exception
   xdmp.trace(TRACE_EVENT, `no Catch defined for error "${err.name}" in state "${stateName}"`);
+  // update the job document
+  setFlowStatus(uri, flowName, stateName, FLOW_STATUS_FAILED);
   jobObj.flowStatus = FLOW_STATUS_FAILED;
+  jobObj.errors = jobObj.errors || {};
+  jobObj.errors[stateName] = err;
   xdmp.nodeReplace(jobDoc.root, jobObj);
+  // trigger CPF error state
   fn.error(null, 'INVALID-STATE-DEFINITION', Sequence.from([
     `Unhandled exception of type "${err.name}" in state "${stateName}"`,
     err
@@ -584,6 +635,8 @@ function isLatestTemporalDocument(uri){
 function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   const collections = ['stateConductorJob'].concat(options.collections || []);
   const directory = options.directory || '/stateConductorJob/';
+  const database = options.database || xdmp.database();
+  const modules = options.modules || xdmp.modulesDatabase();
   
   const id = sem.uuidString();
   const jobUri = directory + id + '.json';
@@ -594,16 +647,25 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     flowStatus: FLOW_STATUS_NEW,
     flowState: null,
     uri: uri,
+    database: database,
+    modules: modules,
     createdDate: (new Date()).toISOString(),
     context: context,
     provenance: []
   };
 
   // insert the job document
-  xdmp.log(`inserting job document: ${jobUri}`);
-  xdmp.documentInsert(jobUri, job, {
-    collections: collections
+  xdmp.trace(TRACE_EVENT, `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`);
+  xdmp.invokeFunction(() => {
+    declareUpdate();
+    xdmp.documentInsert(jobUri, job, {
+      collections: collections,
+      permissions: xdmp.defaultPermissions()
+    });
+  }, {
+    database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
   });
+  
   // add job metadata to the target document
   addJobMetadata(uri, flowName, id); // prevents updates to the target from retriggering this flow
 
@@ -627,6 +689,9 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
 
 module.exports = {
   TRACE_EVENT,
+  STATE_CONDUCTOR_JOBS_DB,
+  STATE_CONDUCTOR_TRIGGERS_DB,
+  STATE_CONDUCTOR_SCHEMAS_DB,
   FLOW_COLLECTION,
   FLOW_DIRECTORY,
   FLOW_ITEM_COLLECTION,
@@ -641,6 +706,7 @@ module.exports = {
   getFlowContextQuery,
   getFlowCounts,
   getFlowDocument,
+  getFlowDocumentFromDatabase,
   getFlowDocuments,
   getFlowNames,
   getFlowNameFromUri,
@@ -651,6 +717,6 @@ module.exports = {
   getJobIds,
   handleStateFailure,
   inTerminalState,
-  isDocumentInProcess,
+  isJobInProcess,
   setFlowStatus
 };

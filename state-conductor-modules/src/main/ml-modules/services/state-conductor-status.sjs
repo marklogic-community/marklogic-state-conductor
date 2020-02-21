@@ -15,9 +15,14 @@ function get(context, params) {
   }
 
   const flowNames = params.flowName ? [params.flowName] : sc.getFlowNames();
+  const startDate = params.startDate;
+  const endDate = params.endDate;
 
   const resp = flowNames.reduce((acc, name) => {
-    acc[name] = sc.getFlowCounts(name);
+    acc[name] = sc.getFlowCounts(name, {
+      startDate: startDate,
+      endDate: endDate
+    });
     return acc;
   }, {});
 

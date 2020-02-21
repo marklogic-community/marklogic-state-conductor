@@ -558,26 +558,44 @@ function inTerminalState(uri, flowName, flow) {
  * @param {*} flowName
  * @returns
  */
-function getFlowCounts(flowName) {
+function getFlowCounts(flowName, { startDate, endDate }) {
   const flow = getFlowDocument(flowName).toObject();
   const states = Object.keys(flow.States);
 
+  let baseQuery = [];
+  if (startDate) {
+    baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(startDate)));
+  }
+  if (endDate) {
+    baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)))
+  }
+
   const numInStatus = (status) => fn.count(
-    cts.uris('', 'properties', 
-      cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
-        cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
-        cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), status)
-      ]))
+    cts.uris('', null, 
+      cts.andQuery([].concat(
+        baseQuery,
+        cts.propertiesFragmentQuery(
+          cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
+            cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
+            cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), status)
+          ]))
+        )
+      ))      
     )
   );
 
   const numInState = (status, state) => fn.count(
-    cts.uris('', 'properties', 
-      cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
-        cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
-        cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'state-name'), state),
-        cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), status)
-      ]))
+    cts.uris('', null,
+      cts.andQuery([].concat(
+        baseQuery,
+        cts.propertiesFragmentQuery(
+          cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
+            cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
+            cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'state-name'), state),
+            cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), status)
+          ]))
+        )
+      ))
     )
   );
 

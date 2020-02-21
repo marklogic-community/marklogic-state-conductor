@@ -429,8 +429,6 @@ function executeState(uri, flowName, stateName) {
 }
 
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
-  xdmp.log('executeActionModule:');
-  xdmp.log(arguments);
   let resp = xdmp.invokeFunction(() => {
     const actionModule = require(modulePath);
     if (typeof actionModule.performAction === 'function') {
@@ -583,10 +581,10 @@ function getFlowCounts(flowName) {
     )
   );
 
-  let numComplete = numInStatus(FLOW_STATUS_COMPLETE);
-  let numWorking = numInStatus(FLOW_STATUS_WORKING);
-  let numNew = numInStatus(FLOW_STATUS_NEW);
-  let numFailed = numInStatus(FLOW_STATUS_FAILED);
+  let numComplete = 0;
+  let numWorking  = 0;
+  let numNew      = 0;
+  let numFailed   = 0;
 
   const resp = {
     flowName: flowName,
@@ -596,13 +594,20 @@ function getFlowCounts(flowName) {
     totalNew: numNew
   };
 
-  resp[FLOW_STATUS_WORKING] = {};
-  resp[FLOW_STATUS_COMPLETE] = {};
+  xdmp.invokeFunction(() => {
+    resp.totalComplete = numInStatus(FLOW_STATUS_COMPLETE);
+    resp.totalWorking  = numInStatus(FLOW_STATUS_WORKING);
+    resp.totalNew      = numInStatus(FLOW_STATUS_NEW);
+    resp.totalFailed   = numInStatus(FLOW_STATUS_FAILED);
 
-  [FLOW_STATUS_WORKING, FLOW_STATUS_COMPLETE].forEach(status => {
-    states.forEach(state => {
-      resp[status][state] = numInState(status, state);
+    [FLOW_STATUS_WORKING, FLOW_STATUS_COMPLETE].forEach(status => {
+      resp[status] = {};
+      states.forEach(state => {
+        resp[status][state] = numInState(status, state);
+      });
     });
+  }, {
+    database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
   });  
 
   return resp;

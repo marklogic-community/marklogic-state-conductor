@@ -20,8 +20,13 @@ repositories {
   }
 }
 dependencies {
-	mlBundle "com.marklogic:marklogic-state-conductor:0.2.1"
+	mlBundle "com.marklogic:marklogic-state-conductor:0.3.0"
 }
+```
+
+The _State Conductor_ utilizes MarkLogic's Content Processing Framework.  Add the following to your gradle project's properties file to ensure that the CPF configurations are installed in the required location:
+```
+mlCpfDatabaseName=state-conductor-triggers
 ```
 ___
 ## Usage
@@ -117,7 +122,7 @@ Where `uri` is the document being processed by the flow; `parameters` is a json 
 
 ### Job Documents
 
-For every document processed by a _State Conductor_ flow there is a corresponding `Job` document.  Job documents are stored in the content database, in the `/stateConductorJob/` folder.  These documents track the in-process document, and flow; they also store the flow's context and provenance information.
+For every document processed by a _State Conductor_ flow there is a corresponding `Job` document.  Job documents are stored in the `state-conductor-jobs` database (new in v0.3.0), in the `/stateConductorJob/` folder.  These documents track the in-process document, and flow; they also store the flow's context and provenance information.
 
 ### Provenance
 
@@ -161,12 +166,14 @@ DELETE /v1/resources/state-conductor-flows?rs:flowName=<my-flow-name>
 
 List the status of the given _State Conductor_ Flow:
 ```
-GET /v1/resources/state-conductor-status?rs:flowName=<my-flow-name>
+GET /v1/resources/state-conductor-status?rs:flowName=<my-flow-name>&rs:startDate=<xs.dateTime>&rs:endDate=<xs.dateTime>
 ```
-
+New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
 ___
 ## Roadmap
 
+* Time based flow context
+* Named event based state pausing and resuming
 * Isolate CPF driver code from State Conductor library
 * Unit Test coverage
 * Move Job document properties into the base Job document

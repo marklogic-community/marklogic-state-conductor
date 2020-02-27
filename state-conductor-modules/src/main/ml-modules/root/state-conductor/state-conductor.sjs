@@ -263,7 +263,7 @@ function getApplicableFlows(uri) {
   const flows = getFlowDocuments().toArray().filter(flow => {
     let flowName = getFlowNameFromUri(fn.documentUri(flow));
     let flowOjb = flow.toObject();
-    return getJobIds(uri, flowName).length === 0 && !getFlowStatus(uri, flowName) && checkFlowContext(uri, flowOjb);
+    return getJobIds(uri, flowName).length === 0 && checkFlowContext(uri, flowOjb);
   });
 
   return flows;

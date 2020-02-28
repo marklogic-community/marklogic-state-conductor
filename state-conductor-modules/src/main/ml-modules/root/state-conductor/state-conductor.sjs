@@ -12,7 +12,6 @@ const FLOW_COLLECTION           = 'state-conductor-flow';
 const FLOW_DIRECTORY            = '/state-conductor-flow/';
 const FLOW_STATE_PROP_NAME      = 'state-conductor-status';
 const FLOW_JOBID_PROP_NAME      = 'state-conductor-job';
-const FLOW_PROVENANCE_PROP_NAME = 'state-conductor-status-event';
 const FLOW_STATUS_NEW           = 'new';
 const FLOW_STATUS_WORKING       = 'working';
 const FLOW_STATUS_COMPLETE      = 'complete';
@@ -100,21 +99,14 @@ function getInitialState({ flowName, StartAt }) {
   return StartAt;
 }
 
+
 /**
- * Gets the flow-conductor-status property for the given flowName
+ * Gets the value of the property which links a document to a State Conductor job
  *
  * @param {*} uri
  * @param {*} flowName
  * @returns
  */
-function getFlowStatusProperty(uri, flowName) {
-  if (fn.docAvailable(uri)) {
-    return xdmp.documentGetProperties(uri, fn.QName('', FLOW_STATE_PROP_NAME))
-      .toArray()
-      .filter(prop => prop.getAttributeNode('flow-name').nodeValue === flowName)[0];
-  }
-}
-
 function getJobMetadatProperty(uri, flowName) {
   if (fn.docAvailable(uri)) {
     return xdmp.documentGetProperties(uri, fn.QName('', FLOW_JOBID_PROP_NAME))
@@ -123,63 +115,14 @@ function getJobMetadatProperty(uri, flowName) {
   }
 }
 
-/**
- * Determines if this job document is being processed by any state conductor flow
- * <state-conductor-status flow="flow-name" state="state-name">flow-status</state-conductor-status>
- * @param {*} uri
- * @returns
- */
-function isJobInProcess(uri) {
-  return cts.contains(
-    xdmp.documentProperties(uri), 
-    cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), FLOW_STATUS_WORKING)
-  );
-}
-
 
 /**
- * Gets the flowName for each flow currently processing this document
- *
- * @param {*} uri
- * @returns
- */
-function getInProcessFlows(uri) {
-  if (fn.docAvailable(uri)) {
-    return xdmp.documentGetProperties(uri, fn.QName('', FLOW_STATE_PROP_NAME))
-      .toArray()
-      .filter(prop => prop.firstChild.nodeValue === FLOW_STATUS_WORKING)
-      .map(prop => prop.getAttributeNode('flow-name').nodeValue);
-  }
-}
-
-/**
- * Sets this document's flow status for the given flow
+ * Links the given document to a state conductor job
  *
  * @param {*} uri
  * @param {*} flowName
- * @param {*} stateName
- * @param {*} status
+ * @param {*} jobId
  */
-function setFlowStatus(uri, flowName, stateName, status = FLOW_STATUS_WORKING) {
-  declareUpdate();
-  const existingStatusProp = getFlowStatusProperty(uri, flowName);
-  const builder = new NodeBuilder();
-  builder.startElement(FLOW_STATE_PROP_NAME);
-  builder.addAttribute('flow-name', flowName);
-  builder.addAttribute('state-name', stateName);
-  builder.addText(status);
-  builder.endElement();
-  let statusElem = builder.toNode();
-  
-  if (existingStatusProp) {
-    // replace the exsting property
-    xdmp.nodeReplace(existingStatusProp, statusElem);
-  } else {
-    // insert the new property
-    xdmp.documentAddProperties(uri, [statusElem]);
-  }
-}
-
 function addJobMetadata(uri, flowName, jobId) {
   const builder = new NodeBuilder();
   builder.startElement(FLOW_JOBID_PROP_NAME);
@@ -189,42 +132,6 @@ function addJobMetadata(uri, flowName, jobId) {
   builder.endElement();
   let jobMetaElem = builder.toNode();
   xdmp.documentAddProperties(uri, [jobMetaElem]);
-}
-
-function addProvenanceEvent(uri, flowName, currState = '', nextState = '') {
-  const builder = new NodeBuilder();
-  builder.startElement(FLOW_PROVENANCE_PROP_NAME);
-  builder.addAttribute('date', (new Date()).toISOString());
-  builder.addAttribute('flow-name', flowName);
-  builder.addAttribute('from', currState);
-  builder.addAttribute('to', nextState);
-  builder.endElement();
-  let newEvent = builder.toNode();
-  xdmp.documentAddProperties(uri, [newEvent]);
-}
-
-/**
- * Gets the document's state in the given flow
- *
- * @param {*} uri
- * @param {*} flowName
- * @returns
- */
-function getFlowState(uri, flowName) {
-  const statusProp = getFlowStatusProperty(uri, flowName);
-  return statusProp ? statusProp.getAttributeNode('state-name').nodeValue : null;
-}
-
-/**
- * Gets the document's status in the given flow
- *
- * @param {*} uri
- * @param {*} flowName
- * @returns
- */
-function getFlowStatus(uri, flowName) {
-  const statusProp = getFlowStatusProperty(uri, flowName);
-  return statusProp ? statusProp.firstChild.nodeValue : null;
 }
 
 function getJobIds(uri, flowName) {
@@ -355,7 +262,7 @@ function executeState(uri, flowName, stateName) {
       let targetState = null;
       xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName}`);
 
-      if (!inTerminalState(uri, flowName, flowObj)) {    
+      if (!inTerminalState(jobObj, flowObj)) {    
         if ('task' === state.Type.toLowerCase()) {
           targetState = state.Next;
         } else if ('pass' === state.Type.toLowerCase()) {
@@ -393,8 +300,6 @@ function executeState(uri, flowName, stateName) {
 
         // perform the transition
         if (targetState) {
-          setFlowStatus(uri, flowName, targetState);
-          addProvenanceEvent(uri, flowName, stateName, targetState);
           jobObj.flowStatus = FLOW_STATUS_WORKING;
           jobObj.flowState = targetState;
           jobObj.provenance.push({
@@ -407,8 +312,6 @@ function executeState(uri, flowName, stateName) {
         }
       } else {
         // terminal states have no "Next" target state
-        setFlowStatus(uri, flowName, stateName, FLOW_STATUS_COMPLETE);
-        addProvenanceEvent(uri, flowName, stateName, 'COMPLETED');
         jobObj.flowStatus = FLOW_STATUS_COMPLETE;
         jobObj.provenance.push({
           date: (new Date()).toISOString(),
@@ -497,9 +400,6 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
       if (target) {
         xdmp.trace(TRACE_EVENT, `transitioning to fallback state "${target}"`);
         // move to the target state
-        setFlowStatus(uri, flowName, target);
-        addProvenanceEvent(uri, flowName, stateName, target);
-        // capture error message in context
         jobObj.flowStatus = FLOW_STATUS_WORKING;
         jobObj.flowState = target;
         jobObj.provenance.push({
@@ -507,6 +407,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
           from: stateName,
           to: target
         });
+        // capture error message in context
         jobObj.errors = jobObj.errors || {};
         jobObj.errors[stateName] = err;
         xdmp.nodeReplace(jobDoc.root, jobObj);
@@ -517,7 +418,6 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
   // unhandled exception
   xdmp.trace(TRACE_EVENT, `no Catch defined for error "${err.name}" in state "${stateName}"`);
   // update the job document
-  setFlowStatus(uri, flowName, stateName, FLOW_STATUS_FAILED);
   jobObj.flowStatus = FLOW_STATUS_FAILED;
   jobObj.errors = jobObj.errors || {};
   jobObj.errors[stateName] = err;
@@ -536,14 +436,13 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
  * @param {*} flow
  * @returns
  */
-function inTerminalState(uri, flowName, flow) {
-  const currStateName = getFlowState(uri, flowName);
+function inTerminalState(job, flow) {
+  const currStateName = job.flowState;
   let currState = flow.States[currStateName];
   
   if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
     fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported state type: "${currState.Type}"`);
   }
-  //return !currState || !currState.transitions || currState.transitions.length === 0;
   return (
     !currState || 
     currState.Type.toLowerCase() === 'succeed' ||
@@ -569,7 +468,7 @@ function getFlowCounts(flowName, { startDate, endDate }) {
   if (endDate) {
     baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)))
   }
-
+  // TODO refactor to work with JSON values not properties
   const numInStatus = (status) => fn.count(
     cts.uris('', null, 
       cts.andQuery([].concat(
@@ -664,6 +563,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   const id = sem.uuidString();
   const jobUri = directory + id + '.json';
 
+  // TODO any benifit to defining a class for the job document?
   const job = {
     id: id,
     flowName: flowName,
@@ -718,8 +618,11 @@ module.exports = {
   FLOW_COLLECTION,
   FLOW_DIRECTORY,
   FLOW_ITEM_COLLECTION,
+  FLOW_STATUS_NEW,
+  FLOW_STATUS_WORKING,
+  FLOW_STATUS_COMPLETE,
+  FLOW_STATUS_FAILED,
   addJobMetadata,
-  addProvenanceEvent,
   batchCreateStateConductorJob,
   checkFlowContext,
   createStateConductorJob,
@@ -733,13 +636,8 @@ module.exports = {
   getFlowDocuments,
   getFlowNames,
   getFlowNameFromUri,
-  getFlowState,
-  getFlowStatus,
   getInitialState,
-  getInProcessFlows,
   getJobIds,
   handleStateFailure,
-  inTerminalState,
-  isJobInProcess,
-  setFlowStatus
+  inTerminalState
 };

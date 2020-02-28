@@ -11,11 +11,13 @@ var transition;
 if (cpf.checkTransition(uri, transition)) {
   try {
     xdmp.trace(sc.TRACE_EVENT, `state-conductor-work-action for "${uri}"`);
-    if (sc.isJobInProcess(uri)) {
-      // job document is being processed by a flow, continue that flow
-      const currFlowName = sc.getInProcessFlows(uri)[0];
+    const jobDoc = cts.doc(uri);
+    const job = jobDoc.toObject();
+    const currFlowName = job.flowName;
+    const status = job.flowStatus;
+    if (sc.FLOW_STATUS_WORKING === status) {
       xdmp.trace(sc.TRACE_EVENT, `executing flow "${currFlowName}"`);
-      const currFlowState = sc.getFlowState(uri, currFlowName);
+      const currFlowState = job.flowState;
       xdmp.trace(sc.TRACE_EVENT, `flow state "${currFlowState}"`);
       // execute state actions and transition to next state
       sc.executeState(uri, currFlowName, currFlowState);     
@@ -23,15 +25,18 @@ if (cpf.checkTransition(uri, transition)) {
       cpf.success(uri, transition, 'http://marklogic.com/states/working');
     } else {
       // job document is not being processed, grab the embedded flow, and start the initial state
-      const job = cts.doc(uri).toObject();
-      const currFlowName = job.flowName;
-      const status = sc.getFlowStatus(uri, currFlowName);
-      if (status === null) {
+      if (status === sc.FLOW_STATUS_NEW) {
         const currFlow = sc.getFlowDocumentFromDatabase(currFlowName, job.database).toObject();
         const currFlowState = sc.getInitialState(currFlow);
         xdmp.trace(sc.TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${currFlowState}"`);
-        sc.setFlowStatus(uri, currFlowName, currFlowState);
-        sc.addProvenanceEvent(uri, currFlowName, 'NEW', currFlowState);
+        job.flowStatus = sc.FLOW_STATUS_WORKING;
+        job.flowState = currFlowState;
+        job.provenance.push({
+          date: (new Date()).toISOString(),
+          from: 'NEW',
+          to: currFlowState
+        });
+        xdmp.nodeReplace(jobDoc.root, job);
         // continue cpf processing - continuing the current flow or any others that apply
         cpf.success(uri, transition, 'http://marklogic.com/states/working');
       } else {

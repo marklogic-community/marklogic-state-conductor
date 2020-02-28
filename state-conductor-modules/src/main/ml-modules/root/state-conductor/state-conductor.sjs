@@ -10,7 +10,6 @@ const FLOW_FILE_EXTENSION       = '.asl.json';
 const FLOW_ITEM_COLLECTION      = 'state-conductor-item';
 const FLOW_COLLECTION           = 'state-conductor-flow';
 const FLOW_DIRECTORY            = '/state-conductor-flow/';
-const FLOW_STATE_PROP_NAME      = 'state-conductor-status';
 const FLOW_JOBID_PROP_NAME      = 'state-conductor-job';
 const FLOW_STATUS_NEW           = 'new';
 const FLOW_STATUS_WORKING       = 'working';
@@ -468,18 +467,14 @@ function getFlowCounts(flowName, { startDate, endDate }) {
   if (endDate) {
     baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)))
   }
-  // TODO refactor to work with JSON values not properties
+  
   const numInStatus = (status) => fn.count(
     cts.uris('', null, 
       cts.andQuery([].concat(
         baseQuery,
-        cts.propertiesFragmentQuery(
-          cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
-            cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
-            cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), status)
-          ]))
-        )
-      ))      
+        cts.jsonPropertyValueQuery('flowName', flowName),
+        cts.jsonPropertyValueQuery('flowStatus', status)
+      ))
     )
   );
 
@@ -487,13 +482,9 @@ function getFlowCounts(flowName, { startDate, endDate }) {
     cts.uris('', null,
       cts.andQuery([].concat(
         baseQuery,
-        cts.propertiesFragmentQuery(
-          cts.elementQuery(fn.QName('', FLOW_STATE_PROP_NAME), cts.andQuery([
-            cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'flow-name'), flowName),
-            cts.elementAttributeValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), fn.QName('', 'state-name'), state),
-            cts.elementValueQuery(fn.QName('', FLOW_STATE_PROP_NAME), status)
-          ]))
-        )
+        cts.jsonPropertyValueQuery('flowName', flowName),
+        cts.jsonPropertyValueQuery('flowStatus', status),
+        cts.jsonPropertyValueQuery('flowState', state)
       ))
     )
   );

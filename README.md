@@ -20,7 +20,7 @@ repositories {
   }
 }
 dependencies {
-	mlBundle "com.marklogic:marklogic-state-conductor:0.3.0"
+	mlBundle "com.marklogic:marklogic-state-conductor:0.3.1"
 }
 ```
 
@@ -176,7 +176,6 @@ ___
 * Named event based state pausing and resuming
 * Isolate CPF driver code from State Conductor library
 * Unit Test coverage
-* Move Job document properties into the base Job document
 * Batch support
 * Rest Services
   * Document Status

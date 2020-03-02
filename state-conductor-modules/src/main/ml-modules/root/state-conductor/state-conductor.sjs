@@ -227,9 +227,51 @@ function getAllFlowsContextQuery() {
   return queries;
 }
 
-function executeState(uri, flowName, stateName) {
+
+/**
+ * Begins the processing of a newly created job document
+ *
+ * @param {*} uri - the job document's uri
+ */
+function startProcessingFlow(uri) {
   const jobDoc = cts.doc(uri);
   const jobObj = jobDoc.toObject();
+  const currFlowName = jobObj.flowName;
+  const status = jobObj.flowStatus;
+  // sanity check
+  if (FLOW_STATUS_NEW !== status) {
+    fn.error(null, 'INVALID-FLOW-STATE', 'Cannot start a flow not in the NEW status');
+  }
+  // grab the flow definition from the correct db
+  const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
+  const initialState = getInitialState(currFlow);
+  xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
+  // update job state, status, and provenence
+  jobObj.flowStatus = FLOW_STATUS_WORKING;
+  jobObj.flowState = initialState;
+  jobObj.provenance.push({
+    date: (new Date()).toISOString(),
+    from: 'NEW',
+    to: initialState
+  });
+  xdmp.nodeReplace(jobDoc.root, jobObj);
+}
+
+
+/**
+ * Performs the actions and transitions for a state.
+ *
+ * @param {*} uri - the job document's uri
+ */
+function executeState(uri) {
+  const jobDoc = cts.doc(uri);
+  const jobObj = jobDoc.toObject();
+  const flowName = jobObj.flowName;
+  const stateName = jobObj.flowState;
+
+  xdmp.trace(TRACE_EVENT, `executing flow "${flowName}"`);
+  xdmp.trace(TRACE_EVENT, `flow state "${stateName}"`);
+
   const flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
   const state = flowObj.States[stateName];
 
@@ -625,10 +667,11 @@ module.exports = {
   getFlowDocument,
   getFlowDocumentFromDatabase,
   getFlowDocuments,
-  getFlowNames,
   getFlowNameFromUri,
+  getFlowNames,
   getInitialState,
   getJobIds,
   handleStateFailure,
-  inTerminalState
+  inTerminalState,
+  startProcessingFlow
 };

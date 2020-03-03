@@ -5,7 +5,7 @@ MarkLogic State Conductor welcomes new contributors. This document will guide yo
  - [Code Explanation](#explanation-of-the-code)
  - [Issues and Bugs](#found-an-issue)
  - [Feature Requests](#want-a-feature)
- - [Building from Source](#building-marklogic-data-hub-from-source)
+ - [Building from Source](#building-markLogic-state-conductor-from-source)
  - [Submission Guidelines](#submission-guidelines)
 
 ## Explanation of the code
@@ -158,13 +158,13 @@ Please fill out the issue template so that your issue can be dealt with quickly.
 
 ### Submitting a Pull Request
 
-#### Fork marklogic-data-hub
+#### Fork markLogic-state-conductor-from-source
 
 Fork the project [on GitHub](https://github.com/aclavio/marklogic-state-conductor/fork) and clone your copy.
 
   ```sh
-  $ git clone git@github.com:username/marklogic-data-hub.git
-  $ cd marklogic-data-hub
+  $ git clone git@github.com:username/markLogic-state-conductor-from-source.git
+  $ cd markLogic-state-conductor-from-source
   $ git remote add upstream git://github.com/aclavio/marklogic-state-conductor/.git
   ```
 

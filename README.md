@@ -174,7 +174,6 @@ ___
 
 * Time based flow context
 * Named event based state pausing and resuming
-* Isolate CPF driver code from State Conductor library
 * Unit Test coverage
 * Batch support
 * Rest Services

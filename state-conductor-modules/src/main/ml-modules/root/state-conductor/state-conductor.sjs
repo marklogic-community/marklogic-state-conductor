@@ -229,6 +229,42 @@ function getAllFlowsContextQuery() {
 
 
 /**
+ * Main unit of processing for a job document.  Performs state actions and transitions to next state.
+ *
+ * @param {*} uri - the uri of the job document
+ * @returns (boolean) indicates if processing of the job document should continue
+ */
+function processJob(uri) {
+  xdmp.trace(TRACE_EVENT, `state-conductor job processing for job document "${uri}"`);
+  // sanity check
+  if (!fn.docAvailable(uri)) {
+    fn.error(null, 'INVALID-JOB-DOCUMENT', `State Conductor job document "${uri}" not found!`);
+  }
+  // check the flow state
+  const jobDoc = cts.doc(uri);
+  const job = jobDoc.toObject();
+  const status = job.flowStatus;
+  
+  if (FLOW_STATUS_WORKING === status) {
+    // execute state actions and transition to next state
+    executeState(uri);     
+    // continue processing
+    return true;
+  } else if (FLOW_STATUS_NEW === status) {
+    // job document is not being processed, grab the embedded flow, and start the initial state
+    // begin the flow processing
+    startProcessingFlow(uri);
+    // continue processing
+    return true;
+  } else {
+    // we're done processing the flow
+    xdmp.trace(TRACE_EVENT, `state-conductor flow completed for job document "${uri}"`);
+    // end processing
+    return false;
+  }
+}
+
+/**
  * Begins the processing of a newly created job document
  *
  * @param {*} uri - the job document's uri
@@ -240,7 +276,7 @@ function startProcessingFlow(uri) {
   const status = jobObj.flowStatus;
   // sanity check
   if (FLOW_STATUS_NEW !== status) {
-    fn.error(null, 'INVALID-FLOW-STATE', 'Cannot start a flow not in the NEW status');
+    fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
   }
   // grab the flow definition from the correct db
   const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
@@ -659,7 +695,6 @@ module.exports = {
   batchCreateStateConductorJob,
   checkFlowContext,
   createStateConductorJob,
-  executeState,
   getAllFlowsContextQuery,
   getApplicableFlows,
   getFlowContextQuery,
@@ -671,7 +706,5 @@ module.exports = {
   getFlowNames,
   getInitialState,
   getJobIds,
-  handleStateFailure,
-  inTerminalState,
-  startProcessingFlow
+  processJob
 };

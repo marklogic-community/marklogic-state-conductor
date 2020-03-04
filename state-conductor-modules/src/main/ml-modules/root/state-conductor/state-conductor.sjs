@@ -18,9 +18,9 @@ const FLOW_STATUS_FAILED        = 'failed';
 
 const SUPPORTED_STATE_TYPES = [
   'choice',
-  'fail', 
-  'pass', 
-  'succeed', 
+  'fail',
+  'pass',
+  'succeed',
   'task'
 ];
 
@@ -80,7 +80,7 @@ function getFlowNames() {
  * @returns
  */
 function getFlowNameFromUri(uri) {
-  uri = uri.toString(); 
+  uri = uri.toString();
   uri = uri.slice(uri.lastIndexOf('/') + 1);
   return uri.lastIndexOf(FLOW_FILE_EXTENSION) !== -1 ? uri.slice(0, uri.lastIndexOf(FLOW_FILE_EXTENSION)) : uri;
 }
@@ -244,10 +244,10 @@ function processJob(uri) {
   const jobDoc = cts.doc(uri);
   const job = jobDoc.toObject();
   const status = job.flowStatus;
-  
+
   if (FLOW_STATUS_WORKING === status) {
     // execute state actions and transition to next state
-    executeState(uri);     
+    executeState(uri);
     // continue processing
     return true;
   } else if (FLOW_STATUS_NEW === status) {
@@ -316,14 +316,14 @@ function executeState(uri) {
       // perform the actions for the "Task" state
       if (state.Type && state.Type.toLowerCase() === 'task') {
         xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
-  
+
         if (state.Resource) {
           // execute the resource modules
           let resp = executeActionModule(
-            state.Resource, 
-            jobObj.uri, 
-            state.Parameters, 
-            jobObj.context, 
+            state.Resource,
+            jobObj.uri,
+            state.Parameters,
+            jobObj.context,
             {
               database: jobObj.database,
               modules: jobObj.modules
@@ -339,7 +339,7 @@ function executeState(uri) {
       let targetState = null;
       xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName}`);
 
-      if (!inTerminalState(jobObj, flowObj)) {    
+      if (!inTerminalState(jobObj, flowObj)) {
         if ('task' === state.Type.toLowerCase()) {
           targetState = state.Next;
         } else if ('pass' === state.Type.toLowerCase()) {
@@ -351,10 +351,10 @@ function executeState(uri) {
                 if (choice.Resource) {
                   let resp = fn.head(
                     executeConditionModule(
-                      choice.Resource, 
-                      jobObj.uri, 
-                      choice.Parameters, 
-                      jobObj.context, 
+                      choice.Resource,
+                      jobObj.uri,
+                      choice.Parameters,
+                      jobObj.context,
                       {
                         database: jobObj.database,
                         modules: jobObj.modules
@@ -363,13 +363,13 @@ function executeState(uri) {
                   );
                   targetState = resp ? choice.Next : null;
                 } else {
-                  fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${stateName}"`);  
+                  fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${stateName}"`);
                 }
               }
             });
             targetState = targetState || state.Default;
           } else {
-            fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}"`);  
+            fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}"`);
           }
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"`);
@@ -457,7 +457,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
   const jobObj = jobDoc.toObject();
 
   if (currState && (
-    'task' === currState.Type.toLowerCase() || 
+    'task' === currState.Type.toLowerCase() ||
     'choice' === currState.Type.toLowerCase())) {
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
@@ -473,7 +473,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
         }
         return acc;
       }, null);
-      
+
       if (target) {
         xdmp.trace(TRACE_EVENT, `transitioning to fallback state "${target}"`);
         // move to the target state
@@ -516,16 +516,53 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
 function inTerminalState(job, flow) {
   const currStateName = job.flowState;
   let currState = flow.States[currStateName];
-  
+
   if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
     fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported state type: "${currState.Type}"`);
   }
   return (
-    !currState || 
+    !currState ||
     currState.Type.toLowerCase() === 'succeed' ||
     currState.Type.toLowerCase() === 'fail' ||
     (currState.Type.toLowerCase() === 'task' && currState.End === true)
   );
+}
+
+
+/**
+ * Query for job document uris, matching the given options
+ *
+ * @param {*} options
+ * @returns
+ */
+function getJobDocuments(options) {
+  const count = options.count || 100;
+  const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
+  const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
+  let uris = [];
+
+  xdmp.invokeFunction(() => {
+    const queries = [
+      cts.collectionQuery('stateConductorJob'),
+      cts.jsonPropertyValueQuery('flowStatus', flowStatus)
+    ];
+
+    if (flowNames.length > 0) {
+      queries.push(cts.jsonPropertyValueQuery('flowName', flowNames));
+    }
+    if (options.startDate) {
+      queries.push(cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(options.startDate)));
+    }
+    if (options.endDate) {
+      queries.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(options.endDate)));
+    }
+
+    uris = uris.concat(cts.uris("", ["document", `limit=${count}`], cts.andQuery(queries)).toArray());
+  }, {
+    database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
+  });
+
+  return uris;
 }
 
 /**
@@ -545,9 +582,9 @@ function getFlowCounts(flowName, { startDate, endDate }) {
   if (endDate) {
     baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)))
   }
-  
+
   const numInStatus = (status) => fn.count(
-    cts.uris('', null, 
+    cts.uris('', null,
       cts.andQuery([].concat(
         baseQuery,
         cts.jsonPropertyValueQuery('flowName', flowName),
@@ -594,7 +631,7 @@ function getFlowCounts(flowName, { startDate, endDate }) {
     });
   }, {
     database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
-  });  
+  });
 
   return resp;
 }
@@ -609,7 +646,7 @@ function isLatestTemporalDocument(uri){
     //the temporalCollections are not strings so we need to convert them into strings
     return documentCollections.includes(collection.toString());
   });
-  
+
   return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
 }
 
@@ -628,7 +665,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   const directory = options.directory || '/stateConductorJob/';
   const database = options.database || xdmp.database();
   const modules = options.modules || xdmp.modulesDatabase();
-  
+
   const id = sem.uuidString();
   const jobUri = directory + id + '.json';
 
@@ -657,7 +694,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   }, {
     database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
   });
-  
+
   // add job metadata to the target document
   addJobMetadata(uri, flowName, id); // prevents updates to the target from retriggering this flow
 
@@ -705,6 +742,7 @@ module.exports = {
   getFlowNameFromUri,
   getFlowNames,
   getInitialState,
+  getJobDocuments,
   getJobIds,
   processJob
 };

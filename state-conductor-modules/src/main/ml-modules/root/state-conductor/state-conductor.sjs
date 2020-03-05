@@ -315,6 +315,8 @@ function executeState(uri) {
 
   try {
     if (state) {
+      //removes old waiting data
+        delete jobObj.currentlyWaiting 
       // perform the actions for the "Task" state
       if (state.Type && state.Type.toLowerCase() === 'task') {
         xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
@@ -335,14 +337,39 @@ function executeState(uri) {
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
         }
+      } else if (state.Type && state.Type.toLowerCase() === 'wait') {
+       //updated the job Doc to have info about why its waiting
+        xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
+  
+        if (state.Event) {
+          jobObj.currentlyWaiting = {
+            event: state.Event
+          }
+          jobObj.status = FLOW_STATUS_WATING
+        } else {
+          fn.error(null, 'INVALID-STATE-DEFINITION', `no "Event" defined for Task state "${stateName}"`);
+        }
       }
 
       // determine the next target state and transition
       let targetState  = null;
       let targetStatus = FLOW_STATUS_WORKING;
-      xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName}`);
+      xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName} with status of ${jobObj.status}`);
+ 
+     if (jobObj.status === FLOW_STATUS_WATING) {
+        xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
+  
+        // updates job document to show that we are waiting
+         jobObj.flowStatus = FLOW_STATUS_WATING;
+         jobObj.provenance.push({
+           date: (new Date()).toISOString(),
+           state: stateName,
+           waiting: jobObj.currentlyWaiting
+         });
 
-      if (!inTerminalState(jobObj, flowObj)) {    
+      } else if (!inTerminalState(jobObj, flowObj)) {  
+        xdmp.trace(TRACE_EVENT, `transition other: ${stateName}`);
+
         if ('task' === state.Type.toLowerCase()) {
           targetState = state.Next;
         } else if ('pass' === state.Type.toLowerCase()) {
@@ -380,7 +407,7 @@ function executeState(uri) {
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"`);
         }
-
+        
         // perform the transition
         if (targetState) {
           jobObj.flowStatus = targetStatus;
@@ -390,10 +417,14 @@ function executeState(uri) {
             from: stateName,
             to: targetState
           });
+
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `No suitable transition found in non-terminal state "${stateName}"`);
         }
-      } else {
+      }  else {
+       
+        xdmp.trace(TRACE_EVENT, `transition complete: ${stateName}`);
+
         // terminal states have no "Next" target state
         jobObj.flowStatus = FLOW_STATUS_COMPLETE;
         jobObj.provenance.push({

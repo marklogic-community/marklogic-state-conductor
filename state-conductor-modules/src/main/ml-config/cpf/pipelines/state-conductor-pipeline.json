@@ -40,22 +40,6 @@
           }
         }
       ]
-    },
-    {
-      "annotation": "State Conductor Waiting action",
-      "state": "http://marklogic.com/states/waiting",
-      "on-success": "http://marklogic.com/states/done",
-      "on-failure": "http://marklogic.com/states/error",
-      "execute": [
-        {
-          "condition": {
-            "module": "state-conductor/cpf/state-conductor-condition.sjs"
-          },
-          "action": {
-            "module": "state-conductor/cpf/state-conductor-work-action.sjs"
-         }
-        }
-      ]
     }
   ]
 }

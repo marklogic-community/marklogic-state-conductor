@@ -13,6 +13,7 @@ const FLOW_DIRECTORY            = '/state-conductor-flow/';
 const FLOW_JOBID_PROP_NAME      = 'state-conductor-job';
 const FLOW_STATUS_NEW           = 'new';
 const FLOW_STATUS_WORKING       = 'working';
+const FLOW_STATUS_WATING       = 'waiting';
 const FLOW_STATUS_COMPLETE      = 'complete';
 const FLOW_STATUS_FAILED        = 'failed';
 
@@ -21,7 +22,8 @@ const SUPPORTED_STATE_TYPES = [
   'fail', 
   'pass', 
   'succeed', 
-  'task'
+  'task',
+  'wait'
 ];
 
 const parseSerializedQuery = (serializedQuery) => {
@@ -336,7 +338,8 @@ function executeState(uri) {
       }
 
       // determine the next target state and transition
-      let targetState = null;
+      let targetState  = null;
+      let targetStatus = FLOW_STATUS_WORKING;
       xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName}`);
 
       if (!inTerminalState(jobObj, flowObj)) {    
@@ -344,6 +347,9 @@ function executeState(uri) {
           targetState = state.Next;
         } else if ('pass' === state.Type.toLowerCase()) {
           targetState = state.Next;
+        } else if ('wait' === state.Type.toLowerCase()) {
+          targetState = state.Next;
+          targetStatus = FLOW_STATUS_WATING;
         } else if ('choice' === state.Type.toLowerCase()) {
           if (state.Choices && state.Choices.length > 0) {
             state.Choices.forEach(choice => {
@@ -377,7 +383,7 @@ function executeState(uri) {
 
         // perform the transition
         if (targetState) {
-          jobObj.flowStatus = FLOW_STATUS_WORKING;
+          jobObj.flowStatus = targetStatus;
           jobObj.flowState = targetState;
           jobObj.provenance.push({
             date: (new Date()).toISOString(),

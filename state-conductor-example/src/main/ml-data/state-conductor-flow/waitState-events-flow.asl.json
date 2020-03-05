@@ -1,0 +1,41 @@
+{
+  "Comment": "wraps things in an envelope",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "collection",
+        "value": "event-test"
+      }
+    ]
+  },
+  "StartAt": "needs-envelope",
+  "States": {
+    "needs-envelope": {
+      "Type": "Task",
+      "Comment": "makes the envelope",
+      "Resource": "/state-conductor/actions/common/examples/make-envelope.sjs",
+      "Next": "waitForEvent"
+    },
+    "waitForEvent": {
+      "Type": "wait",
+      "Comment": "waitForAnEvent",
+      "Event": "eventName:EventId",
+      "Next": "needs-headers"
+    },
+    "needs-headers": {
+      "Type": "Task",
+      "Comment": "makes the envelope's headers",
+      "Resource": "/state-conductor/actions/common/examples/make-headers.sjs",
+      "Next": "needs-triples"
+    },
+    "needs-triples": {
+      "Type": "Task",
+      "Comment": "makes the envelope's triples",
+      "Resource": "/state-conductor/actions/common/examples/make-triples.sjs",
+      "Next": "success"
+    }, 
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

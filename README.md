@@ -172,8 +172,9 @@ New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
 ___
 ## Roadmap
 
-* Time based flow context
+* [Time based flow context](https://github.com/aclavio/marklogic-state-conductor/issues/1)
 * Named event based state pausing and resuming
+* Wait state
 * Unit Test coverage
 * Batch support
 * Rest Services

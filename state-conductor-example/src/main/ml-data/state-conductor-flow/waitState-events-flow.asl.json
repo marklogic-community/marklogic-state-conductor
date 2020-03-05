@@ -17,7 +17,7 @@
       "Next": "waitForEvent"
     },
     "waitForEvent": {
-      "Type": "wait",
+      "Type": "Wait",
       "Comment": "waitForAnEvent",
       "Event": "eventName:EventId",
       "Next": "needs-headers"

@@ -9,7 +9,7 @@ const schema = {
     States: {
       type: 'object',
       patternProperties: {
-        '^.{1,128}$': { 
+        '^.{1,128}$': {
           type: 'object',
           oneOf: [
             {
@@ -68,15 +68,19 @@ const schema = {
       properties: {
         context: {
           type: 'array',
-          minItems: 1,
+          minItems: 0,
           items: {
             type: 'object',
             properties: {
               scope: { type: 'string' },
-              value: { type: 'string' }
+              value: { type: 'string' },
+              period: {
+                type: 'number',
+                minimum: 1
+              }
             },
             additionalProperties: false,
-            required: ['scope', 'value']          
+            required: ['scope', 'value']
           }
         }
       },

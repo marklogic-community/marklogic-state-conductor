@@ -528,6 +528,60 @@ function inTerminalState(job, flow) {
   );
 }
 
+/**
+ * Given a flow context with the "scheduled" scope, determines
+ * if the scheduled period has elapsed.
+ *
+ * @param {*} context
+ * @returns
+ */
+function hasScheduleElapsed(context, now) {
+  if (context.scope !== 'scheduled') {
+    return false;
+  }
+
+  now = now || new Date();
+  const millis = now.getTime();
+  const minutes = Math.floor(millis / 1000 / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const dayname = xdmp.daynameFromDate(now);
+
+  try {
+    if ('minutely' === context.value) {
+      return (minutes % context.period) === 0;
+    } else if ('hourly' === context.value) {
+      const periodMatch = (hours % context.period) === 0;
+      const m = context.minute;
+      return periodMatch && (fn.minutesFromDateTime(now) === parseInt(m));
+    } else if ('daily' === context.value) {
+      const periodMatch = (days % context.period) === 0;
+      const [h, m] = context.startTime.split(':');
+      console.log('hours', h, 'minutes', m, 'hoursFromDateTime', fn.hoursFromDateTime(now), 'minutesFromDateTime', fn.minutesFromDateTime(now));
+      return periodMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
+    } else if ('weekly' === context.value) {
+      const periodMatch = (weeks % context.period) === 0;
+      const dayMatch = context.days.map(day => day.toLowerCase()).includes(dayname.toLowerCase());
+      const [h, m] = context.startTime.split(':');
+      return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
+    } else if ('monthly' === context.value) {
+      const periodMatch = (fn.monthFromDate(now) % context.period) === 0;
+      const dayMatch = fn.dayFromDateTime(now) === context.monthDay;
+      const [h, m] = context.startTime.split(':');
+      return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
+    } else if ('once' === context.value) {
+      const start = xdmp.parseDateTime('[M01]/[D01]/[Y0001]-[H01]:[m01]', `${context.startDate}-${context.startTime}`);
+      const upper = start.add("PT1M");
+      return start.le(now) && upper.gt(now);
+    }
+  } catch (ex) {
+    xdmp.log(`error parsing schedule values: ${JSON.stringify(context)}`);
+  }
+
+  return false;
+}
+
 
 /**
  * Query for job document uris, matching the given options
@@ -746,5 +800,6 @@ module.exports = {
   getInitialState,
   getJobDocuments,
   getJobIds,
+  hasScheduleElapsed,
   processJob
 };

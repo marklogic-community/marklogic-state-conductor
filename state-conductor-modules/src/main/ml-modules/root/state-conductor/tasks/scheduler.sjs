@@ -3,38 +3,46 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 const now = new Date();
-const millis = now.getTime();
-const minutes = Math.floor(millis / 1000 / 60);
-const hours = Math.floor(minutes / 60);
 
-function hasScheduleElapsed(context) {
-  if (context.scope !== 'scheduled') {
-    return false;
-  }
-
-  try {
-    if ('minutely' === context.value) {
-      return (minutes % context.period) === 0;
-    } else if ('hourly' === context.value) {
-      return (hours % context.period) === 0;
-    } else if ('daily' === context.value) {
-      const [h, m] = context.startTime.split(':');
-      return (fn.hoursFromDateTime(now) === h) && (fn.minutesFromDateTime(now) === m);
-    } else if ('weekly' === context.value) {
-      // TODO
-    } else if ('monthly' === context.value) {
-      // TODO
-    } else if ('once' === context.value) {
-      const start = xdmp.parseDateTime('[M01]/[D01]/[Y0001]-[H01]:[m01]', `${context.startDate}-${context.startTime}`);
-      const upper = start.add("PT1M");
-      return start.le(now) && upper.gt(now);
-    }
-  } catch (ex) {
-    xdmp.log(`error parsing schedule values: ${JSON.stringify(context)}`);
-  }
-
-  return false;
+/*
+{
+  "scope": "scheduled",
+  "value": "minutely",
+  "period": 1
 }
+{
+  "scope": "scheduled",
+  "value": "hourly",
+  "period": 1,
+  "minute": 59
+}
+{
+  "scope": "scheduled",
+  "value": "daily",
+  "period": 1,
+  "startTime": "24:00"
+}
+{
+  "scope": "scheduled",
+  "value": "weekly",
+  "period": 1,
+  "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+  "startTime": "24:00"
+}
+{
+  "scope": "scheduled",
+  "value": "monthly",
+  "period": 1,
+  "monthDay": 31,
+  "startTime": "24:00"
+}
+{
+  "scope": "scheduled",
+  "value": "once",
+  "startDate": "MM/DD/YYYY",
+  "startTime": "24:00"
+}
+*/
 
 // grab all state conductor flows with a 'scheduled' context
 const flows = sc.getFlowDocuments().toArray().filter(flow => {
@@ -51,7 +59,7 @@ flows.filter(flow => {
   let contexts = flow.toObject().mlDomain.context;
   let elapsed = false;
   contexts.forEach(ctx => {
-    elapsed = elapsed || hasScheduleElapsed(ctx);
+    elapsed = elapsed || sc.hasScheduleElapsed(ctx, now);
   });
   return elapsed;
 }).forEach(flow => {

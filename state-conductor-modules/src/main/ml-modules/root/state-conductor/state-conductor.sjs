@@ -797,8 +797,11 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
  * @returns
  */
 function emmitEvent(event, batchSize = 100){
-  
-  let waitingURIJobsForEvent =
+  let uris = 
+
+  xdmp.invokeFunction(() => {
+    let waitingURIJobsForEvent =
+    
     cts.uris(null, null,
         cts.andQuery([
           cts.collectionQuery("stateConductorJob"),
@@ -806,30 +809,37 @@ function emmitEvent(event, batchSize = 100){
           cts.jsonPropertyScopeQuery("currentlyWaiting", cts.jsonPropertyValueQuery("event", event))
         ])
       ).toArray()
-  /*
-   splits the array into groups of the batchSize
-   this is to handle the the case where there are many waiting jobs
- */
-  var arrayOfwaitingURIJobsForEvent = [];
-  
-  for (var i=0; i< waitingURIJobsForEvent.length; i+=batchSize) {
-     arrayOfwaitingURIJobsForEvent.push(waitingURIJobsForEvent.slice(i,i+batchSize));
-  }
-  
-  //loops through all the arrays
-  arrayOfwaitingURIJobsForEvent.forEach(function(uriArray){
-  
-    xdmp.spawn(
-      "/state-conductor/resumeWaitingJobs.sjs", 
-      {
-        "uriArray": uriArray, 
-        "resumeBy": "emmit event: " + event
-      }
-    )
+    /*
+    splits the array into groups of the batchSize
+    this is to handle the the case where there are many waiting jobs
+  */
+    var arrayOfwaitingURIJobsForEvent = [];
     
-  })
+    for (var i=0; i< waitingURIJobsForEvent.length; i+=batchSize) {
+      arrayOfwaitingURIJobsForEvent.push(waitingURIJobsForEvent.slice(i,i+batchSize));
+    }
+    
+    //loops through all the arrays
+    arrayOfwaitingURIJobsForEvent.forEach(function(uriArray){
+    
+      xdmp.spawn(
+        "/state-conductor/resumeWaitingJobs.sjs", 
+        {
+          "uriArray": uriArray, 
+          "resumeBy": "emmit event: " + event
+        }
+      )
+      
+    })
+    
+    return waitingURIJobsForEvent
+  }, {
+    database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
+  });
+
+
+ return fn.head(uris)
   
-  return waitingURIJobsForEvent
 }
 
 module.exports = {

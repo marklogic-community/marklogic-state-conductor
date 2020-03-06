@@ -1,10 +1,10 @@
 {
-  "Comment": "wraps things in an envelope",
+  "Comment": "wraps things in an envelope, and waits for an event",
   "mlDomain": {
     "context": [
       {
         "scope": "collection",
-        "value": "event-test"
+        "value": "event-wait-test"
       }
     ]
   },
@@ -19,7 +19,7 @@
     "waitForEvent": {
       "Type": "Wait",
       "Comment": "waitForAnEvent",
-      "Event": "eventName:EventId",
+      "Event": "waitForEvent:123",
       "Next": "needs-headers"
     },
     "needs-headers": {

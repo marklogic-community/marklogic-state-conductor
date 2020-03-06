@@ -789,6 +789,49 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
   return ids;
 }
 
+/**
+ * Convienence function to emmitEvents
+ *
+ * @param {*} event
+ * @param {*} batchSize the size of the batch of uris that gets spawn off
+ * @returns
+ */
+function emmitEvent(event, batchSize = 100){
+  
+  let waitingURIJobsForEvent =
+    cts.uris(null, null,
+        cts.andQuery([
+          cts.collectionQuery("stateConductorJob"),
+          cts.jsonPropertyValueQuery("flowStatus", FLOW_STATUS_WATING),
+          cts.jsonPropertyScopeQuery("currentlyWaiting", cts.jsonPropertyValueQuery("event", event))
+        ])
+      ).toArray()
+  /*
+   splits the array into groups of the batchSize
+   this is to handle the the case where there are many waiting jobs
+ */
+  var arrayOfwaitingURIJobsForEvent = [];
+  
+  for (var i=0; i< waitingURIJobsForEvent.length; i+=batchSize) {
+     arrayOfwaitingURIJobsForEvent.push(waitingURIJobsForEvent.slice(i,i+batchSize));
+  }
+  
+  //loops through all the arrays
+  arrayOfwaitingURIJobsForEvent.forEach(function(uriArray){
+  
+    xdmp.spawn(
+      "/state-conductor/resumeWaitingJobs.sjs", 
+      {
+        "uriArray": uriArray, 
+        "resumeBy": "emmit event: " + event
+      }
+    )
+    
+  })
+  
+  return waitingURIJobsForEvent
+}
+
 module.exports = {
   TRACE_EVENT,
   STATE_CONDUCTOR_JOBS_DB,
@@ -817,5 +860,6 @@ module.exports = {
   getInitialState,
   getJobIds,
   processJob,
-  resumeWaitingJob
+  resumeWaitingJob,
+  emmitEvent
 };

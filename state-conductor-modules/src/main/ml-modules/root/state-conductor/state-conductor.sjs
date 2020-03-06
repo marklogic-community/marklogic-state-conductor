@@ -13,7 +13,7 @@ const FLOW_DIRECTORY            = '/state-conductor-flow/';
 const FLOW_JOBID_PROP_NAME      = 'state-conductor-job';
 const FLOW_STATUS_NEW           = 'new';
 const FLOW_STATUS_WORKING       = 'working';
-const FLOW_STATUS_WATING       = 'waiting';
+const FLOW_STATUS_WATING        = 'waiting';
 const FLOW_STATUS_COMPLETE      = 'complete';
 const FLOW_STATUS_FAILED        = 'failed';
 
@@ -249,13 +249,13 @@ function processJob(uri) {
   
   if (FLOW_STATUS_WORKING === status) {
     // execute state actions and transition to next state
-    executeState(uri);     
+    executeStateByJobDoc(jobDoc);     
     // continue processing
     return true;
   } else if (FLOW_STATUS_NEW === status) {
     // job document is not being processed, grab the embedded flow, and start the initial state
     // begin the flow processing
-    startProcessingFlow(uri);
+    startProcessingFlowByJobDoc(jobDoc);
     // continue processing
     return true;
   } else {
@@ -273,17 +273,26 @@ function processJob(uri) {
  */
 function startProcessingFlow(uri) {
   const jobDoc = cts.doc(uri);
+  startProcessingFlowByJobDoc(jobDoc);
+}
+
+function startProcessingFlowByJobDoc(jobDoc, save = true) {
+  const uri = xdmp.nodeUri(jobDoc)
   const jobObj = jobDoc.toObject();
   const currFlowName = jobObj.flowName;
   const status = jobObj.flowStatus;
+
   // sanity check
   if (FLOW_STATUS_NEW !== status) {
     fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
   }
+
   // grab the flow definition from the correct db
   const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
   const initialState = getInitialState(currFlow);
+
   xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
+
   // update job state, status, and provenence
   jobObj.flowStatus = FLOW_STATUS_WORKING;
   jobObj.flowState = initialState;
@@ -292,7 +301,12 @@ function startProcessingFlow(uri) {
     from: 'NEW',
     to: initialState
   });
-  xdmp.nodeReplace(jobDoc.root, jobObj);
+
+  if (save){
+    xdmp.nodeReplace(jobDoc.root, jobObj);
+  }
+
+  return jobObj
 }
 
 /**
@@ -300,8 +314,13 @@ function startProcessingFlow(uri) {
  *
  * @param {*} uri - the job document's uri
  */
-function resumeWaitingJob(uri, resumeBy = 'event') {
+function resumeWaitingJob(uri, resumeBy = 'unknonw') {
   const jobDoc = cts.doc(uri);
+  resumeWaitingJobByJobDoc(jobDoc, resumeBy)
+};
+
+function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
+  const uri = xdmp.nodeUri(jobDoc);
   const jobObj = jobDoc.toObject();
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
@@ -326,12 +345,12 @@ function resumeWaitingJob(uri, resumeBy = 'event') {
           resumeBy: resumeBy
         });
 
-       return transition(jobDoc, jobObj, stateName, state, flowObj)
+       return transition(jobDoc, jobObj, stateName, state, flowObj, save)
     } else {
       fn.error(null, 'this job doc is not waiting: ' + uri);
     }
   } catch (err) {
-    return handleStateFailure(uri, flowName, flowObj, stateName, err);
+    return handleStateFailure(uri, flowName, flowObj, stateName, err, save);
   }
 
    
@@ -346,94 +365,97 @@ function resumeWaitingJob(uri, resumeBy = 'event') {
  * @param {*} state - the state object 
  * @param {*} flowObj - the flow object 
  */
-function transition(jobDoc, jobObj, stateName, state, flowObj){
+function transition(jobDoc, jobObj, stateName, state, flowObj, save = true){
  try {
-  // determine the next target state and transition
-  let targetState  = null;
- 
-  xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName} with status of ${jobObj.flowStatus}`);
+    // determine the next target state and transition
+    let targetState  = null;
+  
+    xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName} with status of ${jobObj.flowStatus}`);
 
- if (jobObj.flowStatus === FLOW_STATUS_WATING) {
-    xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
+  if (jobObj.flowStatus === FLOW_STATUS_WATING) {
+      xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
 
-    // updates job document to show that we are waiting
-     jobObj.flowStatus = FLOW_STATUS_WATING;
+      jobObj.provenance.push({
+        date: (new Date()).toISOString(),
+        state: stateName,
+        waiting: jobObj.currentlyWaiting
+      });
 
-     jobObj.provenance.push({
-       date: (new Date()).toISOString(),
-       state: stateName,
-       waiting: jobObj.currentlyWaiting
-     });
+    } else if (!inTerminalState(jobObj, flowObj)) {  
+      xdmp.trace(TRACE_EVENT, `transition other: ${stateName}`);
 
-  } else if (!inTerminalState(jobObj, flowObj)) {  
-    xdmp.trace(TRACE_EVENT, `transition other: ${stateName}`);
-
-    if ('task' === state.Type.toLowerCase()) {
-      targetState = state.Next;
-    } else if ('pass' === state.Type.toLowerCase()) {
-      targetState = state.Next;
-    } else if ('wait' === state.Type.toLowerCase()) {
-      targetState = state.Next;
-    } else if ('choice' === state.Type.toLowerCase()) {
-      if (state.Choices && state.Choices.length > 0) {
-        state.Choices.forEach(choice => {
-          if (!targetState) {
-            if (choice.Resource) {
-              let resp = fn.head(
-                executeConditionModule(
-                  choice.Resource, 
-                  jobObj.uri, 
-                  choice.Parameters, 
-                  jobObj.context, 
-                  {
-                    database: jobObj.database,
-                    modules: jobObj.modules
-                  }
-                )
-              );
-              targetState = resp ? choice.Next : null;
-            } else {
-              fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${stateName}"`);  
-            }
+      if ('task' === state.Type.toLowerCase()) {
+        targetState = state.Next;
+      } else if ('pass' === state.Type.toLowerCase()) {
+        targetState = state.Next;
+      } else if ('wait' === state.Type.toLowerCase()) {
+        targetState = state.Next;
+      } else if ('choice' === state.Type.toLowerCase()) {
+        try {
+          if (state.Choices && state.Choices.length > 0) {
+            state.Choices.forEach(choice => {
+              if (!targetState) {
+                if (choice.Resource) {
+                  let resp = fn.head(
+                    executeConditionModule(
+                      choice.Resource, 
+                      jobObj.uri, 
+                      choice.Parameters, 
+                      jobObj.context, 
+                      {
+                        database: jobObj.database,
+                        modules: jobObj.modules
+                      }
+                    )
+                  );
+                  targetState = resp ? choice.Next : null;
+                } else {
+                  fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${stateName}"`);  
+                }
+              }
+            });
+            targetState = targetState || state.Default;
+          } else {
+            fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}" `);  
           }
-        });
-        targetState = targetState || state.Default;
+        } catch (err) {
+          return handleStateFailure(xdmp.nodeUri(jobDoc), flowName, flowObj, stateName, err, save);
+        } 
       } else {
-        fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}" `);  
+        fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"` + xdmp.quote(state));
       }
-    } else {
-      fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"` + xdmp.quote(state));
-    }
+      
+      // perform the transition
+      if (targetState) {
+        jobObj.flowState = targetState;
+        jobObj.provenance.push({
+          date: (new Date()).toISOString(),
+          from: stateName,
+          to: targetState
+        });
+
+      } else {
+        fn.error(null, 'INVALID-STATE-DEFINITION', `No suitable transition found in non-terminal state "${stateName}"`);
+      }
+    }  else {
     
-    // perform the transition
-    if (targetState) {
-      jobObj.flowState = targetState;
+      xdmp.trace(TRACE_EVENT, `transition complete: ${stateName}`);
+
+      // terminal states have no "Next" target state
+      jobObj.flowStatus = FLOW_STATUS_COMPLETE;
+
       jobObj.provenance.push({
         date: (new Date()).toISOString(),
         from: stateName,
-        to: targetState
+        to: 'COMPLETED'
       });
-
-    } else {
-      fn.error(null, 'INVALID-STATE-DEFINITION', `No suitable transition found in non-terminal state "${stateName}"`);
     }
-  }  else {
-   
-    xdmp.trace(TRACE_EVENT, `transition complete: ${stateName}`);
 
-    // terminal states have no "Next" target state
-    jobObj.flowStatus = FLOW_STATUS_COMPLETE;
-
-    jobObj.provenance.push({
-      date: (new Date()).toISOString(),
-      from: stateName,
-      to: 'COMPLETED'
-    });
-  }
-
-  // update the state status and provenence in the job doc
-  xdmp.nodeReplace(jobDoc.root, jobObj);
-
+    // update the state status and provenence in the job doc
+    if (save) {
+      xdmp.nodeReplace(jobDoc.root, jobObj);
+    }
+  
   } catch (err) {
     
     xdmp.trace(TRACE_EVENT, ` transition error for state "${stateName}"`+ xdmp.quote(err));
@@ -442,7 +464,10 @@ function transition(jobDoc, jobObj, stateName, state, flowObj){
     jobObj.flowStatus = FLOW_STATUS_FAILED;
     jobObj.errors = jobObj.errors || {};
     jobObj.errors[stateName] = err;
-    xdmp.nodeReplace(jobDoc.root, jobObj);
+
+    if (save) {
+      xdmp.nodeReplace(jobDoc.root, jobObj);
+    }
     // trigger CPF error state
     fn.error(null, 'TRANSITIONERROR', Sequence.from([
       `transition error for state "${stateName}"`,
@@ -460,6 +485,11 @@ function transition(jobDoc, jobObj, stateName, state, flowObj){
  */
 function executeState(uri) {
   const jobDoc = cts.doc(uri);
+  executeStateByJobDoc(jobDoc);
+};
+
+function executeStateByJobDoc(jobDoc, save = true) {
+  const uri = xdmp.nodeUri(jobDoc);
   const jobObj = jobDoc.toObject();
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
@@ -510,10 +540,10 @@ function executeState(uri) {
       }
 
     } catch (err) {
-      return handleStateFailure(uri, flowName, flowObj, stateName, err);
+      return handleStateFailure(uri, flowName, flowObj, stateName, err, save);
     }
 
-    return transition(jobDoc, jobObj, stateName, state, flowObj);
+    return transition(jobDoc, jobObj, stateName, state, flowObj, save);
 
   } else {
     fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
@@ -562,7 +592,7 @@ function executeConditionModule(modulePath, uri, params, context, { database, mo
  * @param {*} err
  * @returns
  */
-function handleStateFailure(uri, flowName, flow, stateName, err) {
+function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
   const currState = flow.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
@@ -600,8 +630,12 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
         // capture error message in context
         jobObj.errors = jobObj.errors || {};
         jobObj.errors[stateName] = err;
-        xdmp.nodeReplace(jobDoc.root, jobObj);
-        return;
+        
+        if (save){
+          xdmp.nodeReplace(jobDoc.root, jobObj);
+        }
+       
+        return jobObj;
       }
     }
   }

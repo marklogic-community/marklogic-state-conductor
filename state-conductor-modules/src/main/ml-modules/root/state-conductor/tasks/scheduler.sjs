@@ -45,13 +45,14 @@ const now = new Date();
 */
 
 // grab all state conductor flows with a 'scheduled' context
-const flows = sc.getFlowDocuments().toArray().filter(flow => {
-  let context = flow.toObject().mlDomain.context;
-  let hasScheduled = context.filter(c => c.scope === 'scheduled');
-  return hasScheduled.length > 0;
-});
+const flows = cts.search(
+  cts.andQuery([
+    cts.collectionQuery(sc.FLOW_COLLECTION),
+    cts.jsonPropertyScopeQuery('mlDomain', cts.jsonPropertyValueQuery('scope', 'scheduled'))
+  ])
+).toArray();
 
-xdmp.log(`found ${flows.length} scheduled flows`);
+xdmp.trace(sc.TRACE_EVENT, `found ${flows.length} scheduled flows`);
 
 // determine which flows should run and create state conductor jobs
 flows.filter(flow => {
@@ -66,7 +67,7 @@ flows.filter(flow => {
   // create a state conductor job for the elapsed flows
   let flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
   let resp = sc.createStateConductorJob(flowName, null);
-  xdmp.log(`created state conductor job for scheduled flow: ${resp}`);
+  xdmp.trace(sc.TRACE_EVENT, `created state conductor job for scheduled flow: ${resp}`);
 });
 
 

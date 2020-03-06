@@ -72,11 +72,34 @@ const schema = {
           items: {
             type: 'object',
             properties: {
-              scope: { type: 'string' },
+              scope: {
+                type: 'string',
+                pattern: '^(collection|directory|query|scheduled)$'
+              },
               value: { type: 'string' },
               period: {
                 type: 'number',
                 minimum: 1
+              },
+              minute: {
+                type: 'number',
+                minimum: 0,
+                maximum: 59
+              },
+              startDate: { type: 'string' },
+              startTime: { type: 'string' },
+              monthDay: {
+                type: 'number',
+                minimum: 1,
+                maximum: 31
+              },
+              days: {
+                type: 'array',
+                minItems: 1,
+                items: {
+                  type: 'string',
+                  pattern: '^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$'
+                }
               }
             },
             additionalProperties: false,

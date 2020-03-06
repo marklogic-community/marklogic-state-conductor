@@ -18,9 +18,9 @@ const FLOW_STATUS_FAILED        = 'failed';
 
 const SUPPORTED_STATE_TYPES = [
   'choice',
-  'fail', 
-  'pass', 
-  'succeed', 
+  'fail',
+  'pass',
+  'succeed',
   'task'
 ];
 
@@ -80,7 +80,7 @@ function getFlowNames() {
  * @returns
  */
 function getFlowNameFromUri(uri) {
-  uri = uri.toString(); 
+  uri = uri.toString();
   uri = uri.slice(uri.lastIndexOf('/') + 1);
   return uri.lastIndexOf(FLOW_FILE_EXTENSION) !== -1 ? uri.slice(0, uri.lastIndexOf(FLOW_FILE_EXTENSION)) : uri;
 }
@@ -244,10 +244,10 @@ function processJob(uri) {
   const jobDoc = cts.doc(uri);
   const job = jobDoc.toObject();
   const status = job.flowStatus;
-  
+
   if (FLOW_STATUS_WORKING === status) {
     // execute state actions and transition to next state
-    executeState(uri);     
+    executeState(uri);
     // continue processing
     return true;
   } else if (FLOW_STATUS_NEW === status) {
@@ -316,14 +316,14 @@ function executeState(uri) {
       // perform the actions for the "Task" state
       if (state.Type && state.Type.toLowerCase() === 'task') {
         xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
-  
+
         if (state.Resource) {
           // execute the resource modules
           let resp = executeActionModule(
-            state.Resource, 
-            jobObj.uri, 
-            state.Parameters, 
-            jobObj.context, 
+            state.Resource,
+            jobObj.uri,
+            state.Parameters,
+            jobObj.context,
             {
               database: jobObj.database,
               modules: jobObj.modules
@@ -339,7 +339,7 @@ function executeState(uri) {
       let targetState = null;
       xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName}`);
 
-      if (!inTerminalState(jobObj, flowObj)) {    
+      if (!inTerminalState(jobObj, flowObj)) {
         if ('task' === state.Type.toLowerCase()) {
           targetState = state.Next;
         } else if ('pass' === state.Type.toLowerCase()) {
@@ -351,10 +351,10 @@ function executeState(uri) {
                 if (choice.Resource) {
                   let resp = fn.head(
                     executeConditionModule(
-                      choice.Resource, 
-                      jobObj.uri, 
-                      choice.Parameters, 
-                      jobObj.context, 
+                      choice.Resource,
+                      jobObj.uri,
+                      choice.Parameters,
+                      jobObj.context,
                       {
                         database: jobObj.database,
                         modules: jobObj.modules
@@ -363,13 +363,13 @@ function executeState(uri) {
                   );
                   targetState = resp ? choice.Next : null;
                 } else {
-                  fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${stateName}"`);  
+                  fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${stateName}"`);
                 }
               }
             });
             targetState = targetState || state.Default;
           } else {
-            fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}"`);  
+            fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}"`);
           }
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"`);
@@ -457,7 +457,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
   const jobObj = jobDoc.toObject();
 
   if (currState && (
-    'task' === currState.Type.toLowerCase() || 
+    'task' === currState.Type.toLowerCase() ||
     'choice' === currState.Type.toLowerCase())) {
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
@@ -473,7 +473,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
         }
         return acc;
       }, null);
-      
+
       if (target) {
         xdmp.trace(TRACE_EVENT, `transitioning to fallback state "${target}"`);
         // move to the target state
@@ -516,16 +516,115 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
 function inTerminalState(job, flow) {
   const currStateName = job.flowState;
   let currState = flow.States[currStateName];
-  
+
   if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
     fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported state type: "${currState.Type}"`);
   }
   return (
-    !currState || 
+    !currState ||
     currState.Type.toLowerCase() === 'succeed' ||
     currState.Type.toLowerCase() === 'fail' ||
     (currState.Type.toLowerCase() === 'task' && currState.End === true)
   );
+}
+
+/**
+ * Given a flow context with the "scheduled" scope, determines
+ * if the scheduled period has elapsed.
+ *
+ * @param {*} context
+ * @returns
+ */
+function hasScheduleElapsed(context, now) {
+  if (context.scope !== 'scheduled') {
+    return false;
+  }
+
+  now = now || new Date();
+  const millis = now.getTime();
+  const minutes = Math.floor(millis / 1000 / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const dayname = xdmp.daynameFromDate(now);
+
+  try {
+    if ('minutely' === context.value) {
+      // checks periodicity
+      return (minutes % context.period) === 0;
+    } else if ('hourly' === context.value) {
+      // checks periodicity and the number of minutes past the hour
+      const periodMatch = (hours % context.period) === 0;
+      const m = context.minute;
+      return periodMatch && (fn.minutesFromDateTime(now) === parseInt(m));
+    } else if ('daily' === context.value) {
+      // checks periodicity and if we've arrived at the specified time
+      const periodMatch = (days % context.period) === 0;
+      const [h, m] = context.startTime.split(':');
+      return periodMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
+    } else if ('weekly' === context.value) {
+      // checks periodicity and if we've arrived at the specified time and day(s) of the week
+      // periodicity check uses the week number for the current year (1-52)
+      const periodMatch = (xdmp.weekFromDate(now) % context.period) === 0;
+      const dayMatch = context.days.map(day => day.toLowerCase()).includes(dayname.toLowerCase());
+      const [h, m] = context.startTime.split(':');
+      return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
+    } else if ('monthly' === context.value) {
+      // checks periodicity and if we've arrived at the specified time and day of the week
+      // periodicity check uses the month number for the current year (1-12)
+      // day check uses the day number of the month (1 - 31)
+      const periodMatch = (fn.monthFromDate(now) % context.period) === 0;
+      const dayMatch = fn.dayFromDateTime(now) === context.monthDay;
+      const [h, m] = context.startTime.split(':');
+      return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
+    } else if ('once' === context.value) {
+      // checks if we've arrived at the specified date and time
+      // generates a range of one minute from specified time and validates the current time is within that minute
+      const start = xdmp.parseDateTime('[M01]/[D01]/[Y0001]-[H01]:[m01][Z]', `${context.startDate}-${context.startTime}Z`);
+      const upper = start.add("PT1M");
+      return start.le(now) && upper.gt(now);
+    }
+  } catch (ex) {
+    xdmp.log(`error parsing schedule values: ${JSON.stringify(context)}`);
+  }
+
+  return false;
+}
+
+
+/**
+ * Query for job document uris, matching the given options
+ *
+ * @param {*} options
+ * @returns
+ */
+function getJobDocuments(options) {
+  const count = options.count || 100;
+  const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
+  const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
+  let uris = [];
+
+  xdmp.invokeFunction(() => {
+    const queries = [
+      cts.collectionQuery('stateConductorJob'),
+      cts.jsonPropertyValueQuery('flowStatus', flowStatus)
+    ];
+
+    if (flowNames.length > 0) {
+      queries.push(cts.jsonPropertyValueQuery('flowName', flowNames));
+    }
+    if (options.startDate) {
+      queries.push(cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(options.startDate)));
+    }
+    if (options.endDate) {
+      queries.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(options.endDate)));
+    }
+
+    uris = uris.concat(cts.uris("", ["document", `limit=${count}`], cts.andQuery(queries)).toArray());
+  }, {
+    database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
+  });
+
+  return uris;
 }
 
 /**
@@ -545,9 +644,9 @@ function getFlowCounts(flowName, { startDate, endDate }) {
   if (endDate) {
     baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)))
   }
-  
+
   const numInStatus = (status) => fn.count(
-    cts.uris('', null, 
+    cts.uris('', null,
       cts.andQuery([].concat(
         baseQuery,
         cts.jsonPropertyValueQuery('flowName', flowName),
@@ -594,7 +693,7 @@ function getFlowCounts(flowName, { startDate, endDate }) {
     });
   }, {
     database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
-  });  
+  });
 
   return resp;
 }
@@ -609,7 +708,7 @@ function isLatestTemporalDocument(uri){
     //the temporalCollections are not strings so we need to convert them into strings
     return documentCollections.includes(collection.toString());
   });
-  
+
   return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
 }
 
@@ -628,7 +727,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   const directory = options.directory || '/stateConductorJob/';
   const database = options.database || xdmp.database();
   const modules = options.modules || xdmp.modulesDatabase();
-  
+
   const id = sem.uuidString();
   const jobUri = directory + id + '.json';
 
@@ -657,9 +756,11 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   }, {
     database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
   });
-  
-  // add job metadata to the target document
-  addJobMetadata(uri, flowName, id); // prevents updates to the target from retriggering this flow
+
+  // add job metadata to the target document (if one was passed)
+  if (uri) {
+    addJobMetadata(uri, flowName, id); // prevents updates to the target from retriggering this flow
+  }
 
   return id;
 }
@@ -705,6 +806,8 @@ module.exports = {
   getFlowNameFromUri,
   getFlowNames,
   getInitialState,
+  getJobDocuments,
   getJobIds,
+  hasScheduleElapsed,
   processJob
 };

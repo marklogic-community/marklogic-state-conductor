@@ -1,0 +1,24 @@
+{
+  "Comment": "performs an action at a set internval",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "scheduled",
+        "value": "minutely",
+        "period": 5
+      }
+    ]
+  },
+  "StartAt": "log-message",
+  "States": {
+    "log-message": {
+      "Type": "Task",
+      "Comment": "announces the time",
+      "Resource": "/ext/state-conductor/periodic-flow/town-crier.sjs",
+      "Next": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

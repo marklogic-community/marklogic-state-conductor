@@ -558,10 +558,9 @@ function hasScheduleElapsed(context, now) {
     } else if ('daily' === context.value) {
       const periodMatch = (days % context.period) === 0;
       const [h, m] = context.startTime.split(':');
-      console.log('hours', h, 'minutes', m, 'hoursFromDateTime', fn.hoursFromDateTime(now), 'minutesFromDateTime', fn.minutesFromDateTime(now));
       return periodMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
     } else if ('weekly' === context.value) {
-      const periodMatch = (weeks % context.period) === 0;
+      const periodMatch = (xdmp.weekFromDate(now) % context.period) === 0;
       const dayMatch = context.days.map(day => day.toLowerCase()).includes(dayname.toLowerCase());
       const [h, m] = context.startTime.split(':');
       return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
@@ -571,7 +570,7 @@ function hasScheduleElapsed(context, now) {
       const [h, m] = context.startTime.split(':');
       return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
     } else if ('once' === context.value) {
-      const start = xdmp.parseDateTime('[M01]/[D01]/[Y0001]-[H01]:[m01]', `${context.startDate}-${context.startTime}`);
+      const start = xdmp.parseDateTime('[M01]/[D01]/[Y0001]-[H01]:[m01][Z]', `${context.startDate}-${context.startTime}Z`);
       const upper = start.add("PT1M");
       return start.le(now) && upper.gt(now);
     }

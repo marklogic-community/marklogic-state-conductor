@@ -26,7 +26,7 @@ const now = new Date();
   "scope": "scheduled",
   "value": "weekly",
   "period": 1,
-  "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+  "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
   "startTime": "24:00"
 }
 {

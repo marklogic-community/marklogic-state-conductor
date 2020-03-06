@@ -116,18 +116,130 @@ assertions.push(
 );
 
 // weekly tests
+context = {
+  "scope": "scheduled",
+  "value": "weekly",
+  "period": 1,
+  "days": ["monday", "wednesday", "friday"],
+  "startTime": "12:00"
+};
+dt = new Date('2020-01-06T12:00:00Z');
 assertions.push(
-  // TOOD
+  test.assertTrue(sc.hasScheduleElapsed(context, dt)),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-07T12:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-08T12:00:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-09T12:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-10T12:00:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-11T12:00:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-12T12:00:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-08T11:59:59Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-08T12:01:00Z'))),
+);
+context = {
+  "scope": "scheduled",
+  "value": "weekly",
+  "period": 1,
+  "days": ["tuesday", "thursday", "saturday", "sunday"],
+  "startTime": "12:00"
+};
+dt = new Date('2020-01-06T12:00:00Z');
+assertions.push(
+  test.assertFalse(sc.hasScheduleElapsed(context, dt)),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-07T12:00:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-08T12:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-09T12:00:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-10T12:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-11T12:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-12T12:00:00Z')))
+);
+context = {
+  "scope": "scheduled",
+  "value": "weekly",
+  "period": 2,
+  "days": ["monday", "friday"],
+  "startTime": "02:30"
+};
+dt = new Date('2020-01-06T02:30:00Z');
+assertions.push(
+  test.assertTrue(sc.hasScheduleElapsed(context, dt)),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-10T02:30:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-13T02:30:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-17T02:30:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-20T02:30:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-24T02:30:00Z')))
 );
 
 // monthly tests
+context = {
+  "scope": "scheduled",
+  "value": "monthly",
+  "period": 1,
+  "monthDay": 1,
+  "startTime": "20:00"
+};
+dt = new Date('2020-01-01T20:00:00Z');
 assertions.push(
-  // TOOD
+  test.assertTrue(sc.hasScheduleElapsed(context, dt)),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-01T20:01:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-01T219:59:59Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-02T20:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-02-01T20:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-03-01T20:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-06-01T20:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-12-01T20:00:00Z')))
+);
+context = {
+  "scope": "scheduled",
+  "value": "monthly",
+  "period": 3,
+  "monthDay": 5,
+  "startTime": "01:27"
+};
+dt = new Date('2020-01-05T01:27:00Z');
+assertions.push(
+  test.assertFalse(sc.hasScheduleElapsed(context, dt)),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-02-05T01:27:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-03-05T01:27:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-04-05T01:27:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-06-05T01:27:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-08-05T01:27:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-09-05T01:27:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-11-05T01:27:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-12-05T01:27:00Z')))
+);
+context = {
+  "scope": "scheduled",
+  "value": "monthly",
+  "period": 1,
+  "monthDay": 31,
+  "startTime": "20:00"
+};
+dt = new Date('2020-01-31T20:00:00Z');
+assertions.push(
+  test.assertTrue(sc.hasScheduleElapsed(context, dt)),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-02-31T20:00:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-04-31T20:00:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-11-31T20:00:00Z'))),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-12-31T20:00:00Z')))
 );
 
 // once tests
+context = {
+  "scope": "scheduled",
+  "value": "once",
+  "startDate": "01/15/2020",
+  "startTime": "10:59"
+};
+dt = new Date('2020-01-15T10:59:00Z');
 assertions.push(
-  // TOOD
+  test.assertTrue(sc.hasScheduleElapsed(context, dt)),
+  test.assertTrue(sc.hasScheduleElapsed(context, new Date('2020-01-15T10:59:59Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-15T11:00:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-15T10:58:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-14T10:59:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-01-16T10:59:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2020-02-15T10:59:00Z'))),
+  test.assertFalse(sc.hasScheduleElapsed(context, new Date('2021-01-15T10:59:00Z')))
 );
 
 // return

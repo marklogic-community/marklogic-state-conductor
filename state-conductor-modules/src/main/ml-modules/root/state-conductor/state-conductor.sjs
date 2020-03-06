@@ -326,13 +326,15 @@ function resumeWaitingJob(uri, resumeBy = 'event') {
           resumeBy: resumeBy
         });
 
-        transition(jobDoc, jobObj, stateName, state, flowObj)
+       return transition(jobDoc, jobObj, stateName, state, flowObj)
     } else {
       fn.error(null, 'this job doc is not waiting: ' + uri);
     }
   } catch (err) {
-    handleStateFailure(uri, flowName, flowObj, stateName, err);
+    return handleStateFailure(uri, flowName, flowObj, stateName, err);
   }
+
+   
 }
 
 /**
@@ -508,16 +510,15 @@ function executeState(uri) {
       }
 
     } catch (err) {
-      handleStateFailure(uri, flowName, flowObj, stateName, err);
+      return handleStateFailure(uri, flowName, flowObj, stateName, err);
     }
 
-    transition(jobDoc, jobObj, stateName, state, flowObj);
+    return transition(jobDoc, jobObj, stateName, state, flowObj);
 
   } else {
     fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
   }
   
-  return jobObj
 }
 
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {

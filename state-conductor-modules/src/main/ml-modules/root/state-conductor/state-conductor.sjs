@@ -515,7 +515,8 @@ function executeState(uri) {
   } else {
     fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
   }
- 
+  
+  return jobObj
 }
 
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
@@ -614,6 +615,8 @@ function handleStateFailure(uri, flowName, flow, stateName, err) {
     `Unhandled exception of type "${err.name}" in state "${stateName}"`,
     err
   ]));
+
+  return jobObj
 }
 
 /**

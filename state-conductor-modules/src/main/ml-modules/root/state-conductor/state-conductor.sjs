@@ -448,6 +448,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj){
     ]));
   }
   
+  return jobObj
 }
 
 /**

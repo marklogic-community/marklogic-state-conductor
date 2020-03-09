@@ -37,15 +37,20 @@ const parseSerializedQuery = (serializedQuery) => {
  * @returns
  */
 function getFlowDocument(name) {
-  name = fn.normalizeSpace(name) + FLOW_FILE_EXTENSION;
-  const uri = fn.head(cts.uriMatch('*' + name,
+  let nameWithExtension = fn.normalizeSpace(name) + FLOW_FILE_EXTENSION;
+  const uri = fn.head(cts.uriMatch('*' + nameWithExtension,
     [
       'document',
       'case-sensitive'
     ],
     cts.collectionQuery(FLOW_COLLECTION)
   ));
-  return uri ? cts.doc(uri) : null;
+
+  if (fn.docAvailable(uri)) {
+    return  cts.doc(uri);
+  } else {
+    return fn.error(null, 'MISSING-FLOW-FILE', 'Cannot find a a flow file with the name: ' + name);
+  } 
 }
 
 function getFlowDocumentFromDatabase(name, databaseId) {
@@ -910,5 +915,8 @@ module.exports = {
   getJobIds,
   processJob,
   resumeWaitingJob,
+  resumeWaitingJobByJobDoc,
+  executeStateByJobDoc,
+  startProcessingFlowByJobDoc,
   emmitEvent
 };

@@ -16,6 +16,7 @@ const FLOW_STATUS_WORKING       = 'working';
 const FLOW_STATUS_WATING        = 'waiting';
 const FLOW_STATUS_COMPLETE      = 'complete';
 const FLOW_STATUS_FAILED        = 'failed';
+const FLOW_NEW_STEP             = "NEW";
 
 const SUPPORTED_STATE_TYPES = [
   'choice',
@@ -292,31 +293,50 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
     fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
   }
 
-  // grab the flow definition from the correct db
-  const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
-  currFlow.flowName = jobObj.flowName;
-  let initialState = getInitialState(currFlow);
+  try {
+    // grab the flow definition from the correct db
+    const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
+    currFlow.flowName = jobObj.flowName;
+    let initialState = getInitialState(currFlow);
 
-  // update job state, status, and provenence
-  jobObj.flowStatus = FLOW_STATUS_WORKING;
-  jobObj.flowState = initialState;
+    // update job state, status, and provenence
+    jobObj.flowStatus = FLOW_STATUS_WORKING;
+    jobObj.flowState = initialState;
 
-  xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
-  
-  if (!jobObj.hasOwnProperty("provenance")){
-    jobObj.provenance = [];
+    xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
+    
+    if (!jobObj.hasOwnProperty("provenance")){
+      jobObj.provenance = [];
+    }
+    
+    jobObj.provenance.push({
+      date: (new Date()).toISOString(),
+      from: FLOW_NEW_STEP,
+      to: initialState
+    });
+
+    if (save){
+      xdmp.nodeReplace(jobDoc.root, jobObj);
+    }
+
+ } catch (err){
+    xdmp.trace(TRACE_EVENT, ` startProcessingFlowByJobDoc error for flow "${currFlowName}"`+ xdmp.quote(err));
+      
+    // update the job document
+    jobObj.flowStatus = FLOW_STATUS_FAILED;
+    jobObj.errors = jobObj.errors || {};
+    jobObj.errors[FLOW_NEW_STEP] = err;
+
+    if (save) {
+      xdmp.nodeReplace(jobDoc.root, jobObj);
+    }
+    // trigger CPF error state
+    fn.error(null, err.name, Sequence.from([
+      `startProcessingFlowByJobDoc error for flow "${currFlowName}"`,
+      err
+    ]));
+
   }
-  
-  jobObj.provenance.push({
-    date: (new Date()).toISOString(),
-    from: 'NEW',
-    to: initialState
-  });
-
-  if (save){
-    xdmp.nodeReplace(jobDoc.root, jobObj);
-  }
-
   return jobObj
 }
 

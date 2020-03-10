@@ -8,6 +8,7 @@ const STATE_CONDUCTOR_SCHEMAS_DB  = 'state-conductor-schemas';
 
 const FLOW_FILE_EXTENSION       = '.asl.json';
 const FLOW_ITEM_COLLECTION      = 'state-conductor-item';
+const JOB_COLLECTION            = 'stateConductorJob';
 const FLOW_COLLECTION           = 'state-conductor-flow';
 const FLOW_DIRECTORY            = '/state-conductor-flow/';
 const FLOW_JOBID_PROP_NAME      = 'state-conductor-job';
@@ -881,8 +882,8 @@ function isLatestTemporalDocument(uri){
  * @param {*} [options={}]
  */
 function createStateConductorJob(flowName, uri, context = {}, options = {}) {
-  const collections = ['stateConductorJob'].concat(options.collections || []);
-  const directory = options.directory || '/stateConductorJob/';
+  const collections = [JOB_COLLECTION].concat(options.collections || []);
+  const directory = options.directory || '/'+ JOB_COLLECTION +'/';
   const database = options.database || xdmp.database();
   const modules = options.modules || xdmp.modulesDatabase();
   
@@ -951,7 +952,7 @@ function emmitEvent(event, batchSize = 100, save = true){
     
     cts.uris(null, null,
         cts.andQuery([
-          cts.collectionQuery("stateConductorJob"),
+          cts.collectionQuery(JOB_COLLECTION),
           cts.jsonPropertyValueQuery("flowStatus", FLOW_STATUS_WATING),
           cts.jsonPropertyScopeQuery("currentlyWaiting", cts.jsonPropertyValueQuery("event", event))
         ])
@@ -1003,6 +1004,7 @@ module.exports = {
   FLOW_STATUS_WORKING,
   FLOW_STATUS_COMPLETE,
   FLOW_STATUS_FAILED,
+  JOB_COLLECTION,
   addJobMetadata,
   batchCreateStateConductorJob,
   checkFlowContext,

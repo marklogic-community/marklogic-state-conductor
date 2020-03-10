@@ -44,10 +44,10 @@ cd into state-conductor-example
 gradle mldeploy
 ```
 **Note:**
-Set the mlPassword in the gradle.properties in the state-conductor-example folder or pass the mlPassword in on the mldeploy command
+Create a gradle-local.properties in the state-conductor-example folder that has the mlPassword set or pass the mlPassword in on the mldeploy command
 
 ```bash
-gradle mldeploy gradle -PmlPassword=[passwordHere]
+gradle mldeploy -PmlPassword=[passwordHere]
 ```
 
 This builds and locally publishes the state conductor, and then deploys the example project with your changes  

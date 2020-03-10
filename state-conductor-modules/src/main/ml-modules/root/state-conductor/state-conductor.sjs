@@ -325,9 +325,9 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
  *
  * @param {*} uri - the job document's uri
  */
-function resumeWaitingJob(uri, resumeBy = 'unknonw') {
+function resumeWaitingJob(uri, resumeBy = 'unknonw', save = true) {
   const jobDoc = cts.doc(uri);
-  resumeWaitingJobByJobDoc(jobDoc, resumeBy)
+  resumeWaitingJobByJobDoc(jobDoc, resumeBy, save)
 };
 
 function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
@@ -872,7 +872,7 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
  * @param {*} batchSize the size of the batch of uris that gets spawn off
  * @returns
  */
-function emmitEvent(event, batchSize = 100){
+function emmitEvent(event, batchSize = 100, save = true){
   let uris = 
 
   xdmp.invokeFunction(() => {
@@ -896,18 +896,20 @@ function emmitEvent(event, batchSize = 100){
     }
     
     //loops through all the arrays
-    arrayOfwaitingURIJobsForEvent.forEach(function(uriArray){
-    
-      xdmp.spawn(
-        "/state-conductor/resumeWaitingJobs.sjs", 
-        {
-          "uriArray": uriArray, 
-          "resumeBy": "emmit event: " + event
-        }
-      )
+    if (save){ 
+      arrayOfwaitingURIJobsForEvent.forEach(function(uriArray){
       
-    })
-    
+        xdmp.spawn(
+          "/state-conductor/resumeWaitingJobs.sjs", 
+          {
+            "uriArray": uriArray, 
+            "resumeBy": "emmit event: " + event,
+            "save": save
+          }
+        )
+        
+      })
+    }
     return waitingURIJobsForEvent
   }, {
     database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)

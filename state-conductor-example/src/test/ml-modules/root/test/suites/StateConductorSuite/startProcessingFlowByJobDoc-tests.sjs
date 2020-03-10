@@ -14,8 +14,8 @@ jobDoc = xdmp.toJSON(
 "flowStatus": "working", 
 "flowState": "find-gender", 
 "uri": "/data/test-doc3.json", 
-"database": "12694575974081586379", 
-"modules": "54288663922478591",
+"database": xdmp.database(), 
+"modules": xdmp.modulesDatabase(),
 "provenance": []
 })
 
@@ -37,8 +37,8 @@ jobDoc = xdmp.toJSON(
 "flowStatus": "waiting", 
 "flowState": "find-gender", 
 "uri": "/data/test-doc3.json", 
-"database": "12694575974081586379", 
-"modules": "54288663922478591",
+"database": xdmp.database(), 
+"modules": xdmp.modulesDatabase(),
 "provenance": []
 })
 

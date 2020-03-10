@@ -26,4 +26,8 @@ uri = sc.FLOW_DIRECTORY + 'task-flow.asl.json';
 test.loadTestFile('flows/task-flow.asl.json', xdmp.database(), uri);
 xdmp.documentAddCollections(uri, sc.FLOW_COLLECTION);
 
+uri = sc.FLOW_DIRECTORY + 'wait-flow.asl.json';
+test.loadTestFile('flows/wait-flow.asl.json', xdmp.database(), uri);
+xdmp.documentAddCollections(uri, sc.FLOW_COLLECTION);
+
 test.log('StateConductorSuite Suite Setup COMPLETE....');

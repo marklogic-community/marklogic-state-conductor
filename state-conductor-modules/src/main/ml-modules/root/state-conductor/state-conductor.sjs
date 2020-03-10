@@ -916,8 +916,10 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
   });
 
-  // add job metadata to the target document
-  addJobMetadata(uri, flowName, id); // prevents updates to the target from retriggering this flow
+  // add job metadata to the target document (if one was passed)
+  if (uri) {
+    addJobMetadata(uri, flowName, id); // prevents updates to the target from retriggering this flow
+  }
 
   return id;
 }

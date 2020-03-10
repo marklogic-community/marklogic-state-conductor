@@ -294,13 +294,19 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
 
   // grab the flow definition from the correct db
   const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
-  const initialState = getInitialState(currFlow);
-
-  xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
+  currFlow.flowName = jobObj.flowName;
+  let initialState = getInitialState(currFlow);
 
   // update job state, status, and provenence
   jobObj.flowStatus = FLOW_STATUS_WORKING;
   jobObj.flowState = initialState;
+
+  xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
+  
+  if (!jobObj.hasOwnProperty("provenance")){
+    jobObj.provenance = [];
+  }
+  
   jobObj.provenance.push({
     date: (new Date()).toISOString(),
     from: 'NEW',
@@ -433,6 +439,12 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true){
       // perform the transition
       if (targetState) {
         jobObj.flowState = targetState;
+        
+
+        if (!jobObj.hasOwnProperty("provenance")){
+          jobObj.provenance = [];
+        }
+
         jobObj.provenance.push({
           date: (new Date()).toISOString(),
           from: stateName,
@@ -502,8 +514,19 @@ function executeStateByJobDoc(jobDoc, save = true) {
   xdmp.trace(TRACE_EVENT, `executing flow "${flowName}"`);
   xdmp.trace(TRACE_EVENT, `flow state "${stateName}"`);
 
+  // sanity check
+  if (FLOW_STATUS_WORKING !== jobObj.flowStatus) {
+    return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot execute a flow that is not in the WORKING status');
+  }
+
   const flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
-  const state = flowObj.States[stateName];
+  let state; 
+  
+  try {
+    state = flowObj.States[stateName];
+  } catch (e) {
+    fn.error(null, 'CANT-FIND-STATE', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+  }
 
   if (state) {
     try {
@@ -526,6 +549,10 @@ function executeStateByJobDoc(jobDoc, save = true) {
               modules: jobObj.modules
             });
           // update the job context with the response
+          if (!jobObj.hasOwnProperty("context")){
+            jobObj.context = {};
+          }
+         
           jobObj.context[stateName] = resp;
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
@@ -601,6 +628,11 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
   const currState = flow.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
+  
+  if (!fn.docAvailable(uri)) {
+   return fn.error(null, 'DOCUMENT-NOT-FOUND', "the document URI of " + uri + " is a found.");
+  }
+
   const jobDoc = cts.doc(uri);
   const jobObj = jobDoc.toObject();
 

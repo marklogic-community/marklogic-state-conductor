@@ -18,4 +18,12 @@ uri = sc.FLOW_DIRECTORY + 'no-context-flow.asl.json';
 test.loadTestFile('flows/no-context-flow.asl.json', xdmp.database(), uri);
 xdmp.documentAddCollections(uri, sc.FLOW_COLLECTION);
 
+uri = sc.FLOW_DIRECTORY + 'noStates-flow.asl.json';
+test.loadTestFile('flows/noStates-flow.asl.json', xdmp.database(), uri);
+xdmp.documentAddCollections(uri, sc.FLOW_COLLECTION);
+
+uri = sc.FLOW_DIRECTORY + 'task-flow.asl.json';
+test.loadTestFile('flows/task-flow.asl.json', xdmp.database(), uri);
+xdmp.documentAddCollections(uri, sc.FLOW_COLLECTION);
+
 test.log('StateConductorSuite Suite Setup COMPLETE....');

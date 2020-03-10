@@ -13,7 +13,7 @@
     "emmitEvent": {
         "Type": "Task",
         "Comment": "emmits an Event",
-        "Resource": "/state-conductor/actions/common/examples/emmit-event.sjs",
+        "Resource": "/state-conductor/actions/common/emmit-event.sjs",
         "Parameters": {
             "event": ["waitForEvent:123"]
         },

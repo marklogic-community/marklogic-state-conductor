@@ -14,7 +14,7 @@
       "Type": "Task",
       "End": true,
       "Comment": "runs a dhf 5 flow",
-      "Resource": "/state-conductor/actions/common/dhf/dhf5MakeEnvelopeStep.sjs",
+      "Resource": "/state-conductor/actions/custom/dhf/dhf5MakeEnvelopeStep.sjs",
       "Parameters": {
         "collections": ["dhf5MakeEnvelopeStep"]
       },

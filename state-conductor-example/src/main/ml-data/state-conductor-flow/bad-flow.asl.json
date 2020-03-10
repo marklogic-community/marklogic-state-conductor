@@ -13,7 +13,7 @@
     "set-prop1": {
       "Type": "Task",
       "Comment": "initial state of the flow",
-      "Resource": "/state-conductor/actions/common/examples/missing-modules.sjs",
+      "Resource": "/state-conductor/actions/custom/missing-modules.sjs",
       "End": true
     }
   }

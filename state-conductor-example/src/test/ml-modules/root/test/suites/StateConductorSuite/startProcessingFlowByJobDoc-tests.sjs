@@ -75,6 +75,31 @@ assertions.push(test.assertEqual("MISSING-FLOW-FILE", erorr.name, "missing flow 
 
 //check for missing flow file
 jobDoc = xdmp.toJSON(
+    {
+    "id": "0405536f-dd84-4ca6-8de8-c57062b2252d", 
+    "flowName": "noStates-flow", 
+    "flowStatus": "new", 
+    "flowState": "find-gender", 
+    "uri": "/data/test-doc3.json", 
+    "database": xdmp.database(), 
+    "modules": xdmp.modulesDatabase(), 
+     "provenance": []
+    })
+    
+    erorr = null;
+    try {  
+      erorr = sc.startProcessingFlowByJobDoc(jobDoc, false);
+    } catch (e) {
+      erorr = e;
+    }
+    
+    assertions.push(test.assertEqual("INVALID-STATE-DEFINITION", erorr.name, "no StartAt step"))
+    
+
+//
+
+//check for missing flow file
+jobDoc = xdmp.toJSON(
 {
 "id": "0405536f-dd84-4ca6-8de8-c57062b2252d", 
 "flowName": "branching-flow", 

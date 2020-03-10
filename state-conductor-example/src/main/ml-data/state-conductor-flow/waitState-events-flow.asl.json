@@ -13,7 +13,7 @@
     "needs-envelope": {
       "Type": "Task",
       "Comment": "makes the envelope",
-      "Resource": "/state-conductor/actions/common/examples/make-envelope.sjs",
+      "Resource": "/state-conductor/actions/custom/make-envelope.sjs",
       "Next": "waitForEvent"
     },
     "waitForEvent": {
@@ -25,13 +25,13 @@
     "needs-headers": {
       "Type": "Task",
       "Comment": "makes the envelope's headers",
-      "Resource": "/state-conductor/actions/common/examples/make-headers.sjs",
+      "Resource": "/state-conductor/actions/custom/make-headers.sjs",
       "Next": "needs-triples"
     },
     "needs-triples": {
       "Type": "Task",
       "Comment": "makes the envelope's triples",
-      "Resource": "/state-conductor/actions/common/examples/make-triples.sjs",
+      "Resource": "/state-conductor/actions/custom /make-triples.sjs",
       "Next": "success"
     }, 
     "success": {

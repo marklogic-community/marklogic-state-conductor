@@ -358,35 +358,63 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
   const flowStatus = jobObj.flowStatus;
+  let state;
+  let flowObj;
 
   xdmp.trace(TRACE_EVENT, `resumeWaitingJob uri "${uri}"`);
   xdmp.trace(TRACE_EVENT, `resumeWaitingJob flow "${flowName}"`);
   xdmp.trace(TRACE_EVENT, `resumeWaitingJob flow state "${stateName}"`);
 
-  const flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
-  const state = flowObj.States[stateName];
+  try {
+
+    // sanity check
+    if (FLOW_STATUS_WATING !== jobObj.flowStatus) {
+      return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot execute a flow that is not in the WAITING status');
+    }
+
+    flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
+      
+    try {
+      state = flowObj.States[stateName];
+    } catch (e) {
+      return fn.error(null, 'CANT-FIND-STATE', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+    }
+
+  }  catch (err) {
+    xdmp.trace(TRACE_EVENT, ` resumeWaitingJobByJobDoc error for flow "${flowName}"`+ xdmp.quote(err));
+      
+    // update the job document
+    jobObj.flowStatus = FLOW_STATUS_FAILED;
+    jobObj.errors = jobObj.errors || {};
+    jobObj.errors[FLOW_NEW_STEP] = err;
+
+    if (save) {
+      xdmp.nodeReplace(jobDoc.root, jobObj);
+    }
+    // trigger CPF error state
+    fn.error(null, err.name, Sequence.from([
+      `resumeWaitingJobByJobDoc error for flow "${flowName}"`,
+      err
+    ]));
+    return jobObj
+  }
 
   try {
-    if (flowStatus === FLOW_STATUS_WATING) {
-      //removes old waiting data
-        delete jobObj.currentlyWaiting;
+    //removes old waiting data
+    delete jobObj.currentlyWaiting;
 
-        jobObj.flowStatus = FLOW_STATUS_WORKING;
-        jobObj.provenance.push({
-          date: (new Date()).toISOString(),
-          state: stateName,
-          resumeBy: resumeBy
-        });
+    jobObj.flowStatus = FLOW_STATUS_WORKING;
+    jobObj.provenance.push({
+      date: (new Date()).toISOString(),
+      state: stateName,
+      resumeBy: resumeBy
+    });
 
-       return transition(jobDoc, jobObj, stateName, state, flowObj, save)
-    } else {
-      fn.error(null, 'this job doc is not waiting: ' + uri);
-    }
+    return transition(jobDoc, jobObj, stateName, state, flowObj, save)
   } catch (err) {
     return handleStateFailure(uri, flowName, flowObj, stateName, err, save);
   }
 
-   
 }
 
 /**

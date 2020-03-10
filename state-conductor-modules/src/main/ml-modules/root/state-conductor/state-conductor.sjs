@@ -273,16 +273,6 @@ function processJob(uri) {
   }
 }
 
-/**
- * Begins the processing of a newly created job document
- *
- * @param {*} uri - the job document's uri
- */
-function startProcessingFlow(uri) {
-  const jobDoc = cts.doc(uri);
-  startProcessingFlowByJobDoc(jobDoc);
-}
-
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
   const uri = xdmp.nodeUri(jobDoc)
   const jobObj = jobDoc.toObject();
@@ -548,13 +538,8 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
 /**
  * Performs the actions and transitions for a state.
  *
- * @param {*} uri - the job document's uri
+ * @param {*} jobDoc - the job document
  */
-function executeState(uri) {
-  const jobDoc = cts.doc(uri);
-  executeStateByJobDoc(jobDoc);
-};
-
 function executeStateByJobDoc(jobDoc, save = true) {
   const uri = xdmp.nodeUri(jobDoc);
   const jobObj = jobDoc.toObject();
@@ -649,6 +634,9 @@ function executeStateByJobDoc(jobDoc, save = true) {
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
 
   } else {
+    /*
+      TODO: update the job doc as error
+    */
     fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
   }
 

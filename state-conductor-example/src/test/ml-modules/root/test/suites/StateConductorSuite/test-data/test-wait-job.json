@@ -1,0 +1,21 @@
+{
+"id": "0405536f-dd84-4ca6-8de8-c57062b2252d", 
+"flowName": "wait-flow", 
+"flowStatus": "waiting", 
+"flowState": "dialUp", 
+"uri": "/data/test-doc1.json", 
+"database": "18362886368181886203", 
+"modules": "8102028357983228731", 
+"provenance": [
+{
+"date": "2020-03-10T14:29:40.406Z", 
+"state": "dialUp", 
+"waiting": {
+"event": "series-of-clicks-and-beeps-connected"
+}
+}
+], 
+"currentlyWaiting": {
+"event": "series-of-clicks-and-beeps-connected"
+}
+}

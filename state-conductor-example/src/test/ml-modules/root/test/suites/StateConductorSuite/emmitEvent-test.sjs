@@ -23,4 +23,4 @@ assertion = assertion.map(item => item.toString())
 
 assertions.push(test.assertEqual(assertion, [], "jobs shouldnt be found"))
 
-//assertions.push(test.assertEqual("working", assertion.flowStatus, "working flowStatus"))
+assertions

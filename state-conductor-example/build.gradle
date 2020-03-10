@@ -1,12 +1,12 @@
 buildscript {
-	repositories {
-		jcenter()
-		mavenLocal()
-	}
-	dependencies {
-		classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
-		classpath "com.marklogic:ml-gradle:3.16.1"
-	}
+  repositories {
+    jcenter()
+    mavenLocal()
+  }
+  dependencies {
+    classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
+    classpath "com.marklogic:ml-gradle:3.16.1"
+  }
 }
 
 plugins {
@@ -16,11 +16,25 @@ plugins {
 }
 
 repositories {
-	jcenter()
-	mavenLocal()
+  jcenter()
+  mavenLocal()
+  maven {url "http://developer.marklogic.com/maven2/"}
+}
+
+configurations {
+  corb
 }
 
 dependencies {
-	mlBundle "com.marklogic:marklogic-state-conductor:0.3.1"
-	mlBundle "com.marklogic:marklogic-unit-test-modules:1.0.0"
+  mlBundle "com.marklogic:marklogic-state-conductor:0.3.1"
+  mlBundle "com.marklogic:marklogic-state-conductor-cpf:0.3.1"
+  mlBundle "com.marklogic:marklogic-unit-test-modules:1.0.0"
+  corb "com.marklogic:marklogic-corb:2.4.0"
+}
+
+task runCorbDriver(type: com.marklogic.gradle.task.CorbTask, dependsOn: ["mlLoadModules"]) {
+  urisModule="/state-conductor/corb2/uris-module.sjs"
+  transformModule="/state-conductor/corb2/process-module.sjs"
+  threadCount = 5
+  xccConnectionUri=project.property('xccConnectionUri')
 }

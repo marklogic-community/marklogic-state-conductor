@@ -25,11 +25,8 @@ task modulesJar(type: Jar) {
   from("src/main/ml-modules") {
     into("marklogic-state-conductor/ml-modules")
   }
-  from("src/main/ml-data") {
-    into("marklogic-state-conductor/ml-data")
-  }
   destinationDir file("build/libs")
-  baseName "marklogic-state-conductor"
+  baseName "marklogic-state-conductor-cpf"
 }
 
 artifacts {
@@ -39,7 +36,7 @@ artifacts {
 publishing {
 	publications {
 		mainModules(MavenPublication) {
-			artifactId "marklogic-state-conductor"
+			artifactId "marklogic-state-conductor-cpf"
 			artifact modulesJar
 		}
 	}
@@ -52,7 +49,7 @@ if (project.hasProperty("myBintrayUser")) {
 		publications = ["mainModules"]
 		pkg {
 			repo = "maven"
-			name = "marklogic-state-conductor"
+			name = "marklogic-state-conductor-cpf"
 			licenses = ["Apache-2.0"]
 			websiteUrl = "https://github.com/aclavio/marklogic-state-conductor"
 			vcsUrl = "https://github.com/aclavio/marklogic-state-conductor.git"

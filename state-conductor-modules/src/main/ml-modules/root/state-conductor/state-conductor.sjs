@@ -389,7 +389,7 @@ function executeState(uri) {
         }
       } else {
         // terminal states have no "Next" target state
-        jobObj.flowStatus = FLOW_STATUS_COMPLETE;
+        jobObj.flowStatus = FLOW_STATUS_COMPLETE; // TODO this is a "Fail" state shouldn't we change to the "failed" status?
         jobObj.provenance.push({
           date: (new Date()).toISOString(),
           from: stateName,

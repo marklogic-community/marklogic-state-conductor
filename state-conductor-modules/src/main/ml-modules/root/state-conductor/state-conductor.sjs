@@ -288,12 +288,14 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
   const currFlowName = jobObj.flowName;
   const status = jobObj.flowStatus;
 
-  // sanity check
-  if (FLOW_STATUS_NEW !== status) {
-    fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
-  }
-
   try {
+
+      // sanity check
+      if (FLOW_STATUS_NEW !== status) {
+        fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
+      }
+
+
     // grab the flow definition from the correct db
     const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
     currFlow.flowName = jobObj.flowName;
@@ -530,22 +532,43 @@ function executeStateByJobDoc(jobDoc, save = true) {
   const jobObj = jobDoc.toObject();
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
-
+  let state; 
+  let flowObj;
   xdmp.trace(TRACE_EVENT, `executing flow "${flowName}"`);
   xdmp.trace(TRACE_EVENT, `flow state "${stateName}"`);
 
-  // sanity check
-  if (FLOW_STATUS_WORKING !== jobObj.flowStatus) {
-    return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot execute a flow that is not in the WORKING status');
-  }
-
-  const flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
-  let state; 
-  
   try {
-    state = flowObj.States[stateName];
-  } catch (e) {
-    fn.error(null, 'CANT-FIND-STATE', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+
+      // sanity check
+      if (FLOW_STATUS_WORKING !== jobObj.flowStatus) {
+        return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot execute a flow that is not in the WORKING status');
+      }
+
+      flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
+        
+      try {
+        state = flowObj.States[stateName];
+      } catch (e) {
+        return fn.error(null, 'CANT-FIND-STATE', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+      }
+
+  }  catch (err) {
+    xdmp.trace(TRACE_EVENT, ` executeStateByJobDoc error for flow "${flowName}"`+ xdmp.quote(err));
+      
+    // update the job document
+    jobObj.flowStatus = FLOW_STATUS_FAILED;
+    jobObj.errors = jobObj.errors || {};
+    jobObj.errors[FLOW_NEW_STEP] = err;
+
+    if (save) {
+      xdmp.nodeReplace(jobDoc.root, jobObj);
+    }
+    // trigger CPF error state
+    fn.error(null, err.name, Sequence.from([
+      `executeStateByJobDoc error for flow "${flowName}"`,
+      err
+    ]));
+    return jobObj
   }
 
   if (state) {

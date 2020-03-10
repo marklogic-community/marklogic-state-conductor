@@ -145,4 +145,70 @@ assertion = sc.executeStateByJobDoc(jobDoc, false);
 assertions.push(test.assertEqual("waiting", assertion.flowStatus, "waiting flowStatus"))
 assertions.push(test.assertEqual("series-of-clicks-and-beeps-connected", assertion.currentlyWaiting.event, "waiting currentlyWaiting"))
 
+//unKnown database (content)
+jobDoc = xdmp.toJSON(
+  {
+    "id": "0405536f-dd84-4ca6-8de8-c57062b2252d", 
+    "flowName": "branching-flow", 
+    "flowStatus": "working", 
+    "flowState": "find-gender", 
+    "uri": "/data/test-doc3.json", 
+    "database": 1233456, 
+    "modules": xdmp.modulesDatabase(), 
+     "provenance": []
+  })
+
+erorr = null;
+try {  
+  erorr = sc.executeStateByJobDoc(jobDoc, false);
+} catch (e) {
+  erorr = e;
+}
+
+assertions.push(test.assertEqual("XDMP-NODB", erorr.name, "unKnown database content"))
+
+//unKnown module database
+jobDoc = xdmp.toJSON(
+  {
+    "id": "0405536f-dd84-4ca6-8de8-c57062b2252d", 
+    "flowName": "branching-flow", 
+    "flowStatus": "working", 
+    "flowState": "find-gender", 
+    "uri": "/data/test-doc3.json", 
+    "database":  xdmp.database(),
+    "modules": 12345, 
+     "provenance": []
+  })
+
+erorr = null;
+try {  
+  erorr = sc.executeStateByJobDoc(jobDoc, false);
+} catch (e) {
+  erorr = e;
+}
+
+assertions.push(test.assertEqual("TRANSITIONERROR", erorr.name, "unKnown database module"))
+
+//unKnown database both
+jobDoc = xdmp.toJSON(
+  {
+    "id": "0405536f-dd84-4ca6-8de8-c57062b2252d", 
+    "flowName": "branching-flow", 
+    "flowStatus": "working", 
+    "flowState": "find-gender", 
+    "uri": "/data/test-doc3.json", 
+    "database":  12345,
+    "modules": 12345, 
+     "provenance": []
+  })
+
+erorr = null;
+try {  
+  erorr = sc.executeStateByJobDoc(jobDoc, false);
+} catch (e) {
+  erorr = e;
+}
+
+assertions.push(test.assertEqual("XDMP-NODB", erorr.name, "unKnown database both"))
+
 assertions

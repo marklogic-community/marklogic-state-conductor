@@ -274,8 +274,7 @@ function processJob(uri) {
 }
 
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
-  const uri = xdmp.nodeUri(jobDoc)
-  const jobObj = jobDoc.toObject();
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const currFlowName = jobObj.flowName;
   const status = jobObj.flowStatus;
 
@@ -296,10 +295,6 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
     jobObj.flowState = initialState;
 
     xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
-
-    if (!jobObj.hasOwnProperty("provenance")) {
-      jobObj.provenance = [];
-    }
 
     jobObj.provenance.push({
       date: (new Date()).toISOString(),
@@ -344,7 +339,7 @@ function resumeWaitingJob(uri, resumeBy = 'unknonw', save = true) {
 
 function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   const uri = xdmp.nodeUri(jobDoc);
-  const jobObj = jobDoc.toObject();
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
   const flowStatus = jobObj.flowStatus;
@@ -358,7 +353,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   try {
 
     // sanity check
-    if (FLOW_STATUS_WATING !== jobObj.flowStatus) {
+    if (FLOW_STATUS_WATING !== flowStatus) {
       return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot resume a flow that is not in the WAITING status');
     }
 
@@ -480,11 +475,6 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       if (targetState) {
         jobObj.flowState = targetState;
 
-
-        if (!jobObj.hasOwnProperty("provenance")) {
-          jobObj.provenance = [];
-        }
-
         jobObj.provenance.push({
           date: (new Date()).toISOString(),
           from: stateName,
@@ -542,7 +532,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
  */
 function executeStateByJobDoc(jobDoc, save = true) {
   const uri = xdmp.nodeUri(jobDoc);
-  const jobObj = jobDoc.toObject();
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
   let state;
@@ -604,10 +594,6 @@ function executeStateByJobDoc(jobDoc, save = true) {
               database: jobObj.database,
               modules: jobObj.modules
             });
-          // update the job context with the response
-          if (!jobObj.hasOwnProperty("context")) {
-            jobObj.context = {};
-          }
 
           jobObj.context[stateName] = resp;
         } else {
@@ -858,6 +844,28 @@ function isLatestTemporalDocument(uri) {
   return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
 }
 
+/**
+ * Should be used when take a job doc from the database
+ * insures all the needed properties are there
+ * @param {*} jobDoc
+ */
+function scaffoldJobDoc(jobDoc) {
+
+  const needProps = {
+    id: null,
+    flowName: null,
+    flowStatus: null,
+    flowState: null,
+    uri: null,
+    database: null,
+    modules: null,
+    createdDate: null,
+    context: {},
+    provenance: []
+  };
+
+   return Object.assign(needProps, jobDoc)
+}
 
 /**
  * Convienence function to create a job record for a document to be

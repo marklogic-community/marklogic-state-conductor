@@ -312,22 +312,7 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
     }
 
   } catch (err) {
-    xdmp.trace(TRACE_EVENT, ` startProcessingFlowByJobDoc error for flow "${currFlowName}"` + xdmp.quote(err));
-
-    // update the job document
-    jobObj.flowStatus = FLOW_STATUS_FAILED;
-    jobObj.errors = jobObj.errors || {};
-    jobObj.errors[FLOW_NEW_STEP] = err;
-
-    if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
-    }
-    // trigger CPF error state
-    fn.error(null, err.name, Sequence.from([
-      `startProcessingFlowByJobDoc error for flow "${currFlowName}"`,
-      err
-    ]));
-
+    handleError(err.name, ` startProcessingFlowByJobDoc error for flow "${currFlowName}"`, err, jobObj, save);
   }
   return jobObj
 }
@@ -371,22 +356,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
     }
 
   } catch (err) {
-    xdmp.trace(TRACE_EVENT, ` resumeWaitingJobByJobDoc error for flow "${flowName}"` + xdmp.quote(err));
-
-    // update the job document
-    jobObj.flowStatus = FLOW_STATUS_FAILED;
-    jobObj.errors = jobObj.errors || {};
-    jobObj.errors[FLOW_NEW_STEP] = err;
-
-    if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
-    }
-    // trigger CPF error state
-    fn.error(null, err.name, Sequence.from([
-      `resumeWaitingJobByJobDoc error for flow "${flowName}"`,
-      err
-    ]));
-    return jobObj
+    handleError(err.name, ` resumeWaitingJobByJobDoc error for flow "${flowName}"`, err, jobObj, save);
   }
 
   try {
@@ -514,22 +484,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     }
 
   } catch (err) {
-
-    xdmp.trace(TRACE_EVENT, ` transition error for state "${stateName}"` + xdmp.quote(err));
-
-    // update the job document
-    jobObj.flowStatus = FLOW_STATUS_FAILED;
-    jobObj.errors = jobObj.errors || {};
-    jobObj.errors[stateName] = err;
-
-    if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
-    }
-    // trigger CPF error state
-    fn.error(null, 'TRANSITIONERROR', Sequence.from([
-      `transition error for state "${stateName}"`,
-      err
-    ]));
+    handleError('TRANSITIONERROR', ` transition error for state "${stateName}"`, err, jobObj, save);
   }
 
   return jobObj
@@ -566,22 +521,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
     }
 
   } catch (err) {
-    xdmp.trace(TRACE_EVENT, ` executeStateByJobDoc error for flow "${flowName}"` + xdmp.quote(err));
-
-    // update the job document
-    jobObj.flowStatus = FLOW_STATUS_FAILED;
-    jobObj.errors = jobObj.errors || {};
-    jobObj.errors[FLOW_NEW_STEP] = err;
-
-    if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
-    }
-    // trigger CPF error state
-    fn.error(null, err.name, Sequence.from([
-      `executeStateByJobDoc error for flow "${flowName}"`,
-      err
-    ]));
-    return jobObj
+    handleError(err.name, ` executeStateByJobDoc error for flow "${flowName}"`, err, jobObj, save);
   }
 
   if (state) {
@@ -634,10 +574,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
 
   } else {
-    /*
-      TODO: update the job doc as error
-    */
-    fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
+    handleError('state not found', Sequence.from([`state "${stateName}" not found in flow`]), null, jobObj, save);
   }
 
 }
@@ -1078,6 +1015,39 @@ function getJobDocuments(options) {
   });
 
   return uris;
+}
+
+/**
+ * Convienence function to handle error
+ * puts the job document in an error state
+ * return the job object
+ * errors out
+ *
+ * @param {*} name the name of the error
+ * @param {*} message the error message
+ * @param {*} err the error object if gotten from a catch
+ * @param {*} jobObj the job object
+ * @param {*} save while to update the job document
+**/
+function handleError(name, message, err, jobObj, save = true) {
+  xdmp.trace(TRACE_EVENT, name + ":" + message);
+
+  // update the job document
+  jobObj.flowStatus = FLOW_STATUS_FAILED;
+  jobObj.errors = jobObj.errors || {};
+  jobObj.errors[FLOW_NEW_STEP] = err;
+
+  if (save) {
+    xdmp.nodeReplace(jobDoc.root, jobObj);
+  }
+
+  // trigger CPF error state
+  fn.error(null, name, Sequence.from([
+    message,
+    err
+  ]));
+
+  return jobObj
 }
 
 module.exports = {

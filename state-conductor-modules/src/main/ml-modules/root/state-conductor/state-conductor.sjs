@@ -672,20 +672,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
       }
     }
   }
-  // unhandled exception
-  xdmp.trace(TRACE_EVENT, `no Catch defined for error "${err.name}" in state "${stateName}"`);
-  // update the job document
-  jobObj.flowStatus = FLOW_STATUS_FAILED;
-  jobObj.errors = jobObj.errors || {};
-  jobObj.errors[stateName] = err;
-  xdmp.nodeReplace(jobDoc.root, jobObj);
-  // trigger CPF error state
-  fn.error(null, 'INVALID-STATE-DEFINITION', Sequence.from([
-    `Unhandled exception of type "${err.name}" in state "${stateName}"`,
-    err
-  ]));
-
-  return jobObj
+  return handleError('INVALID-STATE-DEFINITION', `no Catch defined for error "${err.name}" in state "${stateName}"`, err, jobObj, save)
 }
 
 /**

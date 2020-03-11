@@ -211,4 +211,46 @@ try {
 
 assertions.push(test.assertEqual("XDMP-NODB", error.name, "unKnown database both"));
 
+// missing action modules test
+jobDoc = xdmp.toJSON(
+  {
+    "id": "0405536f-dd84-4ca6-8de8-c57062b2252d",
+    "flowName": "bad-flow",
+    "flowStatus": "working",
+    "flowState": "set-prop1",
+    "uri": "/data/test-doc3.json",
+    "database":  xdmp.database(),
+    "modules": xdmp.modulesDatabase(),
+    "provenance": []
+  });
+
+error = null;
+try {
+  error = sc.executeStateByJobDoc(jobDoc, false);
+} catch (e) {
+  error = e;
+}
+assertions.push(test.assertTrue(error.data[1].includes('XDMP-MODNOTFOUND'), "detected missing action module"));
+
+// missing condition modules test
+jobDoc = xdmp.toJSON(
+  {
+    "id": "0405536f-dd84-4ca6-8de8-c57062b2252d",
+    "flowName": "bad-flow",
+    "flowStatus": "working",
+    "flowState": "branch",
+    "uri": "/data/test-doc3.json",
+    "database":  xdmp.database(),
+    "modules": xdmp.modulesDatabase(),
+    "provenance": []
+  });
+
+error = null;
+try {
+  error = sc.executeStateByJobDoc(jobDoc, false);
+} catch (e) {
+  error = e;
+}
+assertions.push(test.assertTrue(error.data[1].includes('XDMP-MODNOTFOUND'), "detected missing action module"));
+
 assertions

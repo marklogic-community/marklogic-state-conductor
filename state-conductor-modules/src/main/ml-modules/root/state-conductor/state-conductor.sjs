@@ -433,7 +433,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       });
 
     } else if (!inTerminalState(jobObj, flowObj)) {
-      xdmp.trace(TRACE_EVENT, `transition other: ${stateName}`);
+      xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
 
       if ('task' === state.Type.toLowerCase()) {
         targetState = state.Next;

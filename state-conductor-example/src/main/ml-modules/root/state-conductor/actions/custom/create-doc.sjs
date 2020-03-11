@@ -3,16 +3,11 @@
 function performAction(uri, options = {}, context = {}) {
   declareUpdate();
   xdmp.log('performing action "create-doc.sjs"');
-  let {uriContextRoot, uriPrefix, collections} = options;
+  let {uriPrefix, collections} = options;
+  let {newDocUri} = context;
 
-  let oldDocUri = uri;
-  if (uriContextRoot) {
-    if (context[uriContextRoot]) {
-      oldDocUri = context[uriContextRoot].uri;
-    } else {
-      fn.error(null, 'DHF-FLOW-ERROR', Sequence.from(['"uriContextRoot" is defined, but not in context']));
-    }
-  }
+  // use uri, or the value from context
+  let oldDocUri = newDocUri ? newDocUri : uri;
 
   const doc = cts.doc(oldDocUri);
   const obj = doc.toObject();
@@ -21,7 +16,7 @@ function performAction(uri, options = {}, context = {}) {
     old: obj
   };
 
-  let newDocUri = uriPrefix + sem.uuidString() + '.json';
+  newDocUri = uriPrefix + sem.uuidString() + '.json';
 
   xdmp.documentInsert(newDocUri, envelope, {
     collections: collections

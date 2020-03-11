@@ -4,16 +4,25 @@
 'use strict';
 const sc = require('/state-conductor/state-conductor.sjs');
 
+// external variables
+var jobCount;
+var flowNames;
 
+if (!jobCount) {
+  jobCount = 1000;
+}
+
+if (flowNames) {
+  flowNames = flowNames.split(',');
+}
 
 let options = {
-  count: 100,
+  count: jobCount,
   flowStatus: [sc.FLOW_STATUS_NEW, sc.FLOW_STATUS_WORKING],
-  flowNames: null,
+  flowNames: flowNames,
   startDate: null,
   endDate: null
 }
-
 
 const uris = sc.getJobDocuments(options);
 

@@ -14,7 +14,7 @@
       "Type": "Task",
       "End": true,
       "Comment": "adds a collection",
-      "Resource": "/state-conductor/actions/common/examples/add-collections.sjs",
+      "Resource": "/state-conductor/actions/common/add-collections.sjs",
       "Parameters": {
         "collections": ["chain-done"]
       }

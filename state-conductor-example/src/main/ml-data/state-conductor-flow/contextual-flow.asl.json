@@ -13,7 +13,7 @@
     "createDoc1": {
       "Type": "Task",
       "Comment": "creates a new doc",
-      "Resource": "/state-conductor/actions/common/examples/create-doc.sjs",
+      "Resource": "/state-conductor/actions/custom/create-doc.sjs",
       "Parameters": {
         "uriPrefix": "/test/"
       },
@@ -22,7 +22,7 @@
     "createDoc2": {
       "Type": "Task",
       "Comment": "creates a new doc",
-      "Resource": "/state-conductor/actions/common/examples/create-doc.sjs",
+      "Resource": "/state-conductor/actions/custom/create-doc.sjs",
       "Parameters": {
         "uriContextRoot": "createDoc1",
         "uriPrefix": "/test/"
@@ -33,7 +33,7 @@
       "Type": "Task",
       "End": true,
       "Comment": "creates a new doc",
-      "Resource": "/state-conductor/actions/common/examples/create-doc.sjs",
+      "Resource": "/state-conductor/actions/custom/create-doc.sjs",
       "Parameters": {
         "uriContextRoot": "createDoc2",
         "uriPrefix": "/test/"

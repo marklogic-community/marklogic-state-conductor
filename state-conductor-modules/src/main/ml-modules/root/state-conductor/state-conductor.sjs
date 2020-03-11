@@ -470,7 +470,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
             fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}" `);
           }
         } catch (err) {
-          return handleStateFailure(xdmp.nodeUri(jobDoc), flowName, flowObj, stateName, err, save);
+          return handleStateFailure(xdmp.nodeUri(jobDoc), flowObj.flowName, flowObj, stateName, err, save);
         }
       } else {
         fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"` + xdmp.quote(state));
@@ -479,7 +479,6 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       // perform the transition
       if (targetState) {
         jobObj.flowState = targetState;
-
 
         if (!jobObj.hasOwnProperty("provenance")) {
           jobObj.provenance = [];
@@ -515,7 +514,8 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
 
   } catch (err) {
 
-    xdmp.trace(TRACE_EVENT, ` transition error for state "${stateName}"` + xdmp.quote(err));
+    xdmp.trace(TRACE_EVENT, `transition error for state "${stateName}"`);
+    xdmp.trace(TRACE_EVENT, Sequence.from([err]));
 
     // update the job document
     jobObj.flowStatus = FLOW_STATUS_FAILED;
@@ -604,12 +604,9 @@ function executeStateByJobDoc(jobDoc, save = true) {
               database: jobObj.database,
               modules: jobObj.modules
             });
-          // update the job context with the response
-          if (!jobObj.hasOwnProperty("context")) {
-            jobObj.context = {};
-          }
 
-          jobObj.context[stateName] = resp;
+          // update the job context with the response
+          jobObj.context = resp;
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
         }
@@ -689,7 +686,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
 
   if (!fn.docAvailable(uri)) {
-    return fn.error(null, 'DOCUMENT-NOT-FOUND', "the document URI of " + uri + " is a found.");
+    return fn.error(null, 'DOCUMENT-NOT-FOUND', Sequence.from([`the document URI of "${uri}" was not found.`, err]));
   }
 
   const jobDoc = cts.doc(uri);

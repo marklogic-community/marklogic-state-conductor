@@ -27,9 +27,8 @@ function performAction(uri, options = {}, context = {}) {
     collections: collections
   });
 
-  return {
-    uri: newDocUri
-  };
+  context.newDocUri = newDocUri;
+  return context;
 }
 
 exports.performAction = performAction;

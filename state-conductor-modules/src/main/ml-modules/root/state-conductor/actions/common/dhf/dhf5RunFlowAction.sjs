@@ -1,7 +1,7 @@
 const DataHub = require('/data-hub/5/datahub.sjs');
 const datahub = new DataHub();
 
-function performAction(uri, options = {}) {
+function performAction(uri, options = {}, context = {}) {
 
   // find the dhf flow to execute
   const flowName = options.flowName || null;
@@ -17,7 +17,7 @@ function performAction(uri, options = {}) {
   const numSteps = Object.keys(flow.steps).length;
 
   // setup the dhf runFlow content
-  const contentObj = {  
+  const contentObj = {
     uri: uri,
     context: flowContext
   };
@@ -45,12 +45,13 @@ function performAction(uri, options = {}) {
       datahub.debug.log(flowResponse.errors[0]);
       fn.error(null, flowResponse.errors[0].message, flowResponse.errors[0].stack);
     }
-    xdmp.log(flowResponse);  
 
     resp['' + i] = flowResponse;
   }
 
-  return resp;
+  context[flowName] = resp;
+
+  return context;
 }
 
 exports.performAction = performAction;

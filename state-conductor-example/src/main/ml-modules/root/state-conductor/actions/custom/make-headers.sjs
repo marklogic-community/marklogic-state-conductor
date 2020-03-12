@@ -1,6 +1,6 @@
 'use strict';
 
-function performAction(uri) {
+function performAction(uri, options, context) {
   declareUpdate();
   xdmp.log('performing action "make-headers.sjs"');
   const doc = cts.doc(uri);
@@ -9,6 +9,7 @@ function performAction(uri) {
   obj.headers.name = obj.instance.name || 'anonymous';
 
   xdmp.nodeReplace(doc.root, obj);
+  return context;
 }
 
 exports.performAction = performAction;

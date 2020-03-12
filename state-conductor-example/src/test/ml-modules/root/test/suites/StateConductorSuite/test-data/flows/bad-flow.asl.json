@@ -1,0 +1,38 @@
+{
+  "Comment": "bad flow file that references a non-existent module",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "collection",
+        "value": "bad-test"
+      }
+    ]
+  },
+  "StartAt": "missing-state",
+  "States": {
+    "set-prop1": {
+      "Type": "Task",
+      "Comment": "initial state of the flow",
+      "Resource": "/state-conductor/actions/custom/missing-modules.sjs",
+      "End": true
+    },
+    "branch": {
+      "Type": "Choice",
+      "Comment": "missing condition modules",
+      "Choices": [
+        {
+          "Resource": "/state-conductor/actions/custom/missing-condition-module.sjs",
+          "Next": "success"
+        },
+        {
+          "Resource": "/state-conductor/actions/custom/missing-condition-module.sjs",
+          "Next": "success"
+        }
+      ],
+      "Default": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

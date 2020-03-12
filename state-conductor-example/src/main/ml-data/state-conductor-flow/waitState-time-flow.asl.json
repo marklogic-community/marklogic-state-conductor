@@ -23,7 +23,7 @@
       "Next": "wait_until"
     },
     "wait_until": {
-      "Type": "Task",
+      "Type": "Wait",
       "Comment": "makes the envelope's headers",
       "Timestamp": "2016-03-14T01:59:00Z",
       "Next": "needs-triples"

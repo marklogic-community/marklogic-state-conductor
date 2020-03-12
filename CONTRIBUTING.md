@@ -81,7 +81,7 @@ repositories {
 }
 
 dependencies {
-	mlBundle "com.marklogic:marklogic-state-conductor:(you pick the version number)"
+	mlBundle "com.marklogic:marklogic-state-conductor:(you pick your local version number)"  
 	mlBundle "com.marklogic:marklogic-unit-test-modules:1.0.0"
 }
   ```

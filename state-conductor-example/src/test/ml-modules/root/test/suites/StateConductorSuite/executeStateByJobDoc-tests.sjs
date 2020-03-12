@@ -89,7 +89,7 @@ try {
   error = e;
 }
 
-assertions.push(test.assertEqual("CANT-FIND-STATE", error.name, "status check working"));
+assertions.push(test.assertEqual("INVALID-STATE-DEFINITION", error.name, "status check working"))
 
 //checks see if the context was updated with a task
 jobDoc = xdmp.toJSON(

@@ -274,8 +274,7 @@ function processJob(uri) {
 }
 
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
-  const uri = xdmp.nodeUri(jobDoc)
-  const jobObj = jobDoc.toObject();
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const currFlowName = jobObj.flowName;
   const status = jobObj.flowStatus;
 
@@ -297,10 +296,6 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
 
     xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
 
-    if (!jobObj.hasOwnProperty("provenance")) {
-      jobObj.provenance = [];
-    }
-
     jobObj.provenance.push({
       date: (new Date()).toISOString(),
       from: FLOW_NEW_STEP,
@@ -312,22 +307,7 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
     }
 
   } catch (err) {
-    xdmp.trace(TRACE_EVENT, ` startProcessingFlowByJobDoc error for flow "${currFlowName}"` + xdmp.quote(err));
-
-    // update the job document
-    jobObj.flowStatus = FLOW_STATUS_FAILED;
-    jobObj.errors = jobObj.errors || {};
-    jobObj.errors[FLOW_NEW_STEP] = err;
-
-    if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
-    }
-    // trigger CPF error state
-    fn.error(null, err.name, Sequence.from([
-      `startProcessingFlowByJobDoc error for flow "${currFlowName}"`,
-      err
-    ]));
-
+    handleError(err.name, `startProcessingFlowByJobDoc error for flow "${currFlowName}"`, err, jobObj, save);
   }
   return jobObj
 }
@@ -344,7 +324,7 @@ function resumeWaitingJob(uri, resumeBy = 'unknonw', save = true) {
 
 function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   const uri = xdmp.nodeUri(jobDoc);
-  const jobObj = jobDoc.toObject();
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
   const flowStatus = jobObj.flowStatus;
@@ -358,7 +338,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   try {
 
     // sanity check
-    if (FLOW_STATUS_WATING !== jobObj.flowStatus) {
+    if (FLOW_STATUS_WATING !== flowStatus) {
       return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot resume a flow that is not in the WAITING status');
     }
 
@@ -367,26 +347,11 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
     try {
       state = flowObj.States[stateName];
     } catch (e) {
-      return fn.error(null, 'CANT-FIND-STATE', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+      return fn.error(null, 'INVALID-STATE-DEFINITION', `Can't Find the state "${stateName}" in flow "${flowName}"`);
     }
 
   } catch (err) {
-    xdmp.trace(TRACE_EVENT, ` resumeWaitingJobByJobDoc error for flow "${flowName}"` + xdmp.quote(err));
-
-    // update the job document
-    jobObj.flowStatus = FLOW_STATUS_FAILED;
-    jobObj.errors = jobObj.errors || {};
-    jobObj.errors[FLOW_NEW_STEP] = err;
-
-    if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
-    }
-    // trigger CPF error state
-    fn.error(null, err.name, Sequence.from([
-      `resumeWaitingJobByJobDoc error for flow "${flowName}"`,
-      err
-    ]));
-    return jobObj
+    handleError(err.name, `resumeWaitingJobByJobDoc error for flow "${flowName}"`, err, jobObj, save);
   }
 
   try {
@@ -480,10 +445,6 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       if (targetState) {
         jobObj.flowState = targetState;
 
-        if (!jobObj.hasOwnProperty("provenance")) {
-          jobObj.provenance = [];
-        }
-
         jobObj.provenance.push({
           date: (new Date()).toISOString(),
           from: stateName,
@@ -513,23 +474,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     }
 
   } catch (err) {
-
-    xdmp.trace(TRACE_EVENT, `transition error for state "${stateName}"`);
-    xdmp.trace(TRACE_EVENT, Sequence.from([err]));
-
-    // update the job document
-    jobObj.flowStatus = FLOW_STATUS_FAILED;
-    jobObj.errors = jobObj.errors || {};
-    jobObj.errors[stateName] = err;
-
-    if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
-    }
-    // trigger CPF error state
-    fn.error(null, 'TRANSITIONERROR', Sequence.from([
-      `transition error for state "${stateName}"`,
-      err
-    ]));
+    handleError('TRANSITIONERROR', `transition error for state "${stateName}"`, err, jobObj, save);
   }
 
   return jobObj
@@ -542,7 +487,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
  */
 function executeStateByJobDoc(jobDoc, save = true) {
   const uri = xdmp.nodeUri(jobDoc);
-  const jobObj = jobDoc.toObject();
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
   let state;
@@ -562,26 +507,11 @@ function executeStateByJobDoc(jobDoc, save = true) {
     try {
       state = flowObj.States[stateName];
     } catch (e) {
-      return fn.error(null, 'CANT-FIND-STATE', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+      return fn.error(null, 'INVALID-STATE-DEFINITION', `Can't Find the state "${stateName}" in flow "${flowName}"`);
     }
 
   } catch (err) {
-    xdmp.trace(TRACE_EVENT, ` executeStateByJobDoc error for flow "${flowName}"` + xdmp.quote(err));
-
-    // update the job document
-    jobObj.flowStatus = FLOW_STATUS_FAILED;
-    jobObj.errors = jobObj.errors || {};
-    jobObj.errors[FLOW_NEW_STEP] = err;
-
-    if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
-    }
-    // trigger CPF error state
-    fn.error(null, err.name, Sequence.from([
-      `executeStateByJobDoc error for flow "${flowName}"`,
-      err
-    ]));
-    return jobObj
+    handleError(err.name, `executeStateByJobDoc error for flow "${flowName}"`, err, jobObj, save);
   }
 
   if (state) {
@@ -631,10 +561,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
 
   } else {
-    /*
-      TODO: update the job doc as error
-    */
-    fn.error(null, 'state not found', Sequence.from([`state "${stateName}" not found in flow`]));
+    handleError('INVALID-STATE-DEFINITION', Sequence.from([`state "${stateName}" not found in flow`]), null, jobObj, save);
   }
 
 }
@@ -721,7 +648,6 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
           to: target
         });
         // capture error message in context
-        jobObj.errors = jobObj.errors || {};
         jobObj.errors[stateName] = err;
 
         if (save) {
@@ -732,20 +658,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
       }
     }
   }
-  // unhandled exception
-  xdmp.trace(TRACE_EVENT, `no Catch defined for error "${err.name}" in state "${stateName}"`);
-  // update the job document
-  jobObj.flowStatus = FLOW_STATUS_FAILED;
-  jobObj.errors = jobObj.errors || {};
-  jobObj.errors[stateName] = err;
-  xdmp.nodeReplace(jobDoc.root, jobObj);
-  // trigger CPF error state
-  fn.error(null, 'INVALID-STATE-DEFINITION', Sequence.from([
-    `Unhandled exception of type "${err.name}" in state "${stateName}"`,
-    err
-  ]));
-
-  return jobObj
+  return handleError('INVALID-STATE-DEFINITION', `no Catch defined for error "${err.name}" in state "${stateName}"`, err, jobObj, save)
 }
 
 /**
@@ -855,6 +768,29 @@ function isLatestTemporalDocument(uri) {
   return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
 }
 
+/**
+ * Should be used when take a job doc from the database
+ * insures all the needed properties are there
+ * @param {*} jobDoc
+ */
+function scaffoldJobDoc(jobDoc) {
+
+  const needProps = {
+    id: null,
+    flowName: null,
+    flowStatus: null,
+    flowState: null,
+    uri: null,
+    database: null,
+    modules: null,
+    createdDate: null,
+    context: {},
+    provenance: [],
+    errors: {}
+  };
+
+   return Object.assign(needProps, jobDoc)
+}
 
 /**
  * Convienence function to create a job record for a document to be
@@ -875,7 +811,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   const jobUri = directory + id + '.json';
 
   // TODO any benifit to defining a class for the job document?
-  const job = {
+  const job = scaffoldJobDoc({
     id: id,
     flowName: flowName,
     flowStatus: FLOW_STATUS_NEW,
@@ -886,7 +822,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     createdDate: (new Date()).toISOString(),
     context: context,
     provenance: []
-  };
+  });
 
   // insert the job document
   xdmp.trace(TRACE_EVENT, `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`);
@@ -1075,6 +1011,39 @@ function getJobDocuments(options) {
   });
 
   return uris;
+}
+
+/**
+ * Convienence function to handle error
+ * puts the job document in an error state
+ * return the job object
+ * errors out
+ *
+ * @param {*} name the name of the error
+ * @param {*} message the error message
+ * @param {*} err the error object if gotten from a catch
+ * @param {*} jobObj the job object
+ * @param {*} save while to update the job document
+**/
+function handleError(name, message, err, jobObj, save = true) {
+  xdmp.trace(TRACE_EVENT, name + ":" + message);
+  const state = jobObj.flowState || FLOW_NEW_STEP;
+
+  // update the job document
+  jobObj.flowStatus = FLOW_STATUS_FAILED;
+  jobObj.errors[state] = err;
+
+  if (save) {
+    xdmp.nodeReplace(jobDoc.root, jobObj);
+  }
+
+  // trigger CPF error state
+  fn.error(null, name, Sequence.from([
+    message,
+    err
+  ]));
+
+  return jobObj
 }
 
 module.exports = {

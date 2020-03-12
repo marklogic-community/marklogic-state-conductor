@@ -86,7 +86,6 @@ result = isolate(() => textFileSplitter.performAction(doc1, {
   skipHeader: false,
   skipTrailingEOF: true
 }));
-//xdmp.log(result);
 assertions.push(
   test.assertEqual(66, result.splits.total),
   test.assertEqual(true, Array.isArray(result.splits.uris)),
@@ -103,17 +102,6 @@ isolate(() => {
     test.assertEqual(null, split65)
   );
 });
-
-/*
-result = textFileSplitter.performAction(doc1, {
-  delimiterPattern: '',
-  skipHeader: true,
-  skipTrailingEOF: true,
-  targetPrefix: '',
-  targetExtension: 'txt',
-  targetCollections: []
-});
-*/
 
 // return
 assertions;

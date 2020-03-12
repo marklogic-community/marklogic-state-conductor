@@ -1,6 +1,6 @@
 'use strict';
 
-function performAction(uri) {
+function performAction(uri, options, context) {
   declareUpdate();
   const doc = cts.doc(uri);
   const obj = doc.toObject();
@@ -9,6 +9,8 @@ function performAction(uri) {
 
   xdmp.nodeReplace(doc.root, obj);
   xdmp.documentAddCollections(uri, 'womens-health');
+
+  return context;
 }
 
 exports.performAction = performAction;

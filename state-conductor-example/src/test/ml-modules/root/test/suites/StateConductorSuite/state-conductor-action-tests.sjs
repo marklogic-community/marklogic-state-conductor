@@ -24,12 +24,12 @@ function isolate(func) {
 // split using defaults defaults
 let result = isolate(() => textFileSplitter.performAction(doc1));
 assertions.push(
-  test.assertEqual(10, result.total),
-  test.assertEqual(true, Array.isArray(result.uris)),
-  test.assertEqual(10, result.uris.length)
+  test.assertEqual(10, result.splits.total),
+  test.assertEqual(true, Array.isArray(result.splits.uris)),
+  test.assertEqual(10, result.splits.uris.length)
 );
 isolate(() => {
-  result.uris.forEach(uri => {
+  result.splits.uris.forEach(uri => {
     assertions.push(
       test.assertEqual(true, fn.docAvailable(uri))
     );
@@ -49,9 +49,9 @@ result = isolate(() => textFileSplitter.performAction(doc1, {
   skipHeader: false
 }));
 assertions.push(
-  test.assertEqual(11, result.total),
-  test.assertEqual(true, Array.isArray(result.uris)),
-  test.assertEqual(11, result.uris.length)
+  test.assertEqual(11, result.splits.total),
+  test.assertEqual(true, Array.isArray(result.splits.uris)),
+  test.assertEqual(11, result.splits.uris.length)
 );
 isolate(() => {
   let split1 = cts.doc('/data/lorem.txt/0.txt').root;
@@ -67,9 +67,9 @@ result = isolate(() => textFileSplitter.performAction(doc1, {
   skipTrailingEOF: true
 }));
 assertions.push(
-  test.assertEqual(9, result.total),
-  test.assertEqual(true, Array.isArray(result.uris)),
-  test.assertEqual(9, result.uris.length)
+  test.assertEqual(9, result.splits.total),
+  test.assertEqual(true, Array.isArray(result.splits.uris)),
+  test.assertEqual(9, result.splits.uris.length)
 );
 isolate(() => {
   let split1 = cts.doc('/data/lorem.txt/0.txt').root;
@@ -86,11 +86,10 @@ result = isolate(() => textFileSplitter.performAction(doc1, {
   skipHeader: false,
   skipTrailingEOF: true
 }));
-xdmp.log(result);
 assertions.push(
-  test.assertEqual(66, result.total),
-  test.assertEqual(true, Array.isArray(result.uris)),
-  test.assertEqual(66, result.uris.length)
+  test.assertEqual(66, result.splits.total),
+  test.assertEqual(true, Array.isArray(result.splits.uris)),
+  test.assertEqual(66, result.splits.uris.length)
 );
 isolate(() => {
   let split1 = cts.doc('/data/lorem.txt/0.txt').root;
@@ -103,17 +102,6 @@ isolate(() => {
     test.assertEqual(null, split65)
   );
 });
-
-/*
-result = textFileSplitter.performAction(doc1, {
-  delimiterPattern: '',
-  skipHeader: true,
-  skipTrailingEOF: true,
-  targetPrefix: '',
-  targetExtension: 'txt',
-  targetCollections: []
-});
-*/
 
 // return
 assertions;

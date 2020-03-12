@@ -1,6 +1,6 @@
 'use strict';
 
-function performAction(uri) {
+function performAction(uri, options, context) {
   declareUpdate();
   xdmp.log('performing action "make-envelope.sjs"');
   const doc = cts.doc(uri);
@@ -13,6 +13,7 @@ function performAction(uri) {
   };
 
   xdmp.nodeReplace(doc.root, envelope);
+  return context;
 }
 
 exports.performAction = performAction;

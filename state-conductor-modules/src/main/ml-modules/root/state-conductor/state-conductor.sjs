@@ -398,7 +398,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       });
 
     } else if (!inTerminalState(jobObj, flowObj)) {
-      xdmp.trace(TRACE_EVENT, `transition other: ${stateName}`);
+      xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
 
       if ('task' === state.Type.toLowerCase()) {
         targetState = state.Next;
@@ -435,7 +435,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
             fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}" `);
           }
         } catch (err) {
-          return handleStateFailure(xdmp.nodeUri(jobDoc), flowName, flowObj, stateName, err, save);
+          return handleStateFailure(xdmp.nodeUri(jobDoc), flowObj.flowName, flowObj, stateName, err, save);
         }
       } else {
         fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"` + xdmp.quote(state));
@@ -535,7 +535,8 @@ function executeStateByJobDoc(jobDoc, save = true) {
               modules: jobObj.modules
             });
 
-          jobObj.context[stateName] = resp;
+          // update the job context with the response
+          jobObj.context = resp;
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
         }
@@ -612,7 +613,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
 
   if (!fn.docAvailable(uri)) {
-    return fn.error(null, 'DOCUMENT-NOT-FOUND', "the document URI of " + uri + " is a found.");
+    return fn.error(null, 'DOCUMENT-NOT-FOUND', Sequence.from([`the document URI of "${uri}" was not found.`, err]));
   }
 
   const jobDoc = cts.doc(uri);
@@ -1026,10 +1027,11 @@ function getJobDocuments(options) {
 **/
 function handleError(name, message, err, jobObj, save = true) {
   xdmp.trace(TRACE_EVENT, name + ":" + message);
+  const state = jobObj.flowState || FLOW_NEW_STEP;
 
   // update the job document
   jobObj.flowStatus = FLOW_STATUS_FAILED;
-  jobObj.errors[FLOW_NEW_STEP] = err;
+  jobObj.errors[state] = err;
 
   if (save) {
     xdmp.nodeReplace(jobDoc.root, jobObj);

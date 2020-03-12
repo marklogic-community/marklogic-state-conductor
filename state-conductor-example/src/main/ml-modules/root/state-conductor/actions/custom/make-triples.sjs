@@ -1,6 +1,6 @@
 'use strict';
 
-function performAction(uri) {
+function performAction(uri, options, context) {
   declareUpdate();
   xdmp.log('performing action "make-triples.sjs"');
   const doc = cts.doc(uri);
@@ -11,18 +11,19 @@ function performAction(uri) {
   obj.triples = obj.triples || [];
   obj.triples = obj.triples.concat([
     sem.triple(
-      sem.iri(uuid), 
-      sem.iri('http://www.w3.org/2000/01/rdf-schema#type'), 
+      sem.iri(uuid),
+      sem.iri('http://www.w3.org/2000/01/rdf-schema#type'),
       sem.iri('http://marklogic/thing')
     ),
     sem.triple(
-      sem.iri(uuid), 
-      sem.iri('http://www.w3.org/2000/01/rdf-schema#label'), 
+      sem.iri(uuid),
+      sem.iri('http://www.w3.org/2000/01/rdf-schema#label'),
       obj.headers.name
     )
   ]);
 
   xdmp.nodeReplace(doc.root, obj);
+  return context;
 }
 
 exports.performAction = performAction;

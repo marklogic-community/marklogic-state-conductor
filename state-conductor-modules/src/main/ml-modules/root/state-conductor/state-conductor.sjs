@@ -274,8 +274,7 @@ function processJob(uri) {
 }
 
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
-  const uri = xdmp.nodeUri(jobDoc)
-  const jobObj = jobDoc.toObject();
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const currFlowName = jobObj.flowName;
   const status = jobObj.flowStatus;
 
@@ -296,10 +295,6 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
     jobObj.flowState = initialState;
 
     xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
-
-    if (!jobObj.hasOwnProperty("provenance")) {
-      jobObj.provenance = [];
-    }
 
     jobObj.provenance.push({
       date: (new Date()).toISOString(),
@@ -329,7 +324,7 @@ function resumeWaitingJob(uri, resumeBy = 'unknonw', save = true) {
 
 function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   const uri = xdmp.nodeUri(jobDoc);
-  const jobObj = jobDoc.toObject();
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
   const flowStatus = jobObj.flowStatus;
@@ -343,7 +338,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   try {
 
     // sanity check
-    if (FLOW_STATUS_WATING !== jobObj.flowStatus) {
+    if (FLOW_STATUS_WATING !== flowStatus) {
       return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot resume a flow that is not in the WAITING status');
     }
 
@@ -450,11 +445,6 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       if (targetState) {
         jobObj.flowState = targetState;
 
-
-        if (!jobObj.hasOwnProperty("provenance")) {
-          jobObj.provenance = [];
-        }
-
         jobObj.provenance.push({
           date: (new Date()).toISOString(),
           from: stateName,
@@ -497,7 +487,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
  */
 function executeStateByJobDoc(jobDoc, save = true) {
   const uri = xdmp.nodeUri(jobDoc);
-  const jobObj = jobDoc.toObject();
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
   let state;
@@ -544,10 +534,6 @@ function executeStateByJobDoc(jobDoc, save = true) {
               database: jobObj.database,
               modules: jobObj.modules
             });
-          // update the job context with the response
-          if (!jobObj.hasOwnProperty("context")) {
-            jobObj.context = {};
-          }
 
           jobObj.context[stateName] = resp;
         } else {
@@ -661,7 +647,6 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
           to: target
         });
         // capture error message in context
-        jobObj.errors = jobObj.errors || {};
         jobObj.errors[stateName] = err;
 
         if (save) {
@@ -782,6 +767,29 @@ function isLatestTemporalDocument(uri) {
   return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
 }
 
+/**
+ * Should be used when take a job doc from the database
+ * insures all the needed properties are there
+ * @param {*} jobDoc
+ */
+function scaffoldJobDoc(jobDoc) {
+
+  const needProps = {
+    id: null,
+    flowName: null,
+    flowStatus: null,
+    flowState: null,
+    uri: null,
+    database: null,
+    modules: null,
+    createdDate: null,
+    context: {},
+    provenance: [],
+    errors: {}
+  };
+
+   return Object.assign(needProps, jobDoc)
+}
 
 /**
  * Convienence function to create a job record for a document to be
@@ -802,7 +810,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   const jobUri = directory + id + '.json';
 
   // TODO any benifit to defining a class for the job document?
-  const job = {
+  const job = scaffoldJobDoc({
     id: id,
     flowName: flowName,
     flowStatus: FLOW_STATUS_NEW,
@@ -813,7 +821,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     createdDate: (new Date()).toISOString(),
     context: context,
     provenance: []
-  };
+  });
 
   // insert the job document
   xdmp.trace(TRACE_EVENT, `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`);
@@ -1021,7 +1029,6 @@ function handleError(name, message, err, jobObj, save = true) {
 
   // update the job document
   jobObj.flowStatus = FLOW_STATUS_FAILED;
-  jobObj.errors = jobObj.errors || {};
   jobObj.errors[FLOW_NEW_STEP] = err;
 
   if (save) {

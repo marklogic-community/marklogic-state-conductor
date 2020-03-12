@@ -647,7 +647,6 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
           to: target
         });
         // capture error message in context
-        jobObj.errors = jobObj.errors || {};
         jobObj.errors[stateName] = err;
 
         if (save) {
@@ -785,7 +784,8 @@ function scaffoldJobDoc(jobDoc) {
     modules: null,
     createdDate: null,
     context: {},
-    provenance: []
+    provenance: [],
+    errors: {}
   };
 
    return Object.assign(needProps, jobDoc)
@@ -810,7 +810,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   const jobUri = directory + id + '.json';
 
   // TODO any benifit to defining a class for the job document?
-  const job = {
+  const job = scaffoldJobDoc({
     id: id,
     flowName: flowName,
     flowStatus: FLOW_STATUS_NEW,
@@ -821,7 +821,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     createdDate: (new Date()).toISOString(),
     context: context,
     provenance: []
-  };
+  });
 
   // insert the job document
   xdmp.trace(TRACE_EVENT, `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`);
@@ -1029,7 +1029,6 @@ function handleError(name, message, err, jobObj, save = true) {
 
   // update the job document
   jobObj.flowStatus = FLOW_STATUS_FAILED;
-  jobObj.errors = jobObj.errors || {};
   jobObj.errors[FLOW_NEW_STEP] = err;
 
   if (save) {

@@ -312,7 +312,7 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
     }
 
   } catch (err) {
-    handleError(err.name, ` startProcessingFlowByJobDoc error for flow "${currFlowName}"`, err, jobObj, save);
+    handleError(err.name, `startProcessingFlowByJobDoc error for flow "${currFlowName}"`, err, jobObj, save);
   }
   return jobObj
 }
@@ -352,11 +352,11 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
     try {
       state = flowObj.States[stateName];
     } catch (e) {
-      return fn.error(null, 'CANT-FIND-STATE', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+      return fn.error(null, 'INVALID-STATE-DEFINITION', `Can't Find the state "${stateName}" in flow "${flowName}"`);
     }
 
   } catch (err) {
-    handleError(err.name, ` resumeWaitingJobByJobDoc error for flow "${flowName}"`, err, jobObj, save);
+    handleError(err.name, `resumeWaitingJobByJobDoc error for flow "${flowName}"`, err, jobObj, save);
   }
 
   try {
@@ -484,7 +484,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     }
 
   } catch (err) {
-    handleError('TRANSITIONERROR', ` transition error for state "${stateName}"`, err, jobObj, save);
+    handleError('TRANSITIONERROR', `transition error for state "${stateName}"`, err, jobObj, save);
   }
 
   return jobObj
@@ -517,11 +517,11 @@ function executeStateByJobDoc(jobDoc, save = true) {
     try {
       state = flowObj.States[stateName];
     } catch (e) {
-      return fn.error(null, 'CANT-FIND-STATE', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+      return fn.error(null, 'INVALID-STATE-DEFINITION', `Can't Find the state "${stateName}" in flow "${flowName}"`);
     }
 
   } catch (err) {
-    handleError(err.name, ` executeStateByJobDoc error for flow "${flowName}"`, err, jobObj, save);
+    handleError(err.name, `executeStateByJobDoc error for flow "${flowName}"`, err, jobObj, save);
   }
 
   if (state) {
@@ -574,7 +574,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
 
   } else {
-    handleError('state not found', Sequence.from([`state "${stateName}" not found in flow`]), null, jobObj, save);
+    handleError('INVALID-STATE-DEFINITION', Sequence.from([`state "${stateName}" not found in flow`]), null, jobObj, save);
   }
 
 }

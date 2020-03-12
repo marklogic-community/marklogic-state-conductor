@@ -1,0 +1,41 @@
+{
+  "Comment": "example flow that utilizes the context to create new documents",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "collection",
+        "value": "context-test"
+      }
+    ]
+  },
+  "StartAt": "createDoc1",
+  "States": {
+    "createDoc1": {
+      "Type": "Task",
+      "Comment": "creates a new doc",
+      "Resource": "/state-conductor/actions/custom/create-doc.sjs",
+      "Parameters": {
+        "uriPrefix": "/data/"
+      },
+      "Next": "createDoc2"
+    },
+    "createDoc2": {
+      "Type": "Task",
+      "Comment": "creates a new doc",
+      "Resource": "/state-conductor/actions/custom/create-doc.sjs",
+      "Parameters": {
+        "uriPrefix": "/data/"
+      },
+      "Next": "createDoc3"
+    },
+    "createDoc3": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "creates a new doc",
+      "Resource": "/state-conductor/actions/custom/create-doc.sjs",
+      "Parameters": {
+        "uriPrefix": "/data/"
+      }
+    }
+  }
+}

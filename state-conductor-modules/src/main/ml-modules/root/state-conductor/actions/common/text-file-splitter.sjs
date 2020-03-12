@@ -2,7 +2,7 @@
 
 /**
  * Splits a text file and saves the resulting documents to MarkLogic.
- * 
+ *
  * options.delimiterPattern - string - regular expression for splitting the source document ["\n"]
  * options.skipHeader - boolean - skip the first line of the source document [true]
  * options.skipTrailingEOF - boolean - skip the final empty line of the source document [false]
@@ -17,7 +17,7 @@
  */
 function performAction(uri, options = {}, context = {}) {
   declareUpdate();
-  
+
   let delimiterPattern  = options.delimiterPattern || '\n';
   let skipHeader        = !(options.skipHeader === 'false' || options.skipHeader === false);
   let skipTrailingEOF   = options.skipTrailingEOF === 'true' || options.skipTrailingEOF === true;
@@ -43,7 +43,7 @@ function performAction(uri, options = {}, context = {}) {
   if (skipHeader) {
     lines = lines.slice(1);
   }
-  
+
   // remove the trailing EOF
   if (skipTrailingEOF) {
     let last = lines[lines.length - 1];
@@ -51,7 +51,7 @@ function performAction(uri, options = {}, context = {}) {
       lines.pop();
     }
   }
-  
+
   // create the split documents
   const newDocs = lines.map((line, idx) => {
     let newUri = `${targetPrefix}/${idx}.${targetExtension}`;
@@ -66,13 +66,15 @@ function performAction(uri, options = {}, context = {}) {
     return newUri;
   });
 
-  return {
+  context.splits = {
     total: newDocs.length,
     uris: newDocs
   };
+
+  return context;
 }
 
-function isTextNode(payload) {  
+function isTextNode(payload) {
   if (Node.DOCUMENT_NODE === payload.nodeType) {
     payload = payload.root;
   }

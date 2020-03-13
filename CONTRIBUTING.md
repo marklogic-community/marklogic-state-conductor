@@ -38,55 +38,17 @@ You need:
 #### Building from the command line
 
 ```bash
-cd into state-conductor-modules
-gradle modulesJar publishToMavenLocal
-cd into state-conductor-example
-gradle mldeploy
+./gradlew modulesJar publishToMavenLocal
+./gradlew mldeploy
 ```
 **Note:**
 Create a gradle-local.properties in the state-conductor-example folder that has the mlPassword set or pass the mlPassword in on the mldeploy command
 
 ```bash
-gradle mldeploy -PmlPassword=[passwordHere]
+./gradlew mldeploy -PmlPassword=[passwordHere]
 ```
 
 This builds and locally publishes the state conductor, and then deploys the example project with your changes  
-
-In your Example project's `build.gradle` file, enter the local version:
-
-  ```groovy
-
-  // this goes at the top above the plugins section
-
-  buildscript {
-	repositories {
-		jcenter()
-		mavenLocal()
-	}
-	dependencies {
-		classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
-		classpath "com.marklogic:ml-gradle:3.16.1"
-	}
-}
-
-plugins {
-  id "java"
-  id "net.saliman.properties" version "1.5.1"
-  id "com.marklogic.ml-gradle" version "3.16.1"
-}
-
-repositories {
-	jcenter()
-	mavenLocal()
-}
-
-dependencies {
-	mlBundle "com.marklogic:marklogic-state-conductor:(you pick the version number)"
-	mlBundle "com.marklogic:marklogic-unit-test-modules:1.0.0"
-}
-  ```
-
-**Note**: This change goes in a state-conductor-example project's `build.gradle`. Not the state-conductor-modules source code's build.gradle.
 
 ### Troubleshooting
 

@@ -171,18 +171,20 @@ GET /v1/resources/state-conductor-status?rs:flowName=<my-flow-name>&rs:startDate
 New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
 ___
 ## Roadmap
-
-* [Time based flow context](https://github.com/aclavio/marklogic-state-conductor/issues/1)
-* [Named event based state pausing and resuming](https://github.com/aclavio/marklogic-state-conductor/issues/6)
-* Wait state
-* Unit Test coverage
-* Reference path 
-* [Corb 2 driver](https://github.com/aclavio/marklogic-state-conductor/issues/5)
+* 0.4.0
+  * [Time based flow context](https://github.com/aclavio/marklogic-state-conductor/issues/1)
+  * [Named event based state pausing and resuming](https://github.com/aclavio/marklogic-state-conductor/issues/6)
+  * [Corb 2 driver](https://github.com/aclavio/marklogic-state-conductor/issues/5)
+  * [Time based Wait state](https://github.com/aclavio/marklogic-state-conductor/issues/10)
+  * Additional Unit Test coverage
+* 0.5.0  
+  * [Reference path](https://github.com/aclavio/marklogic-state-conductor/issues/17)
+  * [Role based access controls](https://github.com/aclavio/marklogic-state-conductor/issues/16)   
+  
+* Event based flow context
 * Batch support
+* External Driver wait step handling 
 * Rest Services
-  * Document Status
   * Error Retries
-  * Role-based access controls for CRUD operations
-* Increase ASL syntax support
-* Documentation
-  * supported ASL syntax
+  * Event Emmit
+  * Resume Job

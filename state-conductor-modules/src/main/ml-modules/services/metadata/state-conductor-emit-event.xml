@@ -1,0 +1,9 @@
+<metadata>
+  <title>State Conductor Emit Event Service</title>
+  <description>
+    <p>Service for Emitting Events within the State Conductor</p>
+  </description>
+  <method name="PUT">
+    <param name="event" type="xs:string" />
+  </method>
+</metadata>

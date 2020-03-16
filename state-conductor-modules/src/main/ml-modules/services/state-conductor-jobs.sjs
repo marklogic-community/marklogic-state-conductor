@@ -17,15 +17,25 @@ function get(context, params) {
     returnError(400, 'Bad Request', 'Missing required parameter "flowName"');
   }
 
-  if (!fn.docAvailable(params.uri)) {
-    returnError(404, 'NOT FOUND', `Document at uri "${params.uri}" not found.`);
-  }
-  if (!sc.getFlowDocument(params.flowName)) {
-    returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
-  }
-  
+  //runs the query in the jobs database
+  const JobIds = fn.head(xdmp.invokeFunction(() => {
+
+    if (!fn.docAvailable(params.uri)) {
+      returnError(404, 'NOT FOUND', `Document at uri "${params.uri}" not found.`);
+    }
+    if (!sc.getFlowDocument(params.flowName)) {
+      returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
+    }
+
+    return sc.getJobIds(params.uri, params.flowName);
+
+  }, {
+    database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB)
+  }))
+
   context.outputStatus = [200, 'Success'];
-  return sc.getJobIds(params.uri, params.flowName);
+
+  return JobIds
 }
 
 /**
@@ -46,15 +56,23 @@ function put(context, { uris = [], flowName = '' }, input) {
     returnError(404, 'NOT FOUND', `Flow File "${flowName}" not found.`);
   }
 
-  const resp = uris.reduce((acc, uri) => {
-    if (fn.docAvailable(uri)) {
-      const jobId = sc.createStateConductorJob(flowName, uri);
-      acc[uri] = jobId;
-      return acc;
-    } else {
-      returnError(400, 'Bad Request', `Document "${uri}" not found.`);
-    }
-  }, {});
+  //runs the update in the jobs database
+  const resp = xdmp.invokeFunction(() => {
+    declareUpdate();
+
+      return uris.reduce((acc, uri) => {
+      if (fn.docAvailable(uri)) {
+        const jobId = sc.createStateConductorJob(flowName, uri);
+        acc[uri] = jobId;
+        return acc;
+      } else {
+        returnError(400, 'Bad Request', `Document "${uri}" not found.`);
+      }
+    }, {});
+
+  }, {
+    database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB)
+  })
 
   context.outputStatus = [201, 'Created'];
   return resp;

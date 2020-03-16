@@ -10,23 +10,33 @@ function returnError(statusCode, statusMsg, body) {
  * Lists the status of the given State Conductor Flow
  */
 function get(context, params) {
+
+  //runs the query in the jobs database
+  const resp = xdmp.invokeFunction(() => {
+
+    const flowNames = params.flowName ? [params.flowName] : sc.getFlowNames();
+    const startDate = params.startDate;
+    const endDate = params.endDate;
+
+    return flowNames.reduce((acc, name) => {
+      acc[name] = sc.getFlowCounts(name, {
+        startDate: startDate,
+        endDate: endDate
+      });
+      return acc;
+    }, {});
+
+    context.outputStatus = [200, 'Success'];
+
+  }, {
+    database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB)
+  })
+
   if (params.flowName && !sc.getFlowDocument(params.flowName)) {
     returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
   }
 
-  const flowNames = params.flowName ? [params.flowName] : sc.getFlowNames();
-  const startDate = params.startDate;
-  const endDate = params.endDate;
 
-  const resp = flowNames.reduce((acc, name) => {
-    acc[name] = sc.getFlowCounts(name, {
-      startDate: startDate,
-      endDate: endDate
-    });
-    return acc;
-  }, {});
-
-  context.outputStatus = [200, 'Success'];
   return resp;
 }
 

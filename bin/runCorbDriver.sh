@@ -9,8 +9,8 @@ do
     continue
   elif [ $code -eq 3 ]
   then
-    echo "no jobs to process, sleeping 30 seconds..."
-    sleep 30s
+    echo "no jobs to process, sleeping 15 seconds..."
+    sleep 15s
     continue
   else
     break

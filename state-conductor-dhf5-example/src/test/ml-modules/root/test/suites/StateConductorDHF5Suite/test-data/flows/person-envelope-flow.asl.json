@@ -1,0 +1,30 @@
+{
+  "Comment": "Calls envelope built-in",
+  "mlDomain": {
+    "context": []
+  },
+  "StartAt": "callEnvelope",
+  "States": {
+    "callEnvelope": {
+      "Type": "Task",
+      "Comment": "runs the dhf 5 envelope",
+      "Resource": "/state-conductor/actions/common/dhf/dhf5MakeEnvelopeStep.sjs",
+      "Parameters": {
+        "collections": ["enveloped"]
+      },
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "FailState"
+        }
+      ]
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "FailState": {
+      "Type": "Fail"
+    }
+  }
+}

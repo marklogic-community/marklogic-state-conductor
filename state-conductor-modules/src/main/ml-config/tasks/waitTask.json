@@ -4,7 +4,7 @@
   "task-root": "/",
   "task-type": "minutely",
   "task-period": 1,
-  "task-database": "%%DATABASE%%",
+  "task-database": "state-conductor-jobs",
   "task-modules": "%%MODULES_DATABASE%%",
   "task-user": "%%mlUsername%%"
 }

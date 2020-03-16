@@ -4,34 +4,28 @@
     "context": [
       {
         "scope": "collection",
-        "value": "event-wait-test"
+        "value": "waitStateTest"
       }
     ]
   },
-  "StartAt": "needs-envelope",
+  "StartAt": "wait_two_minute",
   "States": {
+    "wait_two_minute": {
+      "Type": "Wait",
+      "Comment": "wait for 120 second to call the next state",
+      "Seconds": 60,
+      "Next": "needs-envelope"
+    },
     "needs-envelope": {
       "Type": "Task",
       "Comment": "makes the envelope",
       "Resource": "/state-conductor/actions/custom/make-envelope.sjs",
-      "Next": "waitForEvent"
+      "Next": "make-headers"
     },
-    "wait_two_minute": {
-      "Type": "Wait",
-      "Comment": "wait for 120 second to call the next state",
-      "Seconds": 120,
-      "Next": "wait_until"
-    },
-    "wait_until": {
-      "Type": "Wait",
-      "Comment": "makes the envelope's headers",
-      "Timestamp": "2016-03-14T01:59:00Z",
-      "Next": "needs-triples"
-    },
-    "needs-triples": {
+    "make-headers": {
       "Type": "Task",
       "Comment": "makes the envelope's triples",
-      "Resource": "/state-conductor/actions/custom /make-triples.sjs",
+      "Resource": "/state-conductor/actions/custom/make-headers",
       "Next": "success"
     },
     "success": {

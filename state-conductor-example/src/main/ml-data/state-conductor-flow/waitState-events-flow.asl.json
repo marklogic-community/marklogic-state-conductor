@@ -33,7 +33,7 @@
       "Comment": "makes the envelope's triples",
       "Resource": "/state-conductor/actions/custom /make-triples.sjs",
       "Next": "success"
-    }, 
+    },
     "success": {
       "Type": "Succeed"
     }

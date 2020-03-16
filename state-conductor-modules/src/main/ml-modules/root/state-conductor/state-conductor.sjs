@@ -318,6 +318,8 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
  * @param {*} uri - the job document's uri
  */
 function resumeWaitingJob(uri, resumeBy = 'unknonw', save = true) {
+//ike testing trace
+  xdmp.trace(TRACE_EVENT, `check if resumeWaiting is working  "${uri}"`);
   const jobDoc = cts.doc(uri);
   resumeWaitingJobByJobDoc(jobDoc, resumeBy, save)
 };
@@ -540,7 +542,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
         }
-      } else if (state.Type && state.Type.toLowerCase() === 'wait') {
+      } else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Event')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
@@ -551,6 +553,26 @@ function executeStateByJobDoc(jobDoc, save = true) {
           jobObj.flowStatus = FLOW_STATUS_WATING
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Event" defined for Task state "${stateName}"`);
+        }
+      }
+      else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Seconds')) {
+        //updated the job Doc to have info about why its waiting
+        xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
+
+        if (state.Seconds) {
+          let waitTime = Number(state.Seconds)
+          let WaitTimeToMinutes = Math.floor(waitTime / 60);
+          let currentTime = fn.currentDateTime()
+          let WaitTimeToSeconds = waitTime - WaitTimeToMinutes * 60;
+          let nextTaskTime = currentTime.add(xs.dayTimeDuration("PT" + WaitTimeToMinutes + "M" + WaitTimeToSeconds + "S"));
+          xdmp.trace(TRACE_EVENT, `waiting for state nextTaskTime : ${nextTaskTime}`);
+          jobObj.currentlyWaiting = {
+            seconds: state.Seconds,
+            nextTaskTime: nextTaskTime
+          }
+          jobObj.flowStatus = FLOW_STATUS_WATING
+        } else {
+          fn.error(null, 'INVALID-STATE-DEFINITION', `no "Seconds" defined for Task state "${stateName}"`);
         }
       }
 
@@ -789,7 +811,7 @@ function scaffoldJobDoc(jobDoc) {
     errors: {}
   };
 
-   return Object.assign(needProps, jobDoc)
+  return Object.assign(needProps, jobDoc)
 }
 
 /**
@@ -1083,4 +1105,3 @@ module.exports = {
   getJobDocuments,
   hasScheduleElapsed
 };
-

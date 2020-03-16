@@ -176,15 +176,15 @@ ___
   * [Named event based state pausing and resuming](https://github.com/aclavio/marklogic-state-conductor/issues/6)
   * [Corb 2 driver](https://github.com/aclavio/marklogic-state-conductor/issues/5)
   * [Time based Wait state](https://github.com/aclavio/marklogic-state-conductor/issues/10)
+  * [Rest Services for processing a job and querying jobs](https://github.com/aclavio/marklogic-state-conductor/issues/25)
+  * [Rest Services for emitting Events](https://github.com/aclavio/marklogic-state-conductor/issues/20)
+  * [Rest Services for resumming a job](https://github.com/aclavio/marklogic-state-conductor/issues/26)
   * Additional Unit Test coverage
 * 0.5.0  
   * [Reference path](https://github.com/aclavio/marklogic-state-conductor/issues/17)
-  * [Role based access controls](https://github.com/aclavio/marklogic-state-conductor/issues/16)   
-  
-* Event based flow context
-* Batch support
-* External Driver wait step handling 
-* Rest Services
-  * Error Retries
-  * Event Emmit
-  * Resume Job
+  * [Role based access controls](https://github.com/aclavio/marklogic-state-conductor/issues/16)
+  * [Rest Services for Error Retries](https://github.com/aclavio/marklogic-state-conductor/issues/27)
+  * [External Driver wait step handling](https://github.com/aclavio/marklogic-state-conductor/issues/28)
+* Beyond
+  * Event based flow context
+  * Batch support

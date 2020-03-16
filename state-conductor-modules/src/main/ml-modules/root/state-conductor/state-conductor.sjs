@@ -249,12 +249,6 @@ function processJob(uri) {
   if (!fn.docAvailable(uri)) {
     fn.error(null, 'INVALID-JOB-DOCUMENT', `State Conductor job document "${uri}" not found!`);
   }
-
-  //checks if document is there
-  if (!fn.docAvailable(uri)){
-    fn.error(null, 'BAD-URI', `Job Document "${uri}" not found."`);
-  }
-
   const jobDoc = cts.doc(uri);
   const job = jobDoc.toObject();
   const status = job.flowStatus;
@@ -327,7 +321,7 @@ function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
 
   // checks if document is there
   if (!fn.docAvailable(uri)){
-    fn.error(null, 'BAD-URI', `Document Job "${uri}" not found."`);
+    fn.error(null, 'INVALID-JOB-DOCUMENT', `Document Job "${uri}" not found."`);
   }
 
   const jobDoc = cts.doc(uri);

@@ -17,6 +17,6 @@ try {
   erorr = e;
 }
 
-assertions.push(test.assertEqual("BAD-URI", erorr.name, "check if job doc is there"))
+assertions.push(test.assertEqual("INVALID-JOB-DOCUMENT", erorr.name, "check if job doc is there"))
 
 assertions

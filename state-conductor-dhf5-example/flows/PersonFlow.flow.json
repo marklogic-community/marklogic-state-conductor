@@ -1,0 +1,63 @@
+{
+  "name": "PersonFlow",
+  "description": "This is the default flow containing all of the default steps",
+  "batchSize": 100,
+  "threadCount": 4,
+  "options": {
+    "sourceQuery": null
+  },
+  "steps": {
+    "1": {
+      "name": "ingestion-step",
+      "description": "This is the default ingestion step",
+      "stepDefinitionName": "default-ingestion",
+      "stepDefinitionType": "INGESTION",
+      "customHook" : {},
+      "batchSize" : 100,
+      "threadCount" : 4,
+      "fileLocations": {
+        "inputFilePath": "data/people",
+        "inputFileType": "json"
+      },
+      "options": {
+        "targetDatabase": "sce-dh5-STAGING",
+        "sourceQuery": "cts.collectionQuery([])",
+        "permissions": "data-hub-operator,read,data-hub-operator,update",
+        "outputFormat": "json",
+        "collections": [
+          "default-ingestion"
+        ],
+        "headers": {
+          "sources": [{"name":  "PersonFlow"}],
+          "createdOn" : "currentDateTime",
+          "createdBy" : "currentUser"
+        }
+      }
+    },
+    "2": {
+      "name": "PersonMapping",
+      "description": "This is the default mapping step",
+      "stepDefinitionName": "entity-services-mapping",
+      "stepDefinitionType": "MAPPING",
+      "customHook" : {},
+      "batchSize" : 100,
+      "threadCount" : 4,
+      "options": {
+        "sourceDatabase": "sce-dh5-STAGING",
+        "targetDatabase": "sce-dh5-FINAL",
+        "sourceQuery": "cts.collectionQuery('default-ingestion')",
+        "permissions": "data-hub-operator,read,data-hub-operator,update",
+        "outputFormat": "json",
+        "collections": [
+          "default-mapping"
+        ],
+        "targetEntity": "Person",
+        "mapping": {
+          "name": "PersonFlow-PersonMapping",
+          "version": 1
+        },
+        "validateEntity": false
+      }
+    }
+  }
+}

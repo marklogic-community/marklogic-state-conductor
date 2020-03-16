@@ -185,6 +185,7 @@ ___
   * [Role based access controls](https://github.com/aclavio/marklogic-state-conductor/issues/16)
   * [Rest Services for Error Retries](https://github.com/aclavio/marklogic-state-conductor/issues/27)
   * [External Driver wait step handling](https://github.com/aclavio/marklogic-state-conductor/issues/28)
+  * [Test coverage of rest endpoints](https://github.com/aclavio/marklogic-state-conductor/issues/29)
 * Beyond
   * Event based flow context
   * Batch support

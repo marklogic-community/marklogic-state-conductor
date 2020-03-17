@@ -69,7 +69,7 @@ function deleteFunction(context, params) {
       xdmp.documentDelete(uri);
       context.outputStatus = [204, 'Deleted'];
       return '';
-    }    
+    }
   }
 }
 

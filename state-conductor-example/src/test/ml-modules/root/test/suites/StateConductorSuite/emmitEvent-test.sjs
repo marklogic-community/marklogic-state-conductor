@@ -4,7 +4,7 @@ const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 const assertions = [];
-let jobDoc, erorr, assertion;
+let jobDoc, error, assertion;
 
 
 //"found waiting job")

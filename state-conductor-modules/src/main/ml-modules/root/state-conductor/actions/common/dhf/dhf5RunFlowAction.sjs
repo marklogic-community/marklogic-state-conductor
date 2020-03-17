@@ -19,7 +19,8 @@ function performAction(uri, options = {}, context = {}) {
   // setup the dhf runFlow content
   const contentObj = {
     uri: uri,
-    context: flowContext
+    context: flowContext,
+    value: fn.head(xdmp.invokeFunction(() => cts.doc(uri)))
   };
 
   xdmp.log(Sequence.from([
@@ -36,10 +37,11 @@ function performAction(uri, options = {}, context = {}) {
   // execute the flow's steps in sequence
   for (let i = 1; i <= numSteps; i++) {
     // execute the flows step
-    let flowResponse;
-    xdmp.invokeFunction(() => {
-      flowResponse = datahub.flow.runFlow(flowName, null, [contentObj], flowOptions, i);
-    });
+    let flowResponse = fn.head(
+      xdmp.invokeFunction(() => {
+        return datahub.flow.runFlow(flowName, null, [contentObj], flowOptions, i);
+      })
+    );
     // abort on error
     if (flowResponse.errors && flowResponse.errors.length) {
       datahub.debug.log(flowResponse.errors[0]);

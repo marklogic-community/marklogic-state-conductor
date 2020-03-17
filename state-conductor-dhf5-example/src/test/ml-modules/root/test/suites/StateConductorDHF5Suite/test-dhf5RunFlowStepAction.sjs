@@ -34,12 +34,6 @@ let resp = isolate(() => dhf5RunFlowStepAction.performAction(uri, {
 }));
 let ingested = isolate(() => cts.doc(uri).toObject());
 
-xdmp.log('INGESTED:');
-xdmp.log(ingested);
-
-xdmp.log('RESP:');
-xdmp.log(resp);
-
 let flowResult = resp[flowName];
 assertions.push(test.assertTrue(flowResult !== null));
 
@@ -73,12 +67,6 @@ resp = isolate(() => dhf5RunFlowStepAction.performAction(uri, {
 }));
 let mapped = isolate(() => cts.doc(uri).toObject(), xdmp.database('sce-dh5-FINAL'));
 
-xdmp.log('MAPPED:');
-xdmp.log(mapped);
-
-xdmp.log('RESP:');
-xdmp.log(resp);
-
 flowResult = resp[flowName];
 assertions.push(test.assertTrue(flowResult !== null));
 
@@ -104,6 +92,45 @@ assertions.push(
     test.assertTrue(isolate(() => xdmp.documentGetCollections(uri).includes('default-ingestion'))),
     test.assertTrue(isolate(() => xdmp.documentGetMetadata(uri).datahubCreatedInFlow === 'PersonFlow')),
     test.assertTrue(isolate(() => xdmp.documentGetMetadata(uri).datahubCreatedByStep === 'default-ingestion'))
+);
+
+// run a test document through the CustomFlow flow step 1
+uri = "/data/johndoe.json";
+flowName = "CustomFlow";
+step = 1;
+
+original = isolate(() => cts.doc(uri).toObject());
+resp = isolate(() => dhf5RunFlowStepAction.performAction(uri, {
+  flowName: flowName,
+  step: step,
+  flowOptions: {
+    secret: "testing-testing-1-2-3"
+  }
+}));
+let custom = isolate(() => cts.doc(uri).toObject());
+
+flowResult = resp[flowName];
+assertions.push(test.assertTrue(flowResult !== null));
+
+stepResult = flowResult['' + step];
+assertions.push(test.assertTrue(stepResult !== null));
+
+assertions.push(
+    test.assertTrue(stepResult.jobId.length > 0),
+    test.assertTrue(stepResult.totalCount === 1),
+    test.assertTrue(stepResult.errorCount === 0),
+    test.assertTrue(stepResult.completedItems[0] === uri),
+    test.assertTrue(custom.envelope != null),
+    test.assertTrue(custom.envelope.headers != null),
+    test.assertEqual('testing-testing-1-2-3', custom.envelope.headers.secret),
+    test.assertTrue(custom.envelope.headers.randomUuid.length > 0),
+    test.assertTrue(custom.envelope.headers.createdOn.length > 0),
+    test.assertTrue(custom.envelope.triples != null),
+    test.assertTrue(custom.envelope.instance != null),
+    test.assertEqual(JSON.stringify(original), JSON.stringify(custom.envelope.instance)),
+    test.assertTrue(isolate(() => xdmp.documentGetCollections(uri).includes('MyCustomStep'))),
+    test.assertTrue(isolate(() => xdmp.documentGetMetadata(uri).datahubCreatedInFlow === 'CustomFlow')),
+    test.assertTrue(isolate(() => xdmp.documentGetMetadata(uri).datahubCreatedByStep === 'MyCustomStep'))
 );
 
 

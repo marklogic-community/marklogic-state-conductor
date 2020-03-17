@@ -11,30 +11,24 @@ function returnError(statusCode, statusMsg, body) {
  * Lists the installed State Conductor Flows
  */
 function get(context, params) {
-
-    //runs the update in the jobs database
-    return xdmp.invokeFunction(() => {
-      if (params.flowName) {
-        const flow = sc.getFlowDocument(params.flowName);
-        if (flow) {
-          context.outputStatus = [200, 'Success'];
-          return flow;
-        } else {
-          returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
-        }
-      } else {
-        const flows = sc.getFlowDocuments();
-        const resp = flows.toArray().reduce((acc, flow) => {
-          let name = sc.getFlowNameFromUri(fn.documentUri(flow));
-          acc[name] = flow.toObject();
-          return acc;
-        }, {});
-        context.outputStatus = [200, 'Success'];
-        return resp;
-      }
-    }, {
-      database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB)
-    })
+  if (params.flowName) {
+    const flow = sc.getFlowDocument(params.flowName);
+    if (flow) {
+      context.outputStatus = [200, 'Success'];
+      return flow;
+    } else {
+      returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
+    }
+  } else {
+    const flows = sc.getFlowDocuments();
+    const resp = flows.toArray().reduce((acc, flow) => {
+      let name = sc.getFlowNameFromUri(fn.documentUri(flow));
+      acc[name] = flow.toObject();
+      return acc;
+    }, {});
+    context.outputStatus = [200, 'Success'];
+    return resp;
+  }
 }
 
 /**
@@ -49,24 +43,13 @@ function put(context, params, input) {
   } else if (!validator.validateFlowFile(input.toObject())) {
     returnError(400, 'Bad Request', 'Invalid state-conductor flow file');
   } else {
-
-    //runs the update in the jobs database
-    return xdmp.invokeFunction(() => {
-      declareUpdate();
-
-      const uri = `${sc.FLOW_DIRECTORY}${flowName}.asl.json`;
-      xdmp.documentInsert(uri, input, {
-        permissions: xdmp.defaultPermissions(),
-        collections: [sc.FLOW_COLLECTION]
-      });
-      context.outputStatus = [201, 'Created'];
-      return '';
-
-    }, {
-      database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB)
-    })
-
-
+    const uri = `${sc.FLOW_DIRECTORY}${flowName}.asl.json`;
+    xdmp.documentInsert(uri, input, {
+      permissions: xdmp.defaultPermissions(),
+      collections: [sc.FLOW_COLLECTION]
+    });
+    context.outputStatus = [201, 'Created'];
+    return '';
   }
 }
 
@@ -78,23 +61,15 @@ function deleteFunction(context, params) {
   if (flowName === '') {
     returnError(400, 'Bad Request', 'Missing parameter "flowName"');
   } else {
-    return xdmp.invokeFunction(() => {
-      declareUpdate();
-
-      const flow = sc.getFlowDocument(flowName);
-      if (!flow) {
-        returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
-      } else {
-        const uri = fn.documentUri(flow);
-        xdmp.documentDelete(uri);
-        context.outputStatus = [204, 'Deleted'];
-        return '';
-      }
-
-    }, {
-      database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB)
-    })
-
+    const flow = sc.getFlowDocument(flowName);
+    if (!flow) {
+      returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
+    } else {
+      const uri = fn.documentUri(flow);
+      xdmp.documentDelete(uri);
+      context.outputStatus = [204, 'Deleted'];
+      return '';
+    }
   }
 }
 

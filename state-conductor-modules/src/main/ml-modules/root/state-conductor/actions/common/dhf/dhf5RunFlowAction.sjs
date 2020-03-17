@@ -16,13 +16,6 @@ function performAction(uri, options = {}, context = {}) {
   // get the steps for the given flow
   const numSteps = Object.keys(flow.steps).length;
 
-  // setup the dhf runFlow content
-  const contentObj = {
-    uri: uri,
-    context: flowContext,
-    value: fn.head(xdmp.invokeFunction(() => cts.doc(uri)))
-  };
-
   xdmp.log(Sequence.from([
     'Execute DHF flow:',
     '  uri:         ' + uri,
@@ -36,7 +29,14 @@ function performAction(uri, options = {}, context = {}) {
 
   // execute the flow's steps in sequence
   for (let i = 1; i <= numSteps; i++) {
+    // setup the dhf runFlow content
+    const contentObj = {
+      uri: uri,
+      context: flowContext,
+      value: fn.head(xdmp.invokeFunction(() => cts.doc(uri)))
+    };
     // execute the flows step
+    xdmp.log(`Executing Flow: "${flowName}" Step: "${i}"`);
     let flowResponse = fn.head(
       xdmp.invokeFunction(() => {
         return datahub.flow.runFlow(flowName, null, [contentObj], flowOptions, i);

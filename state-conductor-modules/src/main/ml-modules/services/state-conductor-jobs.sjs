@@ -57,7 +57,10 @@ function put(context, { uris = [], flowName = '' }, input) {
   }
 
   //runs the update in the jobs database
-  const resp = uris.reduce((acc, uri) => {
+  const resp = xdmp.invokeFunction(() => {
+    declareUpdate();
+
+      return uris.reduce((acc, uri) => {
       if (fn.docAvailable(uri)) {
         const jobId = sc.createStateConductorJob(flowName, uri);
         acc[uri] = jobId;
@@ -65,7 +68,11 @@ function put(context, { uris = [], flowName = '' }, input) {
       } else {
         returnError(400, 'Bad Request', `Document "${uri}" not found.`);
       }
-    });
+    }, {});
+
+  }, {
+    database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB)
+  })
 
   context.outputStatus = [201, 'Created'];
   return resp;

@@ -8,20 +8,28 @@
       }
     ]
   },
-  "StartAt": "wait_two_minute",
+  "StartAt": "run-in-the-future",
   "States": {
-    "wait_two_minute": {
+    "run-in-the-future": {
       "Type": "Wait",
       "Comment": "wait for 120 second to call the next state",
-      "Seconds": 60,
+      "Timestamp": "2020-03-16T19:55:00Z",
       "Next": "needs-envelope"
-    },
+    }
+    ,
     "needs-envelope": {
       "Type": "Task",
       "Comment": "makes the envelope",
       "Resource": "/state-conductor/actions/custom/make-envelope.sjs",
-      "Next": "make-headers"
+      "Next": "wait_two_minute"
     },
+    "wait_two_minute": {
+      "Type": "Wait",
+      "Comment": "wait for 120 second to call the next state",
+      "Seconds": 60,
+      "Next": "make-headers"
+    }
+    ,
     "make-headers": {
       "Type": "Task",
       "Comment": "makes the envelope's triples",

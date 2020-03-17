@@ -54,7 +54,6 @@ const schema = {
                 Type: {
                   type: 'string',
                   pattern: '^Wait$',
-
                 }
               }
             },

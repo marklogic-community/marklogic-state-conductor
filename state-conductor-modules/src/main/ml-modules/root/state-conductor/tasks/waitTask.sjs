@@ -1,24 +1,22 @@
 'use strict';
 declareUpdate();
+//this take runs every minutes and excutes docs that have elapsed scheduled wait time
+
 const sc = require('/state-conductor/state-conductor.sjs');
 
-//const now = new DateTime();
-
-// grab all state conductor flows with a 'scheduled' context
-
-const uris = cts.uris(null, null,
+const uris = cts.uris(null, 'limit=1000',
   cts.andQuery([
     cts.collectionQuery("stateConductorJob"),
-    cts.jsonPropertyRangeQuery("nextTaskTime", "<=", fn.currentDateTime()),
-    cts.jsonPropertyRangeQuery("nextTaskTime", ">=", fn.currentDateTime().subtract(xs.dayTimeDuration("PT" + 1 + "M")))
-  ])
-).toArray()
-xdmp.log("Reporting from waitTask. Docs to be process are:" + uris.length);
+    cts.jsonPropertyScopeQuery("currentlyWaiting",
+      cts.jsonPropertyRangeQuery("nextTaskTime", "<=", fn.currentDateTime()))
+  ])).toArray()
+
+xdmp.trace(sc.TRACE_EVENT, `Reporting from waitTask. Docs to be process are: ${uris.length}`);
 if (uris.length > 0) {
-
   uris.forEach(uri => {
-    xdmp.log("Reporting from waitTask. processing uri :" + uri);
-    sc.resumeWaitingJob(uri)
+    sc.resumeWaitingJob(uri,"waitTask")
   });
-
 }
+xdmp.trace(sc.TRACE_EVENT, `state-conductor-waitTask completed in "${xdmp.elapsedTime()}"`);
+
+

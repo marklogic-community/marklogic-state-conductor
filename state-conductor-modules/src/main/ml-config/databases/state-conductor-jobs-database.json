@@ -23,7 +23,7 @@
       "collation": "",
       "localname": "nextTaskTime",
       "namespace-uri": "",
-      "range-value-positions": false,
+      "range-value-positions": true,
       "scalar-type": "dateTime"
     }
   ],

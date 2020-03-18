@@ -22,7 +22,7 @@ let options = {
   flowNames: flowNames,
   startDate: null,
   endDate: null
-}
+};
 
 const uris = sc.getJobDocuments(options);
 

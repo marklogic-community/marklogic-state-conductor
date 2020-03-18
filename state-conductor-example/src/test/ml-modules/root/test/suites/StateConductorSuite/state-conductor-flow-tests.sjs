@@ -7,12 +7,12 @@ const assertions = [];
 
 const flowDocuments = sc.getFlowDocuments().toArray();
 assertions.push(
-  test.assertEqual(8, flowDocuments.length, 'Flow files are present')
+  test.assertEqual(9, flowDocuments.length, 'Flow files are present')
 );
 
 const flowNames = sc.getFlowNames().sort();
 assertions.push(
-  test.assertEqual(8, flowNames.length, "flowNames count"),
+  test.assertEqual(9, flowNames.length, "flowNames count"),
   test.assertEqual('bad-flow', flowNames[0]),
   test.assertEqual('branching-flow', flowNames[1]),
   test.assertEqual('contextual-flow', flowNames[2]),
@@ -20,7 +20,8 @@ assertions.push(
   test.assertEqual('noStates-flow', flowNames[4]),
   test.assertEqual('task-flow', flowNames[5]),
   test.assertEqual('test-flow', flowNames[6]),
-  test.assertEqual('wait-flow', flowNames[7])
+  test.assertEqual('test-time-wait', flowNames[7]),
+  test.assertEqual('wait-flow', flowNames[8])
 );
 
 const branchingFlow = sc.getFlowDocument('branching-flow');

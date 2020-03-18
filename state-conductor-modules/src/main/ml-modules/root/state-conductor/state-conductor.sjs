@@ -18,6 +18,7 @@ const FLOW_STATUS_WATING = 'waiting';
 const FLOW_STATUS_COMPLETE = 'complete';
 const FLOW_STATUS_FAILED = 'failed';
 const FLOW_NEW_STEP = "NEW";
+const DATE_TIME_REGEX = "^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$";
 
 const SUPPORTED_STATE_TYPES = [
   'choice',
@@ -546,7 +547,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
         }
-      } else if (state.Type && state.Type.toLowerCase() === 'wait') {
+      } else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Event')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
@@ -559,17 +560,57 @@ function executeStateByJobDoc(jobDoc, save = true) {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Event" defined for Task state "${stateName}"`);
         }
       }
+       else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Seconds')) {
+        //updated the job Doc to have info about why its waiting
+        xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
+        if (state.Seconds) {
+          let waitTime = Number(state.Seconds)
+          let WaitTimeToMinutes = Math.floor(waitTime / 60);
+          let currentTime = fn.currentDateTime()
+          let WaitTimeToSeconds = waitTime - WaitTimeToMinutes * 60;
+          let nextTaskTime = currentTime.add(xs.dayTimeDuration("PT" + WaitTimeToMinutes + "M" + WaitTimeToSeconds + "S"));
+          xdmp.trace(TRACE_EVENT, `waiting for state nextTaskTime : ${nextTaskTime}`);
+          jobObj.currentlyWaiting = {
+            seconds: state.Seconds,
+            nextTaskTime: nextTaskTime
+          }
+          jobObj.flowStatus = FLOW_STATUS_WATING
+        } else {
+          fn.error(null, 'INVALID-STATE-DEFINITION', `no "Seconds" defined for Task state "${stateName}"`);
+          }
+      }
+       else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Timestamp')) {
+        //updated the job Doc to have info about why its waiting
+        xdmp.trace(TRACE_EVENT, `waiting for state Timestamp : ${stateName}`);
+        if (state.Timestamp) {
+          xdmp.trace(TRACE_EVENT, ` timestamp  value is : ${state.Timestamp}`);
+          let timestamp = state.Timestamp
+          if (fn.matches(timestamp, DATE_TIME_REGEX)) {
+             xdmp.trace(TRACE_EVENT, ` pass regex check  value is : ${timestamp}`);
+             let nextTaskTime = xdmp.parseDateTime('[Y0001]-[M01]-[D01]T[H01]:[m01]:[f1]', timestamp)
+             if (nextTaskTime < fn.currentDateTime()) {
+               xdmp.trace(TRACE_EVENT, `Time for Schedule task has passed : ${nextTaskTime}`);
+             }
+              jobObj.currentlyWaiting = {
+              timestamp: timestamp,
+              nextTaskTime: nextTaskTime
+            }
+          } else {
+            fn.error(null, 'INVALID-STATE-DEFINITION', ` "Timestamp" not valid time for Task state "${stateName}"`);
+            }
 
+          jobObj.flowStatus = FLOW_STATUS_WATING
+        } else {
+          fn.error(null, 'INVALID-STATE-DEFINITION', `no "Timestamp" defined for Task state "${stateName}"`);
+        }
+      }
     } catch (err) {
       return handleStateFailure(uri, flowName, flowObj, stateName, err, save);
     }
-
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
-
   } else {
     handleError('INVALID-STATE-DEFINITION', Sequence.from([`state "${stateName}" not found in flow`]), null, jobObj, save);
   }
-
 }
 
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
@@ -795,7 +836,7 @@ function scaffoldJobDoc(jobDoc) {
     errors: {}
   };
 
-   return Object.assign(needProps, jobDoc)
+  return Object.assign(needProps, jobDoc)
 }
 
 /**
@@ -1089,4 +1130,3 @@ module.exports = {
   getJobDocuments,
   hasScheduleElapsed
 };
-

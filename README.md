@@ -188,5 +188,6 @@ ___
   * [Test coverage of rest endpoints](https://github.com/aclavio/marklogic-state-conductor/issues/29)
   * [Ability to change the state conductor jobs database](https://github.com/aclavio/marklogic-state-conductor/issues/32)
 * Beyond
+  * Full support for Choice Rules
   * Event based flow context
   * Batch support

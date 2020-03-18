@@ -23,6 +23,7 @@ jobDoc = xdmp.toJSON({
 //"test excute job")
 assertion = sc.executeStateByJobDoc(jobDoc, false);
 assertions.push(test.assertEqual("waiting", assertion.flowStatus, "waiting flowStatus"));
+assertions.push(test.assertTrue(assertion.hasOwnProperty("currentlyWaiting"),"waiting currentlyWaiting"));
 
 jobDoc = xdmp.toJSON({
   id: "4164b17b-06a5-499b-8870-539add9f69c2",
@@ -60,5 +61,6 @@ jobDoc = xdmp.toJSON({
 assertion = sc.resumeWaitingJobByJobDoc(jobDoc, "waitTask", false);
 assertions.push(test.assertEqual("working", assertion.flowStatus, "working flowStatus"));
 assertions.push(test.assertEqual("needs-envelope",assertion.provenance[3].to, "went to next state"));
-
+assertions.push( test.assertFalse(assertion.hasOwnProperty("currentlyWaiting"),"waiting currentlyWaiting"));
+assertions.push(test.assertEqual("needs-envelope", assertion.flowState, "working flowStatus"));
 assertions;

@@ -1,6 +1,6 @@
 'use strict';
 declareUpdate();
-//this take runs every minutes and excutes docs that have elapsed scheduled wait time
+//this task runs every minutes and excutes docs that have elapsed scheduled wait time
 
 const sc = require('/state-conductor/state-conductor.sjs');
 

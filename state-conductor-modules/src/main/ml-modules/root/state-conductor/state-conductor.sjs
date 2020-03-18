@@ -319,8 +319,6 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
  * @param {*} uri - the job document's uri
  */
 function resumeWaitingJob(uri, resumeBy = 'unknonw', save = true) {
-//ike testing trace
-  xdmp.trace(TRACE_EVENT, `check if resumeWaiting is working "${uri}"`);
   const jobDoc = cts.doc(uri);
   resumeWaitingJobByJobDoc(jobDoc, resumeBy, save)
 };

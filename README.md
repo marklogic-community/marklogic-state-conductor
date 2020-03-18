@@ -194,4 +194,5 @@ ___
   * Full support for Choice Rules
   * Event based flow context
   * Batch support
-  * Retention Policy for job documents 
+  * Retention Policy for job documents
+  * Flush out the validator

@@ -308,7 +308,7 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
     }
 
   } catch (err) {
-    handleError(err.name, `startProcessingFlowByJobDoc error for flow "${currFlowName}"`, err, jobObj, save);
+    handleError(err.name, `startProcessingFlowByJobDoc error for flow "${currFlowName}"`, err, jobDoc, jobObj, save);
   }
   return jobObj;
 }
@@ -358,7 +358,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
     }
 
   } catch (err) {
-    handleError(err.name, `resumeWaitingJobByJobDoc error for flow "${flowName}"`, err, jobObj, save);
+    handleError(err.name, `resumeWaitingJobByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
   }
 
   try {
@@ -481,7 +481,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     }
 
   } catch (err) {
-    handleError('TRANSITIONERROR', `transition error for state "${stateName}"`, err, jobObj, save);
+    handleError('TRANSITIONERROR', `transition error for state "${stateName}"`, err, jobDoc, jobObj, save);
   }
 
   return jobObj;
@@ -518,7 +518,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
     }
 
   } catch (err) {
-    handleError(err.name, `executeStateByJobDoc error for flow "${flowName}"`, err, jobObj, save);
+    handleError(err.name, `executeStateByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
   }
 
   if (state) {
@@ -609,7 +609,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
     }
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } else {
-    handleError('INVALID-STATE-DEFINITION', Sequence.from([`state "${stateName}" not found in flow`]), null, jobObj, save);
+    handleError('INVALID-STATE-DEFINITION', Sequence.from([`state "${stateName}" not found in flow`]), null, jobDoc, jobObj, save);
   }
 }
 
@@ -705,7 +705,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
       }
     }
   }
-  return handleError('INVALID-STATE-DEFINITION', `no Catch defined for error "${err.name}" in state "${stateName}"`, err, jobObj, save);
+  return handleError('INVALID-STATE-DEFINITION', `no Catch defined for error "${err.name}" in state "${stateName}"`, err, jobDoc, jobObj, save);
 }
 
 /**
@@ -1072,7 +1072,7 @@ function getJobDocuments(options) {
  * @param {*} jobObj the job object
  * @param {*} save while to update the job document
 **/
-function handleError(name, message, err, jobObj, save = true) {
+function handleError(name, message, err, jobDoc, jobObj, save = true) {
   xdmp.trace(TRACE_EVENT, name + ':' + message);
   const state = jobObj.flowState || FLOW_NEW_STEP;
 

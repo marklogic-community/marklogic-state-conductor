@@ -184,7 +184,7 @@ ___
   * [Reference path](https://github.com/aclavio/marklogic-state-conductor/issues/17)
   * [Role based access controls](https://github.com/aclavio/marklogic-state-conductor/issues/16)
   * [Rest Services for Error Retries](https://github.com/aclavio/marklogic-state-conductor/issues/27)
-  * [External Driver wait step handling](https://github.com/aclavio/marklogic-state-conductor/issues/28)
+  * [External Driver support for resuming jobs](https://github.com/aclavio/marklogic-state-conductor/issues/28)
   * [Test coverage of rest endpoints](https://github.com/aclavio/marklogic-state-conductor/issues/29)
   * [Ability to change the state conductor jobs database](https://github.com/aclavio/marklogic-state-conductor/issues/32)
   * [Data Services Driver](https://github.com/aclavio/marklogic-state-conductor/issues/22)

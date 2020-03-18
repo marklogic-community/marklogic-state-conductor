@@ -8,12 +8,12 @@ let jobDoc, assertion;
 
 jobDoc = xdmp.toJSON({
   id: "4164b17b-06a5-499b-8870-539add9f69c2",
-  flowName: "waitState-time-flow",
+  flowName: "test-time-wait",
   flowStatus: "working",
   flowState: "run-in-the-future",
   uri: "/data/test-doc1.json",
-  database: "8699561073397609443",
-  modules: "7733622428794920542",
+  database: xdmp.database(),
+  modules: xdmp.modulesDatabase(),
   createdDate: "2020-03-17T21:41:19.022Z",
   context: {},
   provenance: [],
@@ -27,12 +27,12 @@ assertions.push(test.assertTrue(assertion.hasOwnProperty("currentlyWaiting"),"wa
 
 jobDoc = xdmp.toJSON({
   id: "4164b17b-06a5-499b-8870-539add9f69c2",
-  flowName: "waitState-time-flow",
+  flowName: "test-time-wait",
   flowStatus: "waiting",
   flowState: "run-in-the-future",
   uri: "/data/test-doc1.json",
-  database: "8699561073397609443",
-  modules: "7733622428794920542",
+  database: xdmp.database(),
+  modules: xdmp.modulesDatabase(),
   createdDate: "2020-03-17T21:41:19.022Z",
   context: {},
   provenance: [

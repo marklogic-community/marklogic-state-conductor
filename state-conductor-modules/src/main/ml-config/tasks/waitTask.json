@@ -1,0 +1,10 @@
+{
+  "task-enabled": true,
+  "task-path": "/state-conductor/tasks/waitTask.sjs",
+  "task-root": "/",
+  "task-type": "minutely",
+  "task-period": 1,
+  "task-database": "state-conductor-jobs",
+  "task-modules": "%%MODULES_DATABASE%%",
+  "task-user": "%%mlUsername%%"
+}

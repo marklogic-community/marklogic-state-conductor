@@ -18,6 +18,12 @@ test.loadTestFile('flows/task-flow.asl.json', xdmp.database(), sc.FLOW_DIRECTORY
 
 test.loadTestFile('flows/wait-flow.asl.json', xdmp.database(), sc.FLOW_DIRECTORY + 'wait-flow.asl.json', xdmp.defaultPermissions(),  sc.FLOW_COLLECTION);
 
+test.loadTestFile('flows/bad-flow.asl.json', xdmp.database(), sc.FLOW_DIRECTORY + 'bad-flow.asl.json', xdmp.defaultPermissions(),  sc.FLOW_COLLECTION);
+
+test.loadTestFile('flows/contextual-flow.asl.json', xdmp.database(), sc.FLOW_DIRECTORY + 'contextual-flow.asl.json', xdmp.defaultPermissions(),  sc.FLOW_COLLECTION);
+
+test.loadTestFile('flows/test-time-wait.asl.json', xdmp.database(), sc.FLOW_DIRECTORY + 'test-time-wait.asl.json', xdmp.defaultPermissions(), [sc.FLOW_COLLECTION, "waitStateTest"]);
+
 // insert the test jobs
 test.loadTestFile('test-wait-job.json', xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB), '/stateConductorJob/test-wait-job.json', xdmp.defaultPermissions(), [sc.JOB_COLLECTION, "unitTest"])
 

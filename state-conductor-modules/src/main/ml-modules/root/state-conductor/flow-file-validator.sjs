@@ -53,6 +53,15 @@ const schema = {
               properties: {
                 Type: {
                   type: 'string',
+                  pattern: '^Wait$',
+                }
+              }
+            },
+            {
+              type: 'object',
+              properties: {
+                Type: {
+                  type: 'string',
                   pattern: '^Choice$'
                 }
               }

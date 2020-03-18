@@ -187,7 +187,11 @@ ___
   * [External Driver wait step handling](https://github.com/aclavio/marklogic-state-conductor/issues/28)
   * [Test coverage of rest endpoints](https://github.com/aclavio/marklogic-state-conductor/issues/29)
   * [Ability to change the state conductor jobs database](https://github.com/aclavio/marklogic-state-conductor/issues/32)
+  * [Data Services Driver](https://github.com/aclavio/marklogic-state-conductor/issues/22)
+  * DHS support  
 * Beyond
+  * Additional driver support 
   * Full support for Choice Rules
   * Event based flow context
   * Batch support
+  * Retention Policy for job documents 

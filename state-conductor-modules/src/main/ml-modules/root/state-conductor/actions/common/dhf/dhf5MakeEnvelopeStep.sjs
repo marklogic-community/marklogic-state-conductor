@@ -32,7 +32,7 @@ function performAction(uri, options = {}, context = {}) {
     xdmp.documentAddCollections(uri, options.collections);
   }
 
-  context.makeEnvelop = flowResponse;
+  context.makeEnvelope = flowResponse;
 
   return context;
 }

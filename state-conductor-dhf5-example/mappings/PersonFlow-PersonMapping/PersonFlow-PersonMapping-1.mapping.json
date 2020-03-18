@@ -1,0 +1,17 @@
+{
+  "lang" : "zxx",
+  "name" : "PersonFlow-PersonMapping",
+  "description" : "",
+  "version" : 1,
+  "targetEntityType" : "http://example.org/Person-0.0.1/Person",
+  "sourceContext" : "/",
+  "sourceURI" : "/q/data-hub/....json",
+  "properties" : {
+    "firstName" : {
+      "sourcedFrom" : "firstName"
+    },
+    "lastName" : {
+      "sourcedFrom" : "lastName"
+    }
+  }
+}

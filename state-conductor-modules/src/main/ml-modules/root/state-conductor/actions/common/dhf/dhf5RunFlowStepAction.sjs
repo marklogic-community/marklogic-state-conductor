@@ -12,7 +12,8 @@ function performAction(uri, options = {}, context = {}) {
   // setup the dhf runFlow content
   const contentObjs = {
     uri: uri,
-    context: flowContext
+    context: flowContext,
+    value: fn.head(xdmp.invokeFunction(() => cts.doc(uri)))
   };
 
   xdmp.log(Sequence.from([

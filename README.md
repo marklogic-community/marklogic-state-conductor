@@ -35,8 +35,8 @@ repositories {
   }
 }
 dependencies {
-	mlBundle "com.marklogic:marklogic-state-conductor:0.3.1"
-  mlBundle "com.marklogic:marklogic-state-conductor-cpf:0.3.1" // if using the cpf driver
+  mlBundle "com.marklogic:marklogic-state-conductor:0.4.0"
+  mlBundle "com.marklogic:marklogic-state-conductor-cpf:0.4.0" // if using the cpf driver
 }
 ```
 
@@ -188,17 +188,22 @@ New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
 ___
 ## Roadmap <a name="roadmap"></a>
 
-* [Time based flow context](https://github.com/aclavio/marklogic-state-conductor/issues/1)
-* [Named event based state pausing and resuming](https://github.com/aclavio/marklogic-state-conductor/issues/6)
-* Wait state
-* Unit Test coverage
-* Reference path 
-* [Corb 2 driver](https://github.com/aclavio/marklogic-state-conductor/issues/5)
-* Batch support
-* Rest Services
-  * Document Status
-  * Error Retries
-  * Role-based access controls for CRUD operations
-* Increase ASL syntax support
-* Documentation
-  * supported ASL syntax
+* 0.4.0
+  * [Time based flow context](https://github.com/aclavio/marklogic-state-conductor/issues/1)
+  * [Named event based state pausing and resuming](https://github.com/aclavio/marklogic-state-conductor/issues/6)
+  * [Corb 2 driver](https://github.com/aclavio/marklogic-state-conductor/issues/5)
+  * [Time based Wait state](https://github.com/aclavio/marklogic-state-conductor/issues/10)
+  * [Rest Services for processing a job and querying jobs](https://github.com/aclavio/marklogic-state-conductor/issues/25)
+  * [Rest Services for emitting Events](https://github.com/aclavio/marklogic-state-conductor/issues/20)
+  * [Rest Services for resumming a job](https://github.com/aclavio/marklogic-state-conductor/issues/26)
+  * Additional Unit Test coverage
+* 0.5.0  
+  * [Reference path](https://github.com/aclavio/marklogic-state-conductor/issues/17)
+  * [Role based access controls](https://github.com/aclavio/marklogic-state-conductor/issues/16)
+  * [Rest Services for Error Retries](https://github.com/aclavio/marklogic-state-conductor/issues/27)
+  * [External Driver wait step handling](https://github.com/aclavio/marklogic-state-conductor/issues/28)
+  * [Test coverage of rest endpoints](https://github.com/aclavio/marklogic-state-conductor/issues/29)
+  * [Ability to change the state conductor jobs database](https://github.com/aclavio/marklogic-state-conductor/issues/32)
+* Beyond
+  * Event based flow context
+  * Batch support

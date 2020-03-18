@@ -38,19 +38,18 @@ You need:
 #### Building from the command line
 
 ```bash
-cd into state-conductor-modules
-gradle modulesJar publishToMavenLocal
-cd into state-conductor-example
-gradle mldeploy
+./gradlew modulesJar publishToMavenLocal
+./gradlew mldeploy
 ```
 **Note:**
 Create a gradle-local.properties in the state-conductor-example folder that has the mlPassword set or pass the mlPassword in on the mldeploy command
 
 ```bash
-gradle mldeploy -PmlPassword=[passwordHere]
+./gradlew mldeploy -PmlPassword=[passwordHere]
 ```
 
 This builds and locally publishes the state conductor, and then deploys the example project with your changes  
+
 
 In your Example project's `build.gradle` file, enter the local version:
 
@@ -87,6 +86,7 @@ dependencies {
   ```
 
 **Note**: This change goes in a state-conductor-example project's `build.gradle`. Not the state-conductor-modules source code's build.gradle.
+
 
 ### Troubleshooting
 

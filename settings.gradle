@@ -1,1 +1,1 @@
-include "state-conductor-modules", "state-conductor-example"
+include "state-conductor-modules", "state-conductor-cpf", "state-conductor-example", "state-conductor-dhf5-example"

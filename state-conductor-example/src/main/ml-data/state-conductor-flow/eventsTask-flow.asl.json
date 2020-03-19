@@ -1,0 +1,26 @@
+{
+  "Comment": "emmits an Event",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "collection",
+        "value": "event-emmit-test"
+      }
+    ]
+  },
+  "StartAt": "emmitEvent",
+  "States": {
+    "emmitEvent": {
+        "Type": "Task",
+        "Comment": "emmits an Event",
+        "Resource": "/state-conductor/actions/common/emmit-event.sjs",
+        "Parameters": {
+            "event": ["waitForEvent:123"]
+        },
+        "Next": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

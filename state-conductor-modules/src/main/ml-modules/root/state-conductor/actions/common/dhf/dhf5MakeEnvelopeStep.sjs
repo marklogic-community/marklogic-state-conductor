@@ -1,6 +1,6 @@
 const dhf5Ingestion = require('/data-hub/5/builtins/steps/ingestion/default/main.sjs');
 
-function performAction(uri, options = {}) {
+function performAction(uri, options = {}, context = {}) {
   const doc = cts.doc(uri);
 
   // setup the dhf content
@@ -31,8 +31,10 @@ function performAction(uri, options = {}) {
   if (options.collections) {
     xdmp.documentAddCollections(uri, options.collections);
   }
-  
-  return flowResponse;
+
+  context.makeEnvelope = flowResponse;
+
+  return context;
 }
 
 exports.performAction = performAction;

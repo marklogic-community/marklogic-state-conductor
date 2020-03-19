@@ -17,6 +17,14 @@
       "namespace-uri": "",
       "range-value-positions": false,
       "scalar-type": "dateTime"
+    },
+    {
+      "invalid-values": "reject",
+      "collation": "",
+      "localname": "nextTaskTime",
+      "namespace-uri": "",
+      "range-value-positions": true,
+      "scalar-type": "dateTime"
     }
   ],
   "schema-database": "state-conductor-schemas",

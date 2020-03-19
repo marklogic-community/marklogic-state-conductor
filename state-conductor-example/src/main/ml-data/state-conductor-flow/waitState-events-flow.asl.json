@@ -1,0 +1,41 @@
+{
+  "Comment": "wraps things in an envelope, and waits for an event",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "collection",
+        "value": "event-wait-test"
+      }
+    ]
+  },
+  "StartAt": "needs-envelope",
+  "States": {
+    "needs-envelope": {
+      "Type": "Task",
+      "Comment": "makes the envelope",
+      "Resource": "/state-conductor/actions/custom/make-envelope.sjs",
+      "Next": "waitForEvent"
+    },
+    "waitForEvent": {
+      "Type": "Wait",
+      "Comment": "waitForAnEvent",
+      "Event": "waitForEvent:123",
+      "Next": "needs-headers"
+    },
+    "needs-headers": {
+      "Type": "Task",
+      "Comment": "makes the envelope's headers",
+      "Resource": "/state-conductor/actions/custom/make-headers.sjs",
+      "Next": "needs-triples"
+    },
+    "needs-triples": {
+      "Type": "Task",
+      "Comment": "makes the envelope's triples",
+      "Resource": "/state-conductor/actions/custom /make-triples.sjs",
+      "Next": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

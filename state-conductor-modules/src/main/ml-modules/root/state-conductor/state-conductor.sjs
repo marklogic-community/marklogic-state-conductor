@@ -17,8 +17,8 @@ const FLOW_STATUS_WORKING = 'working';
 const FLOW_STATUS_WATING = 'waiting';
 const FLOW_STATUS_COMPLETE = 'complete';
 const FLOW_STATUS_FAILED = 'failed';
-const FLOW_NEW_STEP = "NEW";
-const DATE_TIME_REGEX = "^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$";
+const FLOW_NEW_STEP = 'NEW';
+const DATE_TIME_REGEX = '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
 const SUPPORTED_STATE_TYPES = [
   'choice',
@@ -308,9 +308,9 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
     }
 
   } catch (err) {
-    handleError(err.name, `startProcessingFlowByJobDoc error for flow "${currFlowName}"`, err, jobObj, save);
+    handleError(err.name, `startProcessingFlowByJobDoc error for flow "${currFlowName}"`, err, jobDoc, jobObj, save);
   }
-  return jobObj
+  return jobObj;
 }
 
 /**
@@ -326,8 +326,8 @@ function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
   }
 
   const jobDoc = cts.doc(uri);
-  resumeWaitingJobByJobDoc(jobDoc, resumeBy, save)
-};
+  resumeWaitingJobByJobDoc(jobDoc, resumeBy, save);
+}
 
 function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   const uri = xdmp.nodeUri(jobDoc);
@@ -358,7 +358,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
     }
 
   } catch (err) {
-    handleError(err.name, `resumeWaitingJobByJobDoc error for flow "${flowName}"`, err, jobObj, save);
+    handleError(err.name, `resumeWaitingJobByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
   }
 
   try {
@@ -372,7 +372,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
       resumeBy: resumeBy
     });
 
-    return transition(jobDoc, jobObj, stateName, state, flowObj, save)
+    return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } catch (err) {
     return handleStateFailure(uri, flowName, flowObj, stateName, err, save);
   }
@@ -466,7 +466,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       xdmp.trace(TRACE_EVENT, `transition complete: ${stateName}`);
 
       // terminal states have no "Next" target state
-      jobObj.flowStatus = FLOW_STATUS_COMPLETE;
+      jobObj.flowStatus = FLOW_STATUS_COMPLETE; // TODO if is a "Fail" state shouldn't we change to the "failed" status?
 
       jobObj.provenance.push({
         date: (new Date()).toISOString(),
@@ -481,10 +481,10 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     }
 
   } catch (err) {
-    handleError('TRANSITIONERROR', `transition error for state "${stateName}"`, err, jobObj, save);
+    handleError('TRANSITIONERROR', `transition error for state "${stateName}"`, err, jobDoc, jobObj, save);
   }
 
-  return jobObj
+  return jobObj;
 }
 
 /**
@@ -518,7 +518,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
     }
 
   } catch (err) {
-    handleError(err.name, `executeStateByJobDoc error for flow "${flowName}"`, err, jobObj, save);
+    handleError(err.name, `executeStateByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
   }
 
   if (state) {
@@ -554,52 +554,52 @@ function executeStateByJobDoc(jobDoc, save = true) {
         if (state.Event) {
           jobObj.currentlyWaiting = {
             event: state.Event
-          }
-          jobObj.flowStatus = FLOW_STATUS_WATING
+          };
+          jobObj.flowStatus = FLOW_STATUS_WATING;
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Event" defined for Task state "${stateName}"`);
         }
       }
-       else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Seconds')) {
+      else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Seconds')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
         if (state.Seconds) {
-          let waitTime = Number(state.Seconds)
+          let waitTime = Number(state.Seconds);
           let WaitTimeToMinutes = Math.floor(waitTime / 60);
-          let currentTime = fn.currentDateTime()
+          let currentTime = fn.currentDateTime();
           let WaitTimeToSeconds = waitTime - WaitTimeToMinutes * 60;
-          let nextTaskTime = currentTime.add(xs.dayTimeDuration("PT" + WaitTimeToMinutes + "M" + WaitTimeToSeconds + "S"));
+          let nextTaskTime = currentTime.add(xs.dayTimeDuration('PT' + WaitTimeToMinutes + 'M' + WaitTimeToSeconds + 'S'));
           xdmp.trace(TRACE_EVENT, `waiting for state nextTaskTime : ${nextTaskTime}`);
           jobObj.currentlyWaiting = {
             seconds: state.Seconds,
             nextTaskTime: nextTaskTime
-          }
-          jobObj.flowStatus = FLOW_STATUS_WATING
+          };
+          jobObj.flowStatus = FLOW_STATUS_WATING;
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Seconds" defined for Task state "${stateName}"`);
-          }
+        }
       }
-       else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Timestamp')) {
+      else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Timestamp')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state Timestamp : ${stateName}`);
         if (state.Timestamp) {
           xdmp.trace(TRACE_EVENT, ` timestamp  value is : ${state.Timestamp}`);
-          let timestamp = state.Timestamp
+          let timestamp = state.Timestamp;
           if (fn.matches(timestamp, DATE_TIME_REGEX)) {
-             xdmp.trace(TRACE_EVENT, ` pass regex check  value is : ${timestamp}`);
-             let nextTaskTime = xdmp.parseDateTime('[Y0001]-[M01]-[D01]T[H01]:[m01]:[f1]', timestamp)
-             if (nextTaskTime < fn.currentDateTime()) {
-               xdmp.trace(TRACE_EVENT, `Time for Schedule task has passed : ${nextTaskTime}`);
-             }
-              jobObj.currentlyWaiting = {
+            xdmp.trace(TRACE_EVENT, ` pass regex check  value is : ${timestamp}`);
+            let nextTaskTime = xdmp.parseDateTime('[Y0001]-[M01]-[D01]T[H01]:[m01]:[f1]', timestamp);
+            if (nextTaskTime < fn.currentDateTime()) {
+              xdmp.trace(TRACE_EVENT, `Time for Schedule task has passed : ${nextTaskTime}`);
+            }
+            jobObj.currentlyWaiting = {
               timestamp: timestamp,
               nextTaskTime: nextTaskTime
-            }
+            };
           } else {
             fn.error(null, 'INVALID-STATE-DEFINITION', ` "Timestamp" not valid time for Task state "${stateName}"`);
-            }
+          }
 
-          jobObj.flowStatus = FLOW_STATUS_WATING
+          jobObj.flowStatus = FLOW_STATUS_WATING;
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Timestamp" defined for Task state "${stateName}"`);
         }
@@ -609,7 +609,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
     }
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } else {
-    handleError('INVALID-STATE-DEFINITION', Sequence.from([`state "${stateName}" not found in flow`]), null, jobObj, save);
+    handleError('INVALID-STATE-DEFINITION', Sequence.from([`state "${stateName}" not found in flow`]), null, jobDoc, jobObj, save);
   }
 }
 
@@ -705,7 +705,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
       }
     }
   }
-  return handleError('INVALID-STATE-DEFINITION', `no Catch defined for error "${err.name}" in state "${stateName}"`, err, jobObj, save)
+  return handleError('INVALID-STATE-DEFINITION', `no Catch defined for error "${err.name}" in state "${stateName}"`, err, jobDoc, jobObj, save);
 }
 
 /**
@@ -745,7 +745,7 @@ function getFlowCounts(flowName, { startDate, endDate }) {
     baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(startDate)));
   }
   if (endDate) {
-    baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)))
+    baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)));
   }
 
   const numInStatus = (status) => fn.count(
@@ -836,7 +836,7 @@ function scaffoldJobDoc(jobDoc) {
     errors: {}
   };
 
-  return Object.assign(needProps, jobDoc)
+  return Object.assign(needProps, jobDoc);
 }
 
 /**
@@ -922,10 +922,10 @@ function emmitEvent(event, batchSize = 100, save = true) {
         cts.uris(null, null,
           cts.andQuery([
             cts.collectionQuery(JOB_COLLECTION),
-            cts.jsonPropertyValueQuery("flowStatus", FLOW_STATUS_WATING),
-            cts.jsonPropertyScopeQuery("currentlyWaiting", cts.jsonPropertyValueQuery("event", event))
+            cts.jsonPropertyValueQuery('flowStatus', FLOW_STATUS_WATING),
+            cts.jsonPropertyScopeQuery('currentlyWaiting', cts.jsonPropertyValueQuery('event', event))
           ])
-        ).toArray()
+        ).toArray();
       /*
       splits the array into groups of the batchSize
       this is to handle the the case where there are many waiting jobs
@@ -941,23 +941,23 @@ function emmitEvent(event, batchSize = 100, save = true) {
         arrayOfwaitingURIJobsForEvent.forEach(function (uriArray) {
 
           xdmp.spawn(
-            "/state-conductor/resumeWaitingJobs.sjs",
+            '/state-conductor/resumeWaitingJobs.sjs',
             {
-              "uriArray": uriArray,
-              "resumeBy": "emmit event: " + event,
-              "save": save
+              'uriArray': uriArray,
+              'resumeBy': 'emmit event: ' + event,
+              'save': save
             }
-          )
+          );
 
-        })
+        });
       }
-      return waitingURIJobsForEvent
+      return waitingURIJobsForEvent;
     }, {
       database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
     });
 
 
-  return fn.head(uris)
+  return fn.head(uris);
 
 }
 
@@ -1013,7 +1013,7 @@ function hasScheduleElapsed(context, now) {
       // checks if we've arrived at the specified date and time
       // generates a range of one minute from specified time and validates the current time is within that minute
       const start = xdmp.parseDateTime('[M01]/[D01]/[Y0001]-[H01]:[m01][Z]', `${context.startDate}-${context.startTime}Z`);
-      const upper = start.add("PT1M");
+      const upper = start.add('PT1M');
       return start.le(now) && upper.gt(now);
     }
   } catch (ex) {
@@ -1052,7 +1052,7 @@ function getJobDocuments(options) {
       queries.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(options.endDate)));
     }
 
-    uris = uris.concat(cts.uris("", ["document", `limit=${count}`], cts.andQuery(queries)).toArray());
+    uris = uris.concat(cts.uris('', ['document', `limit=${count}`], cts.andQuery(queries)).toArray());
   }, {
     database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
   });
@@ -1072,8 +1072,8 @@ function getJobDocuments(options) {
  * @param {*} jobObj the job object
  * @param {*} save while to update the job document
 **/
-function handleError(name, message, err, jobObj, save = true) {
-  xdmp.trace(TRACE_EVENT, name + ":" + message);
+function handleError(name, message, err, jobDoc, jobObj, save = true) {
+  xdmp.trace(TRACE_EVENT, name + ':' + message);
   const state = jobObj.flowState || FLOW_NEW_STEP;
 
   // update the job document
@@ -1090,7 +1090,7 @@ function handleError(name, message, err, jobObj, save = true) {
     err
   ]));
 
-  return jobObj
+  return jobObj;
 }
 
 module.exports = {

@@ -1,0 +1,17 @@
+{
+  "domain-name": "state-conductor-domain",
+  "restart-user-name": "%%mlUsername%%",
+  "eval-module": "%%MODULES_DATABASE%%",
+  "eval-root": "/",
+  "conversion-enabled": false,
+  "permission": [
+    {
+      "role-name": "rest-reader",
+      "capability": "read"
+    },
+    {
+      "role-name": "rest-writer",
+      "capability": "update"
+    }
+  ]
+}

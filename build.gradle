@@ -2,6 +2,7 @@ allprojects {
   repositories {
     jcenter()
     mavenLocal()
+    maven {url "http://developer.marklogic.com/maven2/"}
   }
 
   group = "com.marklogic"

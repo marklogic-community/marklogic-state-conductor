@@ -27,7 +27,7 @@ function get(context, params) {
     flowNames: parseArrayParam(params.flowNames),
     startDate: params.startDate,
     endDate: params.endDate
-  }
+  };
 
   context.outputStatus = [200, 'OK'];
   return sc.getJobDocuments(options);
@@ -36,7 +36,7 @@ function get(context, params) {
 /**
  * Executes the given state conductor job - performing state actions and transitions
  */
-function put(context, { uri = '' }, input) {
+function put(context, { uri = '' }) {
   if (uri.length === 0) {
     returnError(400, 'Bad Request', 'Missing required parameter "uri"');
   }

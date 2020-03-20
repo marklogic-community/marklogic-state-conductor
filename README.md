@@ -213,3 +213,4 @@ ___
   * Batch support
   * Retention Policy for job documents
   * Flush out the validator and validate flow files on deployment
+  * Support for Parallel and Map states

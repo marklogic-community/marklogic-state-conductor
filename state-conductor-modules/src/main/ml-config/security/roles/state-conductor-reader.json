@@ -1,0 +1,4 @@
+{
+  "role-name": "state-conductor-reader",
+  "description": "Permits reading flow documents and knowing flow status"
+}

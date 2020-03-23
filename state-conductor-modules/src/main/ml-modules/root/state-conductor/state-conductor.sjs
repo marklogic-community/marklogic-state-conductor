@@ -5,6 +5,8 @@ const TRACE_EVENT = 'state-conductor';
 const STATE_CONDUCTOR_JOBS_DB = 'state-conductor-jobs';
 const STATE_CONDUCTOR_TRIGGERS_DB = 'state-conductor-triggers';
 const STATE_CONDUCTOR_SCHEMAS_DB = 'state-conductor-schemas';
+const JOB_DOC_READ_PERMISSION = 'state-conductor-reader';
+const JOB_DOC_WRITE_PERMISSION = 'state-conductor-flow-writer';
 
 const FLOW_FILE_EXTENSION = '.asl.json';
 const FLOW_ITEM_COLLECTION = 'state-conductor-item';
@@ -876,8 +878,11 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   xdmp.invokeFunction(() => {
     declareUpdate();
     xdmp.documentInsert(jobUri, job, {
-      collections: collections,
-      permissions: xdmp.defaultPermissions()
+      permissions: [
+        xdmp.permission(JOB_DOC_READ_PERMISSION, "read"),
+        xdmp.permission(JOB_DOC_WRITE_PERMISSION, "update")
+      ],
+      collections: collections
     });
   }, {
     database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)

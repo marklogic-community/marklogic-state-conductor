@@ -24,13 +24,20 @@ const FLOW_STATUS_FAILED = 'failed';
 const FLOW_NEW_STEP = 'NEW';
 const DATE_TIME_REGEX = '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
+const STATE_CHOICE = 'choice';
+const STATE_FAIL = 'fail';
+const STATE_PASS = 'pass';
+const STATE_SUCCEED = 'succeed';
+const STATE_TASK = 'task';
+const STATE_WAIT = 'wait';
+
 const SUPPORTED_STATE_TYPES = [
-  'choice',
-  'fail',
-  'pass',
-  'succeed',
-  'task',
-  'wait'
+  STATE_CHOICE,
+  STATE_FAIL,
+  STATE_PASS,
+  STATE_SUCCEED,
+  STATE_TASK,
+  STATE_WAIT
 ];
 
 const parseSerializedQuery = (serializedQuery) => {
@@ -438,13 +445,13 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     } else if (!inTerminalState(jobObj, flowObj)) {
       xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
 
-      if ('task' === state.Type.toLowerCase()) {
+      if (STATE_TASK === state.Type.toLowerCase()) {
         targetState = state.Next;
-      } else if ('pass' === state.Type.toLowerCase()) {
+      } else if (STATE_PASS === state.Type.toLowerCase()) {
         targetState = state.Next;
-      } else if ('wait' === state.Type.toLowerCase()) {
+      } else if (STATE_WAIT === state.Type.toLowerCase()) {
         targetState = state.Next;
-      } else if ('choice' === state.Type.toLowerCase()) {
+      } else if (STATE_CHOICE === state.Type.toLowerCase()) {
         try {
           if (state.Choices && state.Choices.length > 0) {
             state.Choices.forEach(choice => {
@@ -558,7 +565,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
       delete jobObj.currentlyWaiting;
 
       // perform the actions for the "Task" state
-      if (state.Type && state.Type.toLowerCase() === 'task') {
+      if (state.Type && state.Type.toLowerCase() === STATE_TASK) {
         xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
 
         if (state.Resource) {
@@ -578,7 +585,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
         }
-      } else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Event')) {
+      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Event')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
@@ -591,7 +598,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Event" defined for Task state "${stateName}"`);
         }
       }
-      else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Seconds')) {
+      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Seconds')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
         if (state.Seconds) {
@@ -610,7 +617,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Seconds" defined for Task state "${stateName}"`);
         }
       }
-      else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Timestamp')) {
+      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Timestamp')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state Timestamp : ${stateName}`);
         if (state.Timestamp) {
@@ -698,8 +705,8 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
   const jobObj = jobDoc.toObject();
 
   if (currState && (
-    'task' === currState.Type.toLowerCase() ||
-    'choice' === currState.Type.toLowerCase())) {
+    STATE_TASK === currState.Type.toLowerCase() ||
+    STATE_CHOICE === currState.Type.toLowerCase())) {
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
       let target = currState.Catch.reduce((acc, fallback) => {
@@ -755,9 +762,9 @@ function inTerminalState(job, flow) {
   }
   return (
     !currState ||
-    currState.Type.toLowerCase() === 'succeed' ||
-    currState.Type.toLowerCase() === 'fail' ||
-    (currState.Type.toLowerCase() === 'task' && currState.End === true)
+    currState.Type.toLowerCase() === STATE_SUCCEED ||
+    currState.Type.toLowerCase() === STATE_FAIL ||
+    (currState.Type.toLowerCase() === STATE_TASK && currState.End === true)
   );
 }
 

@@ -188,15 +188,6 @@ New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
 ___
 ## Roadmap <a name="roadmap"></a>
 
-* 0.4.0
-  * [Time based flow context](https://github.com/aclavio/marklogic-state-conductor/issues/1)
-  * [Named event based state pausing and resuming](https://github.com/aclavio/marklogic-state-conductor/issues/6)
-  * [Corb 2 driver](https://github.com/aclavio/marklogic-state-conductor/issues/5)
-  * [Time based Wait state](https://github.com/aclavio/marklogic-state-conductor/issues/10)
-  * [Rest Services for processing a job and querying jobs](https://github.com/aclavio/marklogic-state-conductor/issues/25)
-  * [Rest Services for emitting Events](https://github.com/aclavio/marklogic-state-conductor/issues/20)
-  * [Rest Services for resumming a job](https://github.com/aclavio/marklogic-state-conductor/issues/26)
-  * Additional Unit Test coverage
 * 0.5.0  
   * [Ability to change the state conductor jobs database](https://github.com/aclavio/marklogic-state-conductor/issues/32)
   * [Role based access controls](https://github.com/aclavio/marklogic-state-conductor/issues/16)

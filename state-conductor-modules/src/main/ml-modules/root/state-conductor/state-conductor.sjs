@@ -1,16 +1,20 @@
 'use strict';
 
+const configuration  = setDefaultconfiguration(require('/state-conductor/configuration.sjs').configuration);
+
+// configurable //
+const STATE_CONDUCTOR_JOBS_DB = configuration.databases.jobs;
+const STATE_CONDUCTOR_TRIGGERS_DB = configuration.databases.triggers;
+const STATE_CONDUCTOR_SCHEMAS_DB = configuration.databases.schemas;
+const FLOW_ITEM_COLLECTION = configuration.collections.item;
+const JOB_COLLECTION = configuration.collections.job;
+const FLOW_COLLECTION = configuration.collections.flow;
+const FLOW_DIRECTORY = configuration.URIPrefixes.flow;
+const JOB_DIRECTORY = configuration.URIPrefixes.job;
+
+// non-configurable //
 const TRACE_EVENT = 'state-conductor';
-
-const STATE_CONDUCTOR_JOBS_DB = 'state-conductor-jobs';
-const STATE_CONDUCTOR_TRIGGERS_DB = 'state-conductor-triggers';
-const STATE_CONDUCTOR_SCHEMAS_DB = 'state-conductor-schemas';
-
 const FLOW_FILE_EXTENSION = '.asl.json';
-const FLOW_ITEM_COLLECTION = 'state-conductor-item';
-const JOB_COLLECTION = 'stateConductorJob';
-const FLOW_COLLECTION = 'state-conductor-flow';
-const FLOW_DIRECTORY = '/state-conductor-flow/';
 const FLOW_JOBID_PROP_NAME = 'state-conductor-job';
 const FLOW_STATUS_NEW = 'new';
 const FLOW_STATUS_WORKING = 'working';
@@ -32,6 +36,33 @@ const SUPPORTED_STATE_TYPES = [
 const parseSerializedQuery = (serializedQuery) => {
   return cts.query(fn.head(xdmp.fromJsonString(serializedQuery)));
 };
+
+/**
+ * is used to set the defults on the configuration file
+ * incase something was missed
+ * @param {*} configuration
+ * @returns configuration
+ */
+function setDefaultconfiguration(configuration){
+  const defaults = {
+    "databases": {
+      "jobs": "state-conductor-jobs",
+      "triggers": "state-conductor-triggers",
+      "schemas": "state-conductor-schemas"
+    },
+    "collections": {
+      "item": "state-conductor-item",
+      "job": "stateConductorJob",
+      "flow": "state-conductor-flow"
+    },
+    "URIPrefixes": {
+      "flow": "/state-conductor-flow/",
+      "job": "/stateConductorJob/"
+    }
+  };
+
+  return Object.assign(defaults, configuration);
+}
 
 /**
  * Gets a flow definition by flowName
@@ -1106,6 +1137,7 @@ module.exports = {
   FLOW_STATUS_COMPLETE,
   FLOW_STATUS_FAILED,
   JOB_COLLECTION,
+  JOB_DIRECTORY,
   addJobMetadata,
   batchCreateStateConductorJob,
   checkFlowContext,

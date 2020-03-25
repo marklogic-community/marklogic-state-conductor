@@ -1,16 +1,20 @@
 'use strict';
 
+const configuration  = setDefaultconfiguration(require('/state-conductor/configuration.sjs').configuration);
+
+// configurable //
+const STATE_CONDUCTOR_JOBS_DB = configuration.databases.jobs;
+const STATE_CONDUCTOR_TRIGGERS_DB = configuration.databases.triggers;
+const STATE_CONDUCTOR_SCHEMAS_DB = configuration.databases.schemas;
+const FLOW_ITEM_COLLECTION = configuration.collections.item;
+const JOB_COLLECTION = configuration.collections.job;
+const FLOW_COLLECTION = configuration.collections.flow;
+const FLOW_DIRECTORY = configuration.URIPrefixes.flow;
+const JOB_DIRECTORY = configuration.URIPrefixes.job;
+
+// non-configurable //
 const TRACE_EVENT = 'state-conductor';
-
-const STATE_CONDUCTOR_JOBS_DB = 'state-conductor-jobs';
-const STATE_CONDUCTOR_TRIGGERS_DB = 'state-conductor-triggers';
-const STATE_CONDUCTOR_SCHEMAS_DB = 'state-conductor-schemas';
-
 const FLOW_FILE_EXTENSION = '.asl.json';
-const FLOW_ITEM_COLLECTION = 'state-conductor-item';
-const JOB_COLLECTION = 'stateConductorJob';
-const FLOW_COLLECTION = 'state-conductor-flow';
-const FLOW_DIRECTORY = '/state-conductor-flow/';
 const FLOW_JOBID_PROP_NAME = 'state-conductor-job';
 const FLOW_STATUS_NEW = 'new';
 const FLOW_STATUS_WORKING = 'working';
@@ -20,18 +24,80 @@ const FLOW_STATUS_FAILED = 'failed';
 const FLOW_NEW_STEP = 'NEW';
 const DATE_TIME_REGEX = '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
+const STATE_CHOICE = 'choice';
+const STATE_FAIL = 'fail';
+const STATE_PASS = 'pass';
+const STATE_SUCCEED = 'succeed';
+const STATE_TASK = 'task';
+const STATE_WAIT = 'wait';
+
 const SUPPORTED_STATE_TYPES = [
-  'choice',
-  'fail',
-  'pass',
-  'succeed',
-  'task',
-  'wait'
+  STATE_CHOICE,
+  STATE_FAIL,
+  STATE_PASS,
+  STATE_SUCCEED,
+  STATE_TASK,
+  STATE_WAIT
 ];
 
 const parseSerializedQuery = (serializedQuery) => {
   return cts.query(fn.head(xdmp.fromJsonString(serializedQuery)));
 };
+
+/**
+ * is used to set the defults on the configuration file
+ * incase something was missed
+ * @param {*} configuration
+ * @returns configuration
+ */
+function setDefaultconfiguration(configuration){
+  const defaults = {
+    "databases": {
+      "jobs": "state-conductor-jobs",
+      "triggers": "state-conductor-triggers",
+      "schemas": "state-conductor-schemas"
+    },
+    "collections": {
+      "item": "state-conductor-item",
+      "job": "stateConductorJob",
+      "flow": "state-conductor-flow"
+    },
+    "URIPrefixes": {
+      "flow": "/state-conductor-flow/",
+      "job": "/stateConductorJob/"
+    }
+  };
+
+  return Object.assign(defaults, configuration);
+}
+
+/**
+ * This function should be called when ever we are
+ * invoking for the jobs/content database.
+ * Since now its possible that they are
+ * already with in that database
+ * @param {*} name
+ * @returns
+ */
+function invokeOrApplyFunction(functionIn, optionsIn){
+  // is used incase they dont set one of these
+  // often tiems the moduels database isnt set
+  const defaultOptions = {
+        database: xdmp.database(),
+        modules: xdmp.modulesDatabase()
+   }
+  const options = Object.assign(defaultOptions, optionsIn);
+
+  if (options.database.toString() == xdmp.database().toString() && options.modules.toString() == xdmp.modulesDatabase().toString()){
+    //the content and the modules database are already in this context
+    //we just apply the function and convert it to a sequence so that it makes the invoke function
+    return fn.subsequence(functionIn(),1)
+  } else {
+    //either the content or the modules database doesnt match
+    //so we just call invokefunction
+    return xdmp.invokeFunction(functionIn, options)
+  }
+}
 
 /**
  * Gets a flow definition by flowName
@@ -57,7 +123,7 @@ function getFlowDocument(name) {
 }
 
 function getFlowDocumentFromDatabase(name, databaseId) {
-  let resp = xdmp.invokeFunction(() => {
+  let resp = invokeOrApplyFunction(() => {
     return getFlowDocument(name);
   }, {
     database: databaseId
@@ -407,13 +473,13 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     } else if (!inTerminalState(jobObj, flowObj)) {
       xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
 
-      if ('task' === state.Type.toLowerCase()) {
+      if (STATE_TASK === state.Type.toLowerCase()) {
         targetState = state.Next;
-      } else if ('pass' === state.Type.toLowerCase()) {
+      } else if (STATE_PASS === state.Type.toLowerCase()) {
         targetState = state.Next;
-      } else if ('wait' === state.Type.toLowerCase()) {
+      } else if (STATE_WAIT === state.Type.toLowerCase()) {
         targetState = state.Next;
-      } else if ('choice' === state.Type.toLowerCase()) {
+      } else if (STATE_CHOICE === state.Type.toLowerCase()) {
         try {
           if (state.Choices && state.Choices.length > 0) {
             state.Choices.forEach(choice => {
@@ -527,7 +593,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
       delete jobObj.currentlyWaiting;
 
       // perform the actions for the "Task" state
-      if (state.Type && state.Type.toLowerCase() === 'task') {
+      if (state.Type && state.Type.toLowerCase() === STATE_TASK) {
         xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
 
         if (state.Resource) {
@@ -547,7 +613,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
         }
-      } else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Event')) {
+      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Event')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
@@ -560,7 +626,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Event" defined for Task state "${stateName}"`);
         }
       }
-      else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Seconds')) {
+      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Seconds')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
         if (state.Seconds) {
@@ -579,7 +645,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Seconds" defined for Task state "${stateName}"`);
         }
       }
-      else if (state.Type && state.Type.toLowerCase() === 'wait' && state.hasOwnProperty('Timestamp')) {
+      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Timestamp')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state Timestamp : ${stateName}`);
         if (state.Timestamp) {
@@ -614,7 +680,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
 }
 
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
-  let resp = xdmp.invokeFunction(() => {
+  let resp = invokeOrApplyFunction(() => {
     const actionModule = require(modulePath);
     if (typeof actionModule.performAction === 'function') {
       return actionModule.performAction(uri, params, context);
@@ -629,7 +695,7 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
 }
 
 function executeConditionModule(modulePath, uri, params, context, { database, modules }) {
-  let resp = xdmp.invokeFunction(() => {
+  let resp = invokeOrApplyFunction(() => {
     const conditionModule = require(modulePath);
     if (typeof conditionModule.checkCondition === 'function') {
       return conditionModule.checkCondition(uri, params, context);
@@ -667,8 +733,8 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
   const jobObj = jobDoc.toObject();
 
   if (currState && (
-    'task' === currState.Type.toLowerCase() ||
-    'choice' === currState.Type.toLowerCase())) {
+    STATE_TASK === currState.Type.toLowerCase() ||
+    STATE_CHOICE === currState.Type.toLowerCase())) {
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
       let target = currState.Catch.reduce((acc, fallback) => {
@@ -724,9 +790,9 @@ function inTerminalState(job, flow) {
   }
   return (
     !currState ||
-    currState.Type.toLowerCase() === 'succeed' ||
-    currState.Type.toLowerCase() === 'fail' ||
-    (currState.Type.toLowerCase() === 'task' && currState.End === true)
+    currState.Type.toLowerCase() === STATE_SUCCEED ||
+    currState.Type.toLowerCase() === STATE_FAIL ||
+    (currState.Type.toLowerCase() === STATE_TASK && currState.End === true)
   );
 }
 
@@ -782,7 +848,7 @@ function getFlowCounts(flowName, { startDate, endDate }) {
     totalNew: numNew
   };
 
-  xdmp.invokeFunction(() => {
+  invokeOrApplyFunction(() => {
     resp.totalComplete = numInStatus(FLOW_STATUS_COMPLETE);
     resp.totalWorking = numInStatus(FLOW_STATUS_WORKING);
     resp.totalNew = numInStatus(FLOW_STATUS_NEW);
@@ -873,7 +939,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
 
   // insert the job document
   xdmp.trace(TRACE_EVENT, `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`);
-  xdmp.invokeFunction(() => {
+  invokeOrApplyFunction(() => {
     declareUpdate();
     xdmp.documentInsert(jobUri, job, {
       collections: collections,
@@ -916,7 +982,7 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
 function emmitEvent(event, batchSize = 100, save = true) {
   let uris =
 
-    xdmp.invokeFunction(() => {
+    invokeOrApplyFunction(() => {
       let waitingURIJobsForEvent =
 
         cts.uris(null, null,
@@ -1036,7 +1102,7 @@ function getJobDocuments(options) {
   const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
   let uris = [];
 
-  xdmp.invokeFunction(() => {
+  invokeOrApplyFunction(() => {
     const queries = [
       cts.collectionQuery('stateConductorJob'),
       cts.jsonPropertyValueQuery('flowStatus', flowStatus)
@@ -1106,6 +1172,7 @@ module.exports = {
   FLOW_STATUS_COMPLETE,
   FLOW_STATUS_FAILED,
   JOB_COLLECTION,
+  JOB_DIRECTORY,
   addJobMetadata,
   batchCreateStateConductorJob,
   checkFlowContext,
@@ -1128,5 +1195,6 @@ module.exports = {
   startProcessingFlowByJobDoc,
   emmitEvent,
   getJobDocuments,
-  hasScheduleElapsed
+  hasScheduleElapsed,
+  invokeOrApplyFunction
 };

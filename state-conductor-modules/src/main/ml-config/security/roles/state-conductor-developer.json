@@ -1,18 +1,13 @@
 {
-  "role-name": "data-hub-developer",
-  "description": "Permits developing and operating a Data Hub application",
+  "role-name": "state-conductor-developer",
+  "description": "Permits developing and operating Marklogic State onductor",
   "role": [
-    "state-conductor-operator",
+    "state-conductor-execute",
     "manage-user",
     "ps-user",
     "tde-admin"
   ],
   "privilege": [
-    {
-      "privilege-name": "add-query-rolesets",
-      "action": "http://marklogic.com/xdmp/privileges/add-query-rolesets",
-      "kind": "execute"
-    },
     {
       "privilege-name": "any-uri",
       "action": "http://marklogic.com/xdmp/privileges/any-uri",

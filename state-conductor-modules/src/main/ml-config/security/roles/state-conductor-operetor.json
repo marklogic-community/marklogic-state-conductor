@@ -7,6 +7,7 @@
     "state-conductor-job-writer"
   ],
   "privilege": [
+
     {
       "privilege-name": "xdmp:set-server-field",
       "action": "http://marklogic.com/xdmp/privileges/xdmp-set-server-field",

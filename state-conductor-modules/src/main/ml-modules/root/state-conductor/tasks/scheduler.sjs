@@ -1,6 +1,7 @@
 'use strict';
 
 const sc = require('/state-conductor/state-conductor.sjs');
+const scLib = require('/state-conductor/state-conductor-lib.sjs');
 
 const now = new Date();
 
@@ -60,7 +61,7 @@ flows.filter(flow => {
   let contexts = flow.toObject().mlDomain.context;
   let elapsed = false;
   contexts.forEach(ctx => {
-    elapsed = elapsed || sc.hasScheduleElapsed(ctx, now);
+    elapsed = elapsed || scLib.hasScheduleElapsed(ctx, now);
   });
   return elapsed;
 }).forEach(flow => {

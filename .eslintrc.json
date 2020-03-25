@@ -25,7 +25,9 @@
     "Node": false,
     "XMLNode": false,
     "XMLDocument": false,
+    "ObjectNode": false,
     "Document": false,
+    "Value": false,
     "declareUpdate": false
   }
 }

@@ -72,6 +72,34 @@ function setDefaultconfiguration(configuration){
 }
 
 /**
+ * This function should be called when ever we are
+ * invoking for the jobs/content database.
+ * Since now its possible that they are
+ * already with in that database
+ * @param {*} name
+ * @returns
+ */
+function invokeOrApplyFunction(functionIn, optionsIn){
+  // is used incase they dont set one of these
+  // often tiems the moduels database isnt set
+  const defaultOptions = {
+        database: xdmp.database(),
+        modules: xdmp.modulesDatabase()
+   }
+  const options = Object.assign(defaultOptions, optionsIn);
+
+  if (options.database.toString() == xdmp.database().toString() && options.modules.toString() == xdmp.modulesDatabase().toString()){
+    //the content and the modules database are already in this context
+    //we just apply the function and convert it to a sequence so that it makes the invoke function
+    return fn.subsequence(functionIn(),1)
+  } else {
+    //either the content or the modules database doesnt match
+    //so we just call invokefunction
+    return xdmp.invokeFunction(functionIn, options)
+  }
+}
+
+/**
  * Gets a flow definition by flowName
  *
  * @param {*} name
@@ -95,7 +123,7 @@ function getFlowDocument(name) {
 }
 
 function getFlowDocumentFromDatabase(name, databaseId) {
-  let resp = xdmp.invokeFunction(() => {
+  let resp = invokeOrApplyFunction(() => {
     return getFlowDocument(name);
   }, {
     database: databaseId
@@ -652,7 +680,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
 }
 
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
-  let resp = xdmp.invokeFunction(() => {
+  let resp = invokeOrApplyFunction(() => {
     const actionModule = require(modulePath);
     if (typeof actionModule.performAction === 'function') {
       return actionModule.performAction(uri, params, context);
@@ -667,7 +695,7 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
 }
 
 function executeConditionModule(modulePath, uri, params, context, { database, modules }) {
-  let resp = xdmp.invokeFunction(() => {
+  let resp = invokeOrApplyFunction(() => {
     const conditionModule = require(modulePath);
     if (typeof conditionModule.checkCondition === 'function') {
       return conditionModule.checkCondition(uri, params, context);
@@ -820,7 +848,7 @@ function getFlowCounts(flowName, { startDate, endDate }) {
     totalNew: numNew
   };
 
-  xdmp.invokeFunction(() => {
+  invokeOrApplyFunction(() => {
     resp.totalComplete = numInStatus(FLOW_STATUS_COMPLETE);
     resp.totalWorking = numInStatus(FLOW_STATUS_WORKING);
     resp.totalNew = numInStatus(FLOW_STATUS_NEW);
@@ -911,7 +939,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
 
   // insert the job document
   xdmp.trace(TRACE_EVENT, `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`);
-  xdmp.invokeFunction(() => {
+  invokeOrApplyFunction(() => {
     declareUpdate();
     xdmp.documentInsert(jobUri, job, {
       collections: collections,
@@ -954,7 +982,7 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
 function emmitEvent(event, batchSize = 100, save = true) {
   let uris =
 
-    xdmp.invokeFunction(() => {
+    invokeOrApplyFunction(() => {
       let waitingURIJobsForEvent =
 
         cts.uris(null, null,
@@ -1074,7 +1102,7 @@ function getJobDocuments(options) {
   const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
   let uris = [];
 
-  xdmp.invokeFunction(() => {
+  invokeOrApplyFunction(() => {
     const queries = [
       cts.collectionQuery('stateConductorJob'),
       cts.jsonPropertyValueQuery('flowStatus', flowStatus)
@@ -1167,5 +1195,6 @@ module.exports = {
   startProcessingFlowByJobDoc,
   emmitEvent,
   getJobDocuments,
-  hasScheduleElapsed
+  hasScheduleElapsed,
+  invokeOrApplyFunction
 };

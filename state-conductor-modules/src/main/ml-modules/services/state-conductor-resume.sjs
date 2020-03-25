@@ -27,7 +27,7 @@ function put(context, { uris = [], resumeBy = 'unspecified' }, input) {
   };
 
   //runs the update in the jobs database
-  xdmp.invokeFunction(() => {
+  sc.invokeOrApplyFunction(() => {
     declareUpdate();
 
     uris.forEach(function(uri){

@@ -824,20 +824,6 @@ function getFlowCounts(flowName, { startDate, endDate }) {
   return resp;
 }
 
-// checks if its a temporal document and if its latested document
-function isLatestTemporalDocument(uri) {
-  const temporal = require('/MarkLogic/temporal.xqy');
-  const temporalCollections = temporal.collections().toArray();
-  const documentCollections = xdmp.documentGetCollections(uri);
-
-  const hasTemporalCollection = temporalCollections.some(collection => {
-    //the temporalCollections are not strings so we need to convert them into strings
-    return documentCollections.includes(collection.toString());
-  });
-
-  return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
-}
-
 /**
  * Should be used when take a job doc from the database
  * insures all the needed properties are there

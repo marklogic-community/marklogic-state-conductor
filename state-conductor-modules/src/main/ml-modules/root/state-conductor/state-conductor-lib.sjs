@@ -123,8 +123,23 @@ function hasScheduleElapsed(context, now) {
   return false;
 }
 
+// checks if its a temporal document and if its latested document
+function isLatestTemporalDocument(uri) {
+  const temporal = require('/MarkLogic/temporal.xqy');
+  const temporalCollections = temporal.collections().toArray();
+  const documentCollections = xdmp.documentGetCollections(uri);
+
+  const hasTemporalCollection = temporalCollections.some(collection => {
+    //the temporalCollections are not strings so we need to convert them into strings
+    return documentCollections.includes(collection.toString());
+  });
+
+  return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
+}
+
 module.exports = {
   hasScheduleElapsed,
+  isLatestTemporalDocument,
   materializeParameters,
   materializeReferencePath,
   referencePathToXpath

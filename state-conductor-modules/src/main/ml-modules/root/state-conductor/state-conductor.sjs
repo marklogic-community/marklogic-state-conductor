@@ -54,19 +54,19 @@ const parseSerializedQuery = (serializedQuery) => {
  */
 function setDefaultconfiguration(configuration){
   const defaults = {
-    "databases": {
-      "jobs": "state-conductor-jobs",
-      "triggers": "state-conductor-triggers",
-      "schemas": "state-conductor-schemas"
+    'databases': {
+      'jobs': 'state-conductor-jobs',
+      'triggers': 'state-conductor-triggers',
+      'schemas': 'state-conductor-schemas'
     },
-    "collections": {
-      "item": "state-conductor-item",
-      "job": "stateConductorJob",
-      "flow": "state-conductor-flow"
+    'collections': {
+      'item': 'state-conductor-item',
+      'job': 'stateConductorJob',
+      'flow': 'state-conductor-flow'
     },
-    "URIPrefixes": {
-      "flow": "/state-conductor-flow/",
-      "job": "/stateConductorJob/"
+    'URIPrefixes': {
+      'flow': '/state-conductor-flow/',
+      'job': '/stateConductorJob/'
     }
   };
 
@@ -85,19 +85,19 @@ function invokeOrApplyFunction(functionIn, optionsIn){
   // is used incase they dont set one of these
   // often tiems the moduels database isnt set
   const defaultOptions = {
-        database: xdmp.database(),
-        modules: xdmp.modulesDatabase()
-   }
+    database: xdmp.database(),
+    modules: xdmp.modulesDatabase()
+  };
   const options = Object.assign(defaultOptions, optionsIn);
 
-  if (options.database.toString() == xdmp.database().toString() && options.modules.toString() == xdmp.modulesDatabase().toString()){
+  if (options.database.toString() === xdmp.database().toString() && options.modules.toString() === xdmp.modulesDatabase().toString()){
     //the content and the modules database are already in this context
     //we just apply the function and convert it to a sequence so that it makes the invoke function
-    return fn.subsequence(functionIn(),1)
+    return fn.subsequence(functionIn(), 1);
   } else {
     //either the content or the modules database doesnt match
     //so we just call invokefunction
-    return xdmp.invokeFunction(functionIn, options)
+    return xdmp.invokeFunction(functionIn, options);
   }
 }
 
@@ -610,11 +610,30 @@ function executeStateByJobDoc(jobDoc, save = true) {
               modules: jobObj.modules
             });
 
-          // update the job context with the response
-          jobObj.context = resp;
+          // add the data from the result to the job's context
+          if (state.OutputPath && state.OutputPath !== '$') {
+            // update the job context with the response optionally modified by the OutputPath config
+            jobObj.context = lib.materializeReferencePath(state.OutputPath, resp);
+          } else {
+            jobObj.context = resp;
+          }
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
         }
+      } else if (state.Type && state.Type.toLowerCase() === STATE_PASS) {
+
+        if (state.Result) {
+          let result = state.Result;
+
+          // add the data from the result to the job's context
+          if (state.OutputPath && state.OutputPath !== '$') {
+            // update the job context with the result data optionally modified by the OutputPath config
+            jobObj.context = lib.materializeReferencePath(state.OutputPath, result);
+          } else {
+            jobObj.context = result;
+          }
+        }
+
       } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Event')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);

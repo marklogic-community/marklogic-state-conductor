@@ -23,7 +23,7 @@
     },
     "add-collections": {
       "Type": "Task",
-      "Comment": "initial state of the flow",
+      "Comment": "used to test referencePath params",
       "Resource": "/state-conductor/actions/common/add-collections.sjs",
       "Parameters": {
         "collections.$": "$.collections"
@@ -47,6 +47,17 @@
       "Type": "Pass",
       "Result": "foo",
       "OutputPath": "$",
+      "Next": "success"
+    },
+    "add-collections2": {
+      "Type": "Task",
+      "Comment": "used to test InputPath",
+      "InputPath": "$.nested.nested.deep",
+      "Resource": "/state-conductor/actions/common/add-collections.sjs",
+      "Parameters": {
+        "collections.$": "$.collections"
+      },
+      "OutputPath": "$.test",
       "Next": "success"
     },
     "success": {

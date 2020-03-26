@@ -599,12 +599,19 @@ function executeStateByJobDoc(jobDoc, save = true) {
         xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
 
         if (state.Resource) {
+          let context = jobObj.context;
+
+          // filter the context through the InputPath if set
+          if (state.InputPath && state.InputPath !== '$') {
+            context = lib.materializeReferencePath(state.InputPath, context);
+          }
+
           // execute the resource modules
           let resp = executeActionModule(
             state.Resource,
             jobObj.uri,
             state.Parameters,
-            jobObj.context,
+            context,
             {
               database: jobObj.database,
               modules: jobObj.modules

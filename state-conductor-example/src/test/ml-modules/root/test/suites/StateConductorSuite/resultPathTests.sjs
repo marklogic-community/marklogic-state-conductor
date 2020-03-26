@@ -93,6 +93,45 @@ assertions.push(
   test.assertEqual('success', resp.flowState)
 );
 
+// test InputPath filtering
+jobDoc = xdmp.toJSON({
+  id: sem.uuidString(),
+  flowName: 'ref-path-flow',
+  flowStatus: 'working',
+  flowState: 'add-collections2',
+  uri: uri,
+  database: xdmp.database(),
+  modules: xdmp.modulesDatabase(),
+  context: {
+    nested: {
+      nested: {
+        deep: {
+          collections: 'test-col-2',
+          test: 'hello world'
+        }
+      }
+    }
+  },
+  provenance: []
+});
+
+colls = isolate(() => xdmp.documentGetCollections(uri));
+assertions.push(
+  test.assertFalse(colls.includes('test-col-2'), 'doc does not yet have collection')
+);
+
+resp = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
+colls = isolate(() => xdmp.documentGetCollections(uri));
+
+xdmp.log(resp);
+xdmp.log(colls);
+
+assertions.push(
+  test.assertTrue(resp.context !== null, 'context was set'),
+  test.assertTrue(colls.includes('test-col-2'), 'doc had collection applied using params'),
+  test.assertEqual('hello world', resp.context, 'context was filtered by OutputPath'),
+  test.assertEqual('success', resp.flowState)
+);
 
 // return
 assertions;

@@ -5,8 +5,8 @@ const TRACE_EVENT = 'state-conductor';
 const STATE_CONDUCTOR_JOBS_DB = 'state-conductor-jobs';
 const STATE_CONDUCTOR_TRIGGERS_DB = 'state-conductor-triggers';
 const STATE_CONDUCTOR_SCHEMAS_DB = 'state-conductor-schemas';
-const JOB_DOC_READ_PERMISSION = "state-conductor-internal-reader";
-const JOB_DOC_WRITE_PERMISSION = "state-conductor-job-internal-writer";
+const JOB_DOC_READ_PERMISSION = "state-conductor-reader-role";
+const JOB_DOC_WRITE_PERMISSION = "state-conductor-job-writer-role";
 
 const FLOW_FILE_EXTENSION = '.asl.json';
 const FLOW_ITEM_COLLECTION = 'state-conductor-item';

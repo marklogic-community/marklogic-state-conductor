@@ -1,5 +1,0 @@
-{
-  "privilege-name": "state-conductor-job",
-  "action": "/state-conductor/",
-  "kind": "uri"
-}

@@ -1,5 +1,0 @@
-{
-  "privilege-name": "state-conductor-excute",
-  "action": "http://marklogic.com/state-conductor/excute",
-  "kind": "execute"
-}

@@ -2,10 +2,8 @@
   "role-name": "state-conductor-developer",
   "description": "Permits developing and operating Marklogic State onductor",
   "role": [
-    "state-conductor-execute",
-    "manage-user",
-    "ps-user",
-    "tde-admin"
+    "state-conductor-execute-role",
+    "manage-user"
   ],
   "privilege": [
     {
@@ -14,73 +12,18 @@
       "kind": "execute"
     },
     {
-      "privilege-name": "create-trigger",
-      "action": "http://marklogic.com/xdmp/privileges/create-trigger",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "database-node-query-rolesets",
-      "action": "http://marklogic.com/xdmp/privileges/database-node-query-rolesets",
-      "kind": "execute"
-    },
-    {
       "privilege-name": "get-system-logs",
       "action": "http://marklogic.com/xdmp/privileges/logs/system",
       "kind": "execute"
     },
     {
-      "privilege-name": "node-query-rolesets",
-      "action": "http://marklogic.com/xdmp/privileges/node-query-rolesets",
+      "privilege-name": "rest-writer",
+      "action": "http://marklogic.com/xdmp/privileges/rest-writer",
       "kind": "execute"
     },
     {
-      "privilege-name": "path-add-permissions",
-      "action": "http://marklogic.com/xdmp/privileges/path-add-permissions",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "path-get-permissions",
-      "action": "http://marklogic.com/xdmp/privileges/path-get-permissions",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "path-remove-permissions",
-      "action": "http://marklogic.com/xdmp/privileges/path-remove-permissions",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "path-set-permissions",
-      "action": "http://marklogic.com/xdmp/privileges/path-set-permissions",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "protect-path",
-      "action": "http://marklogic.com/xdmp/privileges/protect-path",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "remove-path",
-      "action": "http://marklogic.com/xdmp/privileges/remove-path",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "remove-query-rolesets",
-      "action": "http://marklogic.com/xdmp/privileges/remove-query-rolesets",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "rest-admin",
-      "action": "http://marklogic.com/xdmp/privileges/rest-admin",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "temporal-admin",
-      "action": "http://marklogic.com/xdmp/privileges/temporal-admin",
-      "kind": "execute"
-    },
-    {
-      "privilege-name": "unprotect-path",
-      "action": "http://marklogic.com/xdmp/privileges/unprotect-path",
+      "privilege-name": "xdmp:get-server-field-names",
+      "action": "http://marklogic.com/xdmp/privileges/xdmp-get-server-field-names",
       "kind": "execute"
     }
   ]

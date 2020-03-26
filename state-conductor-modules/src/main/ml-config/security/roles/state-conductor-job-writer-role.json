@@ -1,13 +1,13 @@
 {
-  "role-name": "state-conductor-job-writer",
+  "role-name": "state-conductor-job-writer-role",
   "description": "Permits reading flow documents and knowing flow status",
   "role": [
-    "state-conductor-reader"
+    "state-conductor-reader-role"
   ],
   "privilege": [
     {
-      "privilege-name": "state-conductor-excute",
-      "action": "http://marklogic.com/state-conductor/excute",
+      "privilege-name": "state-conductor-execute",
+      "action": "http://marklogic.com/state-conductor/execute",
       "kind": "execute"
     },
     {

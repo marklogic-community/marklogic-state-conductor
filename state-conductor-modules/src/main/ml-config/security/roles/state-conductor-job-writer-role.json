@@ -7,7 +7,7 @@
   "privilege": [
     {
       "privilege-name": "state-conductor-execute",
-      "action": "http://marklogic.com/state-conductor/execute",
+      "action": "http://marklogic.com/state-conductor/privilege/execute",
       "kind": "execute"
     },
     {

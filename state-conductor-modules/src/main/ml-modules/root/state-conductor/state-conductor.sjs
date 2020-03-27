@@ -315,7 +315,7 @@ function getAllFlowsContextQuery() {
  */
 function processJob(uri) {
   xdmp.securityAssert(
-    "http://marklogic.com/xdmp/privileges/state-conductor/excute",
+    "http://marklogic.com/state-conductor/privilege/execute",
     "execute"
   );
   xdmp.trace(TRACE_EVENT, `state-conductor job processing for job document "${uri}"`);
@@ -349,7 +349,7 @@ function processJob(uri) {
 
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
   xdmp.securityAssert(
-    "http://marklogic.com/xdmp/privileges/state-conductor/excute",
+    "http://marklogic.com/state-conductor/privilege/execute",
     "execute"
   );
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
@@ -397,7 +397,7 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
  */
 function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
   xdmp.securityAssert(
-    "http://marklogic.com/xdmp/privileges/state-conductor/excute",
+    "http://marklogic.com/state-conductor/privilege/execute",
     "execute"
   );
 
@@ -412,7 +412,7 @@ function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
 
 function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   xdmp.securityAssert(
-    "http://marklogic.com/xdmp/privileges/state-conductor/excute",
+    "http://marklogic.com/state-conductor/privilege/execute",
     "execute"
   );
   const uri = xdmp.nodeUri(jobDoc);
@@ -476,7 +476,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
 function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
 
   xdmp.securityAssert(
-    "http://marklogic.com/xdmp/privileges/state-conductor/excute",
+    "http://marklogic.com/state-conductor/privilege/execute",
     "execute"
   );
 
@@ -586,7 +586,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
 function executeStateByJobDoc(jobDoc, save = true) {
 
   xdmp.securityAssert(
-    "http://marklogic.com/xdmp/privileges/state-conductor/excute",
+    "http://marklogic.com/state-conductor/privilege/execute",
     "execute"
   );
 

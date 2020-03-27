@@ -186,6 +186,11 @@ function getInitialState({ flowName, StartAt }) {
  * @returns
  */
 function getJobMetadatProperty(uri, flowName) {
+
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
   if (fn.docAvailable(uri)) {
     return xdmp.documentGetProperties(uri, fn.QName('', FLOW_JOBID_PROP_NAME))
       .toArray()
@@ -213,6 +218,10 @@ function addJobMetadata(uri, flowName, jobId) {
 }
 
 function getJobIds(uri, flowName) {
+xdmp.securityAssert(
+  "http://marklogic.com/state-conductor/privilege/execute",
+  "execute"
+);
   const jobProps = getJobMetadatProperty(uri, flowName);
   return jobProps.map(prop => prop.getAttributeNode('job-id').nodeValue);
 }
@@ -1139,6 +1148,10 @@ function hasScheduleElapsed(context, now) {
  */
 function getJobDocuments(options) {
 
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
   const count = options.count || 100;
   const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
   const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];

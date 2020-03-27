@@ -947,6 +947,12 @@ function scaffoldJobDoc(jobDoc) {
  * @param {*} [options={}]
  */
 function createStateConductorJob(flowName, uri, context = {}, options = {}) {
+
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
+
   const collections = [JOB_COLLECTION].concat(options.collections || []);
   const directory = options.directory || '/' + JOB_COLLECTION + '/';
   const database = options.database || xdmp.database();

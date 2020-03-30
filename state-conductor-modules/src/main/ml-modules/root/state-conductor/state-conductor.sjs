@@ -412,7 +412,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
 
     // sanity check
     if (FLOW_STATUS_WATING !== flowStatus) {
-      return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot resume a flow that is not in the WAITING status');
+      return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot resume a flow that is not in the '+ FLOW_STATUS_WATING +' status');
     }
 
     flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
@@ -436,6 +436,71 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
       date: (new Date()).toISOString(),
       state: stateName,
       resumeBy: resumeBy
+    });
+
+    return transition(jobDoc, jobObj, stateName, state, flowObj, save);
+  } catch (err) {
+    return handleStateFailure(uri, flowName, flowObj, stateName, err, save);
+  }
+
+}
+
+/**
+ * Performs the actions and transitions for a state.
+ *
+ * @param {*} uri - the job document's uri
+ */
+function retryJobAtStep(uri, stateName = FLOW_NEW_STEP, restartBy = 'unspecified', save = true) {
+
+  // checks if document is there
+  if (!fn.docAvailable(uri)){
+    fn.error(null, 'INVALID-JOB-DOCUMENT', `Document Job "${uri}" not found."`);
+  }
+
+  const jobDoc = cts.doc(uri);
+  retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save);
+}
+
+function retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save = true) {
+  const uri = xdmp.nodeUri(jobDoc);
+  const jobObj = scaffoldJobDoc(jobDoc.toObject());
+  const flowName = jobObj.flowName;
+  const flowStatus = jobObj.flowStatus;
+  let state;
+  let flowObj;
+
+  xdmp.trace(TRACE_EVENT, `retryJobAtStepByJobDoc uri "${uri}"`);
+  xdmp.trace(TRACE_EVENT, `retryJobAtStepByJobDoc flow "${flowName}"`);
+  xdmp.trace(TRACE_EVENT, `retryJobAtStepByJobDoc flow state "${stateName}"`);
+
+  try {
+
+    // sanity check
+    if (FLOW_STATUS_WATING !== FLOW_STATUS_FAILED) {
+      return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot try a flow that is not in the '+ FLOW_STATUS_FAILED +' status');
+    }
+
+    flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
+
+    try {
+      state = flowObj.States[stateName];
+    } catch (e) {
+      return fn.error(null, 'INVALID-STATE-DEFINITION', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+    }
+
+  } catch (err) {
+    handleError(err.name, `retryJobAtStepByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
+  }
+
+  try {
+    //removes old waiting data
+    delete jobObj.currentlyWaiting;
+
+    jobObj.flowStatus = FLOW_STATUS_WORKING;
+    jobObj.provenance.push({
+      date: (new Date()).toISOString(),
+      state: stateName,
+      restartBy: restartBy
     });
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);

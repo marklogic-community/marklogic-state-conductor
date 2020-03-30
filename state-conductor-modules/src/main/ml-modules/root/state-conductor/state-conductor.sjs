@@ -1238,6 +1238,8 @@ module.exports = {
   FLOW_STATUS_FAILED,
   JOB_COLLECTION,
   JOB_DIRECTORY,
+  retryJobAtStep,
+  retryJobAtStepByJobDoc,
   addJobMetadata,
   batchCreateStateConductorJob,
   checkFlowContext,

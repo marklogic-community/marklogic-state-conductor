@@ -1,4 +1,5 @@
 .gradle
+.idea
 .tmp
 build
 gradle-local.properties

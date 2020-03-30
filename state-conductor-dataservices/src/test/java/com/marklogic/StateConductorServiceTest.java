@@ -2,6 +2,7 @@ package com.marklogic;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
+import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import java.util.Arrays;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -13,23 +14,17 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class StateConductorServiceTest {
+public class StateConductorServiceTest extends AbstractSpringMarkLogicTest {
 
   static Logger logger = LoggerFactory.getLogger(StateConductorServiceTest.class);
-  static DatabaseClient client;
 
   StateConductorService mockService;
   StateConductorService service;
 
-  @BeforeAll
-  public static void suiteSetup() {
-    client = DatabaseClientFactory.newClient("vm1", 8888, new DatabaseClientFactory.DigestAuthContext("admin", "admin"));
-  }
-
   @BeforeEach
   public void setup() {
     mockService = new StateConductorServiceMock();
-    service = StateConductorService.on(client);
+    service = StateConductorService.on(getDatabaseClient());
   }
 
   @Test
@@ -60,13 +55,6 @@ public class StateConductorServiceTest {
   @Test
   public void testProcessJob() {
 
-  }
-
-  @AfterAll
-  public static void suiteTeardown() {
-    if (client != null) {
-      client.release();
-    }
   }
 
 }

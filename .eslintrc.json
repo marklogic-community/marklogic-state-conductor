@@ -26,6 +26,7 @@
     "XMLNode": false,
     "XMLDocument": false,
     "Document": false,
-    "declareUpdate": false
+    "declareUpdate": false,
+    "console": false
   }
 }

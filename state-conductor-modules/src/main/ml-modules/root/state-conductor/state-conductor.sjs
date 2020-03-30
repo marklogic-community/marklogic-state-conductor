@@ -83,19 +83,19 @@ function invokeOrApplyFunction(functionIn, optionsIn){
   // is used incase they dont set one of these
   // often tiems the moduels database isnt set
   const defaultOptions = {
-        database: xdmp.database(),
-        modules: xdmp.modulesDatabase()
-   }
+    database: xdmp.database(),
+    modules: xdmp.modulesDatabase()
+  };
   const options = Object.assign(defaultOptions, optionsIn);
 
-  if (options.database.toString() == xdmp.database().toString() && options.modules.toString() == xdmp.modulesDatabase().toString()){
+  if (options.database.toString() === xdmp.database().toString() && options.modules.toString() === xdmp.modulesDatabase().toString()) {
     //the content and the modules database are already in this context
     //we just apply the function and convert it to a sequence so that it makes the invoke function
-    return fn.subsequence(functionIn(),1)
+    return fn.subsequence(functionIn(), 1);
   } else {
     //either the content or the modules database doesnt match
     //so we just call invokefunction
-    return xdmp.invokeFunction(functionIn, options)
+    return xdmp.invokeFunction(functionIn, options);
   }
 }
 

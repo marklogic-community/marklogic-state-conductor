@@ -1,0 +1,29 @@
+{
+  "functionName": "getJobs",
+  "desc": "Returns a list of MarkLogic State Conductor Job document URIs",
+  "params": [
+    {
+      "name": "count",
+      "datatype": "unsignedInt",
+      "desc": "The number of uris to return",
+      "nullable": true
+    },
+    {
+      "name": "flowNames",
+      "datatype": "string",
+      "desc": "A list of flow names to filter the returned job documents",
+      "nullable": true
+    },
+    {
+      "name": "flowStatus",
+      "datatype": "string",
+      "desc": "A list of flow status's to filter the returned job documents.  Defaults to 'new' and 'working'.",
+      "nullable": true,
+      "multiple": true
+    }
+  ],
+  "return": {
+    "datatype": "string",
+    "multiple": true
+  }
+}

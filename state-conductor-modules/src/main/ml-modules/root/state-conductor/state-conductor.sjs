@@ -440,7 +440,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } catch (err) {
-    return handleStateFailure(uri, flowName, flowObj, stateName, err, save);
+    return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobDoc);
   }
 
 }
@@ -476,7 +476,7 @@ function retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save = true) {
   try {
 
     // sanity check
-    if (FLOW_STATUS_WATING !== FLOW_STATUS_FAILED) {
+    if (FLOW_STATUS_FAILED !== flowStatus) {
       return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot try a flow that is not in the '+ FLOW_STATUS_FAILED +' status');
     }
 
@@ -492,7 +492,7 @@ function retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save = true) {
     handleError(err.name, `retryJobAtStepByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
   }
 
-  try {
+ try {
     //removes old waiting data
     delete jobObj.currentlyWaiting;
 
@@ -505,8 +505,8 @@ function retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save = true) {
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } catch (err) {
-    return handleStateFailure(uri, flowName, flowObj, stateName, err, save);
-  }
+   return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
+ }
 
 }
 
@@ -573,7 +573,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
             fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}" `);
           }
         } catch (err) {
-          return handleStateFailure(xdmp.nodeUri(jobDoc), flowObj.flowName, flowObj, stateName, err, save);
+          return handleStateFailure(xdmp.nodeUri(jobDoc), flowObj.flowName, flowObj, stateName, err, save, jobObj);
         }
       } else {
         fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"` + xdmp.quote(state));
@@ -736,7 +736,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
         }
       }
     } catch (err) {
-      return handleStateFailure(uri, flowName, flowObj, stateName, err, save);
+      return handleStateFailure(uri, flowName, flowObj, stateName, err, save, handleStateFailure);
     }
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } else {
@@ -783,19 +783,27 @@ function executeConditionModule(modulePath, uri, params, context, { database, mo
  * @param {*} flow
  * @param {*} stateName
  * @param {*} err
+ * @param {*} save
+ * @param {*} jobDoc
  * @returns
  */
-function handleStateFailure(uri, flowName, flow, stateName, err, save = true) {
+function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jobDocIn) {
   const currState = flow.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
 
-  if (!fn.docAvailable(uri)) {
+  if (save && !fn.docAvailable(uri)) {
     return fn.error(null, 'DOCUMENT-NOT-FOUND', Sequence.from([`the document URI of "${uri}" was not found.`, err]));
   }
 
-  const jobDoc = cts.doc(uri);
-  const jobObj = jobDoc.toObject();
+  let jobObj;
+  let jobDoc;
+  if (save) {
+    const jobDoc = cts.doc(uri);
+    const jobObj = jobDoc.toObject();
+  } else {
+   jobObj = jobDocIn
+  }
 
   if (currState && (
     STATE_TASK === currState.Type.toLowerCase() ||
@@ -1216,6 +1224,7 @@ function handleError(name, message, err, jobDoc, jobObj, save = true) {
   }
 
   // trigger CPF error state
+
   fn.error(null, name, Sequence.from([
     message,
     err
@@ -1234,6 +1243,7 @@ module.exports = {
   FLOW_ITEM_COLLECTION,
   FLOW_STATUS_NEW,
   FLOW_STATUS_WORKING,
+  FLOW_STATUS_WATING,
   FLOW_STATUS_COMPLETE,
   FLOW_STATUS_FAILED,
   JOB_COLLECTION,

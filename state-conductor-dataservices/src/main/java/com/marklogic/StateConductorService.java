@@ -47,6 +47,21 @@ public interface StateConductorService {
 
 
             @Override
+            public String createJob(String uri, String flowName) {
+              return BaseProxy.StringType.toString(
+                baseProxy
+                .request("createJob.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("uri", false, BaseProxy.StringType.fromString(uri)),
+                    BaseProxy.atomicParam("flowName", false, BaseProxy.StringType.fromString(flowName)))
+                .withMethod("POST")
+                .responseSingle(false, null)
+                );
+            }
+
+
+            @Override
             public Boolean processJob(String uri) {
               return BaseProxy.BooleanType.toBoolean(
                 baseProxy
@@ -73,6 +88,15 @@ public interface StateConductorService {
    * @return	as output
    */
     Stream<String> getJobs(Integer count, String flowNames, Stream<String> flowStatus);
+
+  /**
+   * Creates a MarkLogic State Conductor Job document for the given uri and flow.
+   *
+   * @param uri	The uri of a document to be processed by the flow
+   * @param flowName	The name of the State Conductor Flow
+   * @return	The Job ID of the State Conductor Job document
+   */
+    String createJob(String uri, String flowName);
 
   /**
    * Invokes the processing of a MarkLogic State Conductor Job

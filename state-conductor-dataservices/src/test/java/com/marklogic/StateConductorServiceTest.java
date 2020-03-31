@@ -1,26 +1,19 @@
 package com.marklogic;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.marklogic.client.io.*;
-import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.DatabaseClientFactory;
-import com.marklogic.client.document.JSONDocumentManager;
+import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.document.DocumentWriteSet;
-//import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.ext.AbstractStateConductorTest;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Arrays;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class StateConductorServiceTest extends AbstractStateConductorTest {
 
@@ -83,6 +76,32 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     String[] uris = service.getJobs(count, null, Arrays.stream(status)).toArray(String[]::new);
     assertEquals(2, uris.length);
     logger.info("URIS: {}", String.join(",", Arrays.asList(uris)));
+  }
+
+  @Test
+  public void testCreateJobMock() {
+    String resp = mockService.createJob(data2Uri, "test-flow");
+    assertTrue(resp.length() > 0);
+  }
+
+  @Test
+  public void testCreateJob() throws IOException {
+    String resp = service.createJob(data2Uri, "test-flow");
+    assertTrue(resp.length() > 0);
+
+    StateConductorJob jobDoc = getJobDocument("/stateConductorJob/" + resp + ".json");
+    assertTrue(jobDoc != null);
+    assertEquals(resp, jobDoc.getId());
+    assertEquals(data2Uri, jobDoc.getUri());
+    assertEquals("test-flow", jobDoc.getFlowName());
+
+    assertThrows(FailedRequestException.class, () -> {
+      service.createJob("/my/fake/document.json", "test-flow");
+    });
+
+    assertThrows(FailedRequestException.class, () -> {
+      service.createJob(data2Uri, "my-fake-flow");
+    });
   }
 
   @Test

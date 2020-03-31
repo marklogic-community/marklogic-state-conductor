@@ -2,6 +2,7 @@ package com.marklogic;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 public class StateConductorServiceMock implements StateConductorService {
@@ -13,6 +14,11 @@ public class StateConductorServiceMock implements StateConductorService {
       uris.add(String.format("/test/test%s.json", i));
     }
     return uris.stream();
+  }
+
+  @Override
+  public String createJob(String uri, String flowName) {
+    return UUID.randomUUID().toString();
   }
 
   @Override

@@ -117,7 +117,7 @@ function hasScheduleElapsed(context, now) {
       return start.le(now) && upper.gt(now);
     }
   } catch (ex) {
-    xdmp.log(`error parsing schedule values: ${JSON.stringify(context)}`);
+    fn.error(null, 'INVALID-STATE-DEFINITION', `error parsing schedule values: ${JSON.stringify(context)}`);
   }
 
   return false;

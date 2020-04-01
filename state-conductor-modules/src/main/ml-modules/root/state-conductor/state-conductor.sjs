@@ -1,5 +1,7 @@
 'use strict';
 
+const lib = require('/state-conductor/state-conductor-lib.sjs');
+
 const configuration  = setDefaultconfiguration(require('/state-conductor/configuration.sjs').configuration);
 
 // configurable //
@@ -55,19 +57,19 @@ const parseSerializedQuery = (serializedQuery) => {
  */
 function setDefaultconfiguration(configuration){
   const defaults = {
-    "databases": {
-      "jobs": "state-conductor-jobs",
-      "triggers": "state-conductor-triggers",
-      "schemas": "state-conductor-schemas"
+    'databases': {
+      'jobs': 'state-conductor-jobs',
+      'triggers': 'state-conductor-triggers',
+      'schemas': 'state-conductor-schemas'
     },
-    "collections": {
-      "item": "state-conductor-item",
-      "job": "stateConductorJob",
-      "flow": "state-conductor-flow"
+    'collections': {
+      'item': 'state-conductor-item',
+      'job': 'stateConductorJob',
+      'flow': 'state-conductor-flow'
     },
-    "URIPrefixes": {
-      "flow": "/state-conductor-flow/",
-      "job": "/stateConductorJob/"
+    'URIPrefixes': {
+      'flow': '/state-conductor-flow/',
+      'job': '/stateConductorJob/'
     }
   };
 
@@ -86,19 +88,19 @@ function invokeOrApplyFunction(functionIn, optionsIn){
   // is used incase they dont set one of these
   // often tiems the moduels database isnt set
   const defaultOptions = {
-        database: xdmp.database(),
-        modules: xdmp.modulesDatabase()
-   }
+    database: xdmp.database(),
+    modules: xdmp.modulesDatabase()
+  };
   const options = Object.assign(defaultOptions, optionsIn);
 
-  if (options.database.toString() == xdmp.database().toString() && options.modules.toString() == xdmp.modulesDatabase().toString()){
+  if (options.database.toString() === xdmp.database().toString() && options.modules.toString() === xdmp.modulesDatabase().toString()){
     //the content and the modules database are already in this context
     //we just apply the function and convert it to a sequence so that it makes the invoke function
-    return fn.subsequence(functionIn(),1)
+    return fn.subsequence(functionIn(), 1);
   } else {
     //either the content or the modules database doesnt match
     //so we just call invokefunction
-    return xdmp.invokeFunction(functionIn, options)
+    return xdmp.invokeFunction(functionIn, options);
   }
 }
 
@@ -637,22 +639,48 @@ function executeStateByJobDoc(jobDoc, save = true) {
         xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
 
         if (state.Resource) {
+          let context = jobObj.context;
+
+          // filter the context through the InputPath if set
+          if (state.InputPath && state.InputPath !== '$') {
+            context = lib.materializeReferencePath(state.InputPath, context);
+          }
+
           // execute the resource modules
           let resp = executeActionModule(
             state.Resource,
             jobObj.uri,
             state.Parameters,
-            jobObj.context,
+            context,
             {
               database: jobObj.database,
               modules: jobObj.modules
             });
 
-          // update the job context with the response
-          jobObj.context = resp;
+          // add the data from the result to the job's context
+          if (state.OutputPath && state.OutputPath !== '$') {
+            // update the job context with the response optionally modified by the OutputPath config
+            jobObj.context = lib.materializeReferencePath(state.OutputPath, resp);
+          } else {
+            jobObj.context = resp;
+          }
         } else {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
         }
+      } else if (state.Type && state.Type.toLowerCase() === STATE_PASS) {
+
+        if (state.Result) {
+          let result = state.Result;
+
+          // add the data from the result to the job's context
+          if (state.OutputPath && state.OutputPath !== '$') {
+            // update the job context with the result data optionally modified by the OutputPath config
+            jobObj.context = lib.materializeReferencePath(state.OutputPath, result);
+          } else {
+            jobObj.context = result;
+          }
+        }
+
       } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Event')) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
@@ -719,11 +747,21 @@ function executeStateByJobDoc(jobDoc, save = true) {
   }
 }
 
+/**
+ * Invokes a Task state's action module
+ *
+ * @param {*} modulePath the uri of the module to execute
+ * @param {*} uri the uri of the in-process document
+ * @param {*} params the parameters passed to this state
+ * @param {*} context the current job's context
+ * @param {*} options { database, modules } the execution context of the module
+ * @returns the action module's resposne
+ */
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
   let resp = invokeOrApplyFunction(() => {
     const actionModule = require(modulePath);
     if (typeof actionModule.performAction === 'function') {
-      return actionModule.performAction(uri, params, context);
+      return actionModule.performAction(uri, lib.materializeParameters(params, context), context);
     } else {
       fn.error(null, 'INVALID-STATE-DEFINITION', `no "performAction" function defined for action module "${modulePath}"`);
     }
@@ -734,11 +772,22 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
   return fn.head(resp);
 }
 
+
+/**
+ * Invokes a Choice state's condition module
+ *
+ * @param {*} modulePath the uri of the module to execute
+ * @param {*} uri the uri of the in-process document
+ * @param {*} params the parameters passed to this Choice rule
+ * @param {*} context the current job's context
+ * @param {*} options { database, modules } the execution context of the module
+ * @returns boolean response of the module
+ */
 function executeConditionModule(modulePath, uri, params, context, { database, modules }) {
   let resp = invokeOrApplyFunction(() => {
     const conditionModule = require(modulePath);
     if (typeof conditionModule.checkCondition === 'function') {
-      return conditionModule.checkCondition(uri, params, context);
+      return conditionModule.checkCondition(uri, lib.materializeParameters(params, context), context);
     } else {
       fn.error(null, 'INVALID-STATE-DEFINITION', `no "checkCondition" function defined for condition module "${modulePath}"`);
     }
@@ -908,20 +957,6 @@ function getFlowCounts(flowName, { startDate, endDate }) {
   return resp;
 }
 
-// checks if its a temporal document and if its latested document
-function isLatestTemporalDocument(uri) {
-  const temporal = require('/MarkLogic/temporal.xqy');
-  const temporalCollections = temporal.collections().toArray();
-  const documentCollections = xdmp.documentGetCollections(uri);
-
-  const hasTemporalCollection = temporalCollections.some(collection => {
-    //the temporalCollections are not strings so we need to convert them into strings
-    return documentCollections.includes(collection.toString());
-  });
-
-  return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
-}
-
 /**
  * Should be used when take a job doc from the database
  * insures all the needed properties are there
@@ -1078,69 +1113,6 @@ function emmitEvent(event, batchSize = 100, save = true) {
 }
 
 /**
- * Given a flow context with the "scheduled" scope, determines
- * if the scheduled period has elapsed.
- *
- * @param {*} context
- * @returns
- */
-function hasScheduleElapsed(context, now) {
-  if (context.scope !== 'scheduled') {
-    return false;
-  }
-
-  now = now || new Date();
-  const millis = now.getTime();
-  const minutes = Math.floor(millis / 1000 / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  const dayname = xdmp.daynameFromDate(now);
-
-  try {
-    if ('minutely' === context.value) {
-      // checks periodicity
-      return (minutes % context.period) === 0;
-    } else if ('hourly' === context.value) {
-      // checks periodicity and the number of minutes past the hour
-      const periodMatch = (hours % context.period) === 0;
-      const m = context.minute;
-      return periodMatch && (fn.minutesFromDateTime(now) === parseInt(m));
-    } else if ('daily' === context.value) {
-      // checks periodicity and if we've arrived at the specified time
-      const periodMatch = (days % context.period) === 0;
-      const [h, m] = context.startTime.split(':');
-      return periodMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
-    } else if ('weekly' === context.value) {
-      // checks periodicity and if we've arrived at the specified time and day(s) of the week
-      // periodicity check uses the week number for the current year (1-52)
-      const periodMatch = (xdmp.weekFromDate(now) % context.period) === 0;
-      const dayMatch = context.days.map(day => day.toLowerCase()).includes(dayname.toLowerCase());
-      const [h, m] = context.startTime.split(':');
-      return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
-    } else if ('monthly' === context.value) {
-      // checks periodicity and if we've arrived at the specified time and day of the week
-      // periodicity check uses the month number for the current year (1-12)
-      // day check uses the day number of the month (1 - 31)
-      const periodMatch = (fn.monthFromDate(now) % context.period) === 0;
-      const dayMatch = fn.dayFromDateTime(now) === context.monthDay;
-      const [h, m] = context.startTime.split(':');
-      return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
-    } else if ('once' === context.value) {
-      // checks if we've arrived at the specified date and time
-      // generates a range of one minute from specified time and validates the current time is within that minute
-      const start = xdmp.parseDateTime('[M01]/[D01]/[Y0001]-[H01]:[m01][Z]', `${context.startDate}-${context.startTime}Z`);
-      const upper = start.add('PT1M');
-      return start.le(now) && upper.gt(now);
-    }
-  } catch (ex) {
-    xdmp.log(`error parsing schedule values: ${JSON.stringify(context)}`);
-  }
-
-  return false;
-}
-
-
-/**
  * Query for job document uris, matching the given options
  *
  * @param {*} options
@@ -1250,6 +1222,5 @@ module.exports = {
   startProcessingFlowByJobDoc,
   emmitEvent,
   getJobDocuments,
-  hasScheduleElapsed,
   invokeOrApplyFunction
 };

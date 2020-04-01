@@ -1,0 +1,13 @@
+{
+  "id": "job3",
+  "flowName": "test-flow",
+  "flowStatus": "working",
+  "flowState": "add-collection-1",
+  "uri": "/test/doc2.json",
+  "database": "10112838349240466754",
+  "modules": "15675193590742246967",
+  "createdDate": "2020-03-30T17:20:00.362Z",
+  "context": {},
+  "provenance": [],
+  "errors": {}
+}

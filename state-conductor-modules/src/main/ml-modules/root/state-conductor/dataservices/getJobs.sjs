@@ -27,6 +27,8 @@ if (Array.isArray(flowStatus)) {
   // continue
 } else if (flowStatus instanceof Sequence) {
   flowStatus = flowStatus.toArray();
+} else if (typeof flowStatus === 'string') {
+  flowStatus = [flowStatus];
 } else {
   flowStatus = [sc.FLOW_STATUS_NEW, sc.FLOW_STATUS_WORKING];
 }

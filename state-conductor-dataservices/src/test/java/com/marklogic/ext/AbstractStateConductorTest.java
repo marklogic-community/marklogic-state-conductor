@@ -8,14 +8,14 @@ import com.marklogic.client.document.JSONDocumentManager;
 import com.marklogic.client.ext.helper.DatabaseClientProvider;
 import com.marklogic.client.io.FileHandle;
 import com.marklogic.junit5.AbstractMarkLogicTest;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
 
 /**

@@ -12,7 +12,10 @@ const FLOW_COLLECTION = configuration.collections.flow;
 const FLOW_DIRECTORY = configuration.URIPrefixes.flow;
 const JOB_DIRECTORY = configuration.URIPrefixes.job;
 
+
 // non-configurable //
+const JOB_DOC_READ_PERMISSION = "state-conductor-reader-role";
+const JOB_DOC_WRITE_PERMISSION = "state-conductor-job-writer-role";
 const TRACE_EVENT = 'state-conductor';
 const FLOW_FILE_EXTENSION = '.asl.json';
 const FLOW_JOBID_PROP_NAME = 'state-conductor-job';
@@ -183,6 +186,11 @@ function getInitialState({ flowName, StartAt }) {
  * @returns
  */
 function getJobMetadatProperty(uri, flowName) {
+
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
   if (fn.docAvailable(uri)) {
     return xdmp.documentGetProperties(uri, fn.QName('', FLOW_JOBID_PROP_NAME))
       .toArray()
@@ -210,6 +218,10 @@ function addJobMetadata(uri, flowName, jobId) {
 }
 
 function getJobIds(uri, flowName) {
+xdmp.securityAssert(
+  "http://marklogic.com/state-conductor/privilege/execute",
+  "execute"
+);
   const jobProps = getJobMetadatProperty(uri, flowName);
   return jobProps.map(prop => prop.getAttributeNode('job-id').nodeValue);
 }
@@ -311,6 +323,10 @@ function getAllFlowsContextQuery() {
  * @returns (boolean) indicates if processing of the job document should continue
  */
 function processJob(uri) {
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
   xdmp.trace(TRACE_EVENT, `state-conductor job processing for job document "${uri}"`);
   // sanity check
   if (!fn.docAvailable(uri)) {
@@ -341,6 +357,10 @@ function processJob(uri) {
 }
 
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const currFlowName = jobObj.flowName;
   const status = jobObj.flowStatus;
@@ -385,6 +405,10 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
  * @param {*} uri - the job document's uri
  */
 function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
 
   // checks if document is there
   if (!fn.docAvailable(uri)){
@@ -396,6 +420,10 @@ function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
 }
 
 function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
   const uri = xdmp.nodeUri(jobDoc);
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
@@ -455,6 +483,12 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
  * @param {*} flowObj - the flow object
  */
 function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
+
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
+
   try {
     // determine the next target state and transition
     let targetState = null;
@@ -559,6 +593,12 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
  * @param {*} jobDoc - the job document
  */
 function executeStateByJobDoc(jobDoc, save = true) {
+
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
+
   const uri = xdmp.nodeUri(jobDoc);
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
@@ -803,6 +843,7 @@ function inTerminalState(job, flow) {
  * @returns
  */
 function getFlowCounts(flowName, { startDate, endDate }) {
+
   const flow = getFlowDocument(flowName).toObject();
   const states = Object.keys(flow.States);
 
@@ -915,6 +956,12 @@ function scaffoldJobDoc(jobDoc) {
  * @param {*} [options={}]
  */
 function createStateConductorJob(flowName, uri, context = {}, options = {}) {
+
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
+
   const collections = [JOB_COLLECTION].concat(options.collections || []);
   const directory = options.directory || '/' + JOB_COLLECTION + '/';
   const database = options.database || xdmp.database();
@@ -942,8 +989,11 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   invokeOrApplyFunction(() => {
     declareUpdate();
     xdmp.documentInsert(jobUri, job, {
-      collections: collections,
-      permissions: xdmp.defaultPermissions()
+      permissions: [
+        xdmp.permission(JOB_DOC_READ_PERMISSION, "read"),
+        xdmp.permission(JOB_DOC_WRITE_PERMISSION, "update")
+      ],
+      collections: collections
     });
   }, {
     database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
@@ -1097,6 +1147,11 @@ function hasScheduleElapsed(context, now) {
  * @returns
  */
 function getJobDocuments(options) {
+
+  xdmp.securityAssert(
+    "http://marklogic.com/state-conductor/privilege/execute",
+    "execute"
+  );
   const count = options.count || 100;
   const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
   const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];

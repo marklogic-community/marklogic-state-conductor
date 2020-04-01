@@ -24,6 +24,7 @@
   ],
   "return": {
     "datatype": "string",
-    "multiple": true
+    "multiple": true,
+    "nullable": true
   }
 }

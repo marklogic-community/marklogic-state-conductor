@@ -41,7 +41,7 @@ public interface StateConductorService {
                     BaseProxy.atomicParam("flowNames", true, BaseProxy.StringType.fromString(flowNames)),
                     BaseProxy.atomicParam("flowStatus", true, BaseProxy.StringType.fromString(flowStatus)))
                 .withMethod("POST")
-                .responseMultiple(false, null)
+                .responseMultiple(true, null)
                 );
             }
 

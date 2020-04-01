@@ -9,11 +9,11 @@ var count;
 var flowNames;
 var flowStatus;
 
-xdmp.log('Count: ' + count);
-xdmp.log('flowNames: ' + xdmp.describe(flowNames));
-xdmp.log('flowStatus: ' + xdmp.describe(flowStatus));
-
-console.log('got here!');
+xdmp.trace(sc.TRACE_EVENT, Sequence.from([
+  `Count: ${count}`,
+  `flowNames: ${xdmp.describe(flowNames)}`,
+  `flowStatus: ${xdmp.describe(flowStatus)}`
+]));
 
 if (!count) {
   count = 1000;
@@ -41,7 +41,7 @@ let options = {
 
 const uris = sc.getJobDocuments(options);
 
-console.log('return=', uris);
+xdmp.trace(sc.TRACE_EVENT, `getJobs found ${uris.length} job documents`);
 
 // return
 Sequence.from(uris);

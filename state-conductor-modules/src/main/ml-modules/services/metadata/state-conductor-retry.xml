@@ -1,0 +1,11 @@
+<metadata>
+  <title>State Conductor Retry</title>
+  <description>
+    <p>Service for Retry jobs by State within the State Conductor</p>
+  </description>
+  <method name="PUT">
+    <param name="uris" type="xs:string*" />
+    <param name="stateName" type="xs:string?" />
+    <param name="retryBy" type="xs:string?" />
+  </method>
+</metadata>

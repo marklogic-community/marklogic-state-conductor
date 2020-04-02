@@ -22,10 +22,12 @@ test.loadTestFile('flows/bad-flow.asl.json', xdmp.database(), sc.FLOW_DIRECTORY 
 
 test.loadTestFile('flows/contextual-flow.asl.json', xdmp.database(), sc.FLOW_DIRECTORY + 'contextual-flow.asl.json', xdmp.defaultPermissions(),  sc.FLOW_COLLECTION);
 
-test.loadTestFile('flows/test-time-wait.asl.json', xdmp.database(), sc.FLOW_DIRECTORY + 'test-time-wait.asl.json', xdmp.defaultPermissions(), [sc.FLOW_COLLECTION, "waitStateTest"]);
+test.loadTestFile('flows/test-time-wait.asl.json', xdmp.database(), sc.FLOW_DIRECTORY + 'test-time-wait.asl.json', xdmp.defaultPermissions(), [sc.FLOW_COLLECTION, 'waitStateTest']);
+
+test.loadTestFile('flows/ref-path-flow.asl.json', xdmp.database(), sc.FLOW_DIRECTORY + 'ref-path-flow.asl.json', xdmp.defaultPermissions(),  sc.FLOW_COLLECTION);
 
 // insert the test jobs
-test.loadTestFile('test-wait-job.json', xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB), '/stateConductorJob/test-wait-job.json', xdmp.defaultPermissions(), [sc.JOB_COLLECTION, "unitTest"])
+test.loadTestFile('test-wait-job.json', xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB), '/stateConductorJob/test-wait-job.json', xdmp.defaultPermissions(), [sc.JOB_COLLECTION, 'unitTest']);
 
 
 test.log('StateConductorSuite Suite Setup COMPLETE....');

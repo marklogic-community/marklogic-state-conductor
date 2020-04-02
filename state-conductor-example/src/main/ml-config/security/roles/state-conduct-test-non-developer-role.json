@@ -1,0 +1,7 @@
+{
+  "role-name": "state-conductor-test-non-developer-role",
+  "description": "Test user permission",
+  "role": [
+    "state-conductor-reader-role"
+  ]
+}

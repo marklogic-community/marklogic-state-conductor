@@ -1,0 +1,7 @@
+{
+  "role-name": "state-conductor-test-developer-role",
+  "description": "Test user permission",
+  "role": [
+    "state-conductor-developer"
+  ]
+}

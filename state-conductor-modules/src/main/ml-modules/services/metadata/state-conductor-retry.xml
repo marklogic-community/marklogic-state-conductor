@@ -6,6 +6,6 @@
   <method name="PUT">
     <param name="uris" type="xs:string*" />
     <param name="stateName" type="xs:string?" />
-    <param name="restartBy" type="xs:string?" />
+    <param name="retryBy" type="xs:string?" />
   </method>
 </metadata>

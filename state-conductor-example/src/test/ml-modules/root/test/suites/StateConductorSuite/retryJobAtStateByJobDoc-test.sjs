@@ -22,7 +22,7 @@ jobDoc = xdmp.toJSON(
 error = null;
 
 try {
-  error = sc.retryJobAtStepByJobDoc(jobDoc, "dialUp", "testing", false);
+  error = sc.retryJobAtStateByJobDoc(jobDoc, "dialUp", "testing", false);
 } catch (e) {
   error = e;
 }
@@ -45,7 +45,7 @@ jobDoc = xdmp.toJSON(
 error = null;
 
 try {
-  error =  sc.retryJobAtStepByJobDoc(jobDoc, "dialUp", "testing", false);
+  error =  sc.retryJobAtStateByJobDoc(jobDoc, "dialUp", "testing", false);
 } catch (e) {
   error = e;
 }
@@ -68,7 +68,7 @@ jobDoc = xdmp.toJSON(
 error = null;
 
 try {
-  error =  sc.retryJobAtStepByJobDoc(jobDoc, "dialUp", "testing", false);
+  error =  sc.retryJobAtStateByJobDoc(jobDoc, "dialUp", "testing", false);
 } catch (e) {
   error = e;
 }
@@ -91,7 +91,7 @@ jobDoc = xdmp.toJSON(
 error = null;
 
 try {
-  error =  sc.retryJobAtStepByJobDoc(jobDoc, "dialUp", "testing", false);
+  error =  sc.retryJobAtStateByJobDoc(jobDoc, "dialUp", "testing", false);
 } catch (e) {
   error = e;
 }
@@ -111,7 +111,7 @@ jobDoc = xdmp.toJSON(
 "provenance": []
 })
 
-assertion =  sc.retryJobAtStepByJobDoc(jobDoc, "dialUp", "testing", false);
+assertion =  sc.retryJobAtStateByJobDoc(jobDoc, "dialUp", "testing", false);
 
 
 assertions.push(test.assertEqual("working", assertion.flowStatus, "working retry"))
@@ -133,7 +133,7 @@ jobDoc = xdmp.toJSON(
 error = null;
 
 try {
-  error =  sc.retryJobAtStepByJobDoc(jobDoc, "unknownStep", "testing", false);
+  error =  sc.retryJobAtStateByJobDoc(jobDoc, "unknownStep", "testing", false);
 } catch (e) {
   error = e;
 }
@@ -156,7 +156,7 @@ jobDoc = xdmp.toJSON(
 error = null;
 
 try {
-  error =  sc.retryJobAtStepByJobDoc(jobDoc, "NEW", "testing", false);
+  error =  sc.retryJobAtStateByJobDoc(jobDoc, "NEW", "testing", false);
 } catch (e) {
   error = e;
 }
@@ -179,7 +179,7 @@ jobDoc = xdmp.toJSON(
 
 error = null;
 try {
-  error = sc.retryJobAtStepByJobDoc(jobDoc, "dialUp", "testing", false);
+  error = sc.retryJobAtStateByJobDoc(jobDoc, "dialUp", "testing", false);
 } catch (e) {
   error = e;
 }
@@ -199,7 +199,7 @@ jobDoc = xdmp.toJSON(
     "provenance": []
   })
 
-assertion = sc.retryJobAtStepByJobDoc(jobDoc, "dialUp", "testing", false);
+assertion = sc.retryJobAtStateByJobDoc(jobDoc, "dialUp", "testing", false);
 
 assertions.push(test.assertEqual("working", assertion.flowStatus, "working retry"))
 assertions.push(test.assertFalse(assertion.hasOwnProperty("parameters-check"), "next step retry"))
@@ -219,7 +219,7 @@ jobDoc = xdmp.toJSON(
 
 error = null;
 try {
-  error = sc.retryJobAtStepByJobDoc(jobDoc, "dialUp", "testing", false);
+  error = sc.retryJobAtStateByJobDoc(jobDoc, "dialUp", "testing", false);
 } catch (e) {
   error = e;
 }

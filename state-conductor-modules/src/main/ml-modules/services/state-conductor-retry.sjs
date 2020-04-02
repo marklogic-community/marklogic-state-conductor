@@ -9,7 +9,7 @@ function returnError(statusCode, statusMsg, body) {
 /**
  * resumes the jobs with the URIS sent
  */
-function put(context, { uris = [], stateName = sc.FLOW_NEW_STEP,  restartBy = 'unspecified' }, input) {
+function put(context, { uris = [], stateName = sc.FLOW_NEW_STEP,  retriedBy = 'unspecified' }, input) {
 
   if (typeof uris === 'string') {
     uris = uris.split(',');
@@ -19,7 +19,7 @@ function put(context, { uris = [], stateName = sc.FLOW_NEW_STEP,  restartBy = 'u
     returnError(400, 'Bad Request', 'Missing required parameter "uris"');
   }
 
-  restartBy = "Rest Endpoint:" + restartBy;
+  retriedBy = "Rest Endpoint:" + retriedBy;
 
   const resp = {
     "uris": [],
@@ -34,7 +34,7 @@ function put(context, { uris = [], stateName = sc.FLOW_NEW_STEP,  restartBy = 'u
 
       resp.uris.push(uri);
 
-      resp.jobs[uri] = sc.retryJobAtStep(uri, stateName, restartBy);
+      resp.jobs[uri] = sc.retryJobAtState(uri, stateName, retriedBy);
 
     });
 

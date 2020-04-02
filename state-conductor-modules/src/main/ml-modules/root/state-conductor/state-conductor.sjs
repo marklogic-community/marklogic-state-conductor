@@ -1,4 +1,3 @@
-'use strict';
 
 const configuration  = setDefaultconfiguration(require('/state-conductor/configuration.sjs').configuration);
 
@@ -450,7 +449,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
  *
  * @param {*} uri - the job document's uri
  */
-function retryJobAtStep(uri, stateName = FLOW_NEW_STEP, restartBy = 'unspecified', save = true) {
+function retryJobAtState(uri, stateName = FLOW_NEW_STEP, retriedBy = 'unspecified', save = true) {
 
   // checks if document is there
   if (!fn.docAvailable(uri)){
@@ -458,10 +457,10 @@ function retryJobAtStep(uri, stateName = FLOW_NEW_STEP, restartBy = 'unspecified
   }
 
   const jobDoc = cts.doc(uri);
-  retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save);
+  retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save);
 }
 
-function retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save = true) {
+function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
   const uri = xdmp.nodeUri(jobDoc);
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
@@ -469,9 +468,9 @@ function retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save = true) {
   let state;
   let flowObj;
 
-  xdmp.trace(TRACE_EVENT, `retryJobAtStepByJobDoc uri "${uri}"`);
-  xdmp.trace(TRACE_EVENT, `retryJobAtStepByJobDoc flow "${flowName}"`);
-  xdmp.trace(TRACE_EVENT, `retryJobAtStepByJobDoc flow state "${stateName}"`);
+  xdmp.trace(TRACE_EVENT, `retryJobAtStateByJobDoc uri "${uri}"`);
+  xdmp.trace(TRACE_EVENT, `retryJobAtStateByJobDoc flow "${flowName}"`);
+  xdmp.trace(TRACE_EVENT, `retryJobAtStateByJobDoc flow state "${stateName}"`);
 
   try {
 
@@ -489,7 +488,7 @@ function retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save = true) {
     }
 
   } catch (err) {
-    handleError(err.name, `retryJobAtStepByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
+    handleError(err.name, `retryJobAtStateByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
   }
 
  try {
@@ -500,7 +499,7 @@ function retryJobAtStepByJobDoc(jobDoc, stateName, restartBy, save = true) {
     jobObj.provenance.push({
       date: (new Date()).toISOString(),
       state: stateName,
-      restartBy: restartBy
+      retriedBy: retriedBy
     });
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
@@ -736,7 +735,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
         }
       }
     } catch (err) {
-      return handleStateFailure(uri, flowName, flowObj, stateName, err, save, handleStateFailure);
+      return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
     }
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } else {
@@ -797,12 +796,12 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
   }
 
   let jobObj;
-  let jobDoc;
+  
   if (save) {
-    const jobDoc = cts.doc(uri);
-    const jobObj = jobDoc.toObject();
+     let jobDoc = cts.doc(uri);
+     jobObj = jobDoc.toObject();
   } else {
-   jobObj = jobDocIn
+   jobObj = jobDocIn;
   }
 
   if (currState && (
@@ -1248,8 +1247,8 @@ module.exports = {
   FLOW_STATUS_FAILED,
   JOB_COLLECTION,
   JOB_DIRECTORY,
-  retryJobAtStep,
-  retryJobAtStepByJobDoc,
+  retryJobAtState,
+  retryJobAtStateByJobDoc,
   addJobMetadata,
   batchCreateStateConductorJob,
   checkFlowContext,

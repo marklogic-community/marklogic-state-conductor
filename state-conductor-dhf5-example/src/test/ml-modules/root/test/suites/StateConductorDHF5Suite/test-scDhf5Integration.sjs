@@ -1,11 +1,12 @@
 'use strict';
+declareUpdate();
 
 const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 // helper to allow processing in seperate transactions
 function isolate(func, db) {
-  db = db || xdmp.database()
+  db = db || xdmp.database();
   return fn.head(
     xdmp.invokeFunction(
       () => {
@@ -13,8 +14,8 @@ function isolate(func, db) {
         return func();
       },
       {
-        isolation: "different-transaction",
-        commit: "auto",
+        isolation: 'different-transaction',
+        commit: 'auto',
         database: db
       }
     )
@@ -26,16 +27,16 @@ let jobDoc, error, respDoc, updated;
 
 // test reference to missing DHF flow
 jobDoc = xdmp.toJSON(
-{
-  "id": "0405536f-dd84-4ca6-8de8-c57062b2252d",
-  "flowName": "missing-dhf-flow",
-  "flowStatus": "working",
-  "flowState": "runStep1",
-  "uri": "/data/johndoe.json",
-  "database": xdmp.database(),
-  "modules": xdmp.modulesDatabase(),
-  "provenance": []
-});
+  {
+    'id': '0405536f-dd84-4ca6-8de8-c57062b2252d',
+    'flowName': 'missing-dhf-flow',
+    'flowStatus': 'working',
+    'flowState': 'runStep1',
+    'uri': '/data/johndoe.json',
+    'database': xdmp.database(),
+    'modules': xdmp.modulesDatabase(),
+    'provenance': []
+  });
 
 try {
   respDoc = sc.executeStateByJobDoc(jobDoc, false);
@@ -44,26 +45,26 @@ try {
 }
 
 assertions.push(
-  test.assertEqual('DOCUMENT-NOT-FOUND', error.name, "handled missing dhf flow")
+  test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'handled missing dhf flow')
 );
 
 // test executing flow step
 jobDoc = xdmp.toJSON(
-{
-  "id": "0405536f-dd84-4ca6-8de8-c57062b2252d",
-  "flowName": "person-steps-flow",
-  "flowStatus": "working",
-  "flowState": "runStep1",
-  "uri": "/data/johndoe.json",
-  "database": xdmp.database(),
-  "modules": xdmp.modulesDatabase(),
-  "provenance": []
-});
+  {
+    'id': '0405536f-dd84-4ca6-8de8-c57062b2252d',
+    'flowName': 'person-steps-flow',
+    'flowStatus': 'working',
+    'flowState': 'runStep1',
+    'uri': '/data/johndoe.json',
+    'database': xdmp.database(),
+    'modules': xdmp.modulesDatabase(),
+    'provenance': []
+  });
 
 respDoc = sc.executeStateByJobDoc(jobDoc, false);
 
 assertions.push(
-  test.assertEqual(sc.FLOW_STATUS_WORKING, respDoc.flowStatus, "excecuted step 1"),
+  test.assertEqual(sc.FLOW_STATUS_WORKING, respDoc.flowStatus, 'excecuted step 1'),
   test.assertEqual('runStep2', respDoc.flowState),
   test.assertEqual(1, respDoc.context['PersonFlow']['1'].totalCount),
   test.assertEqual(0, respDoc.context['PersonFlow']['1'].errorCount),
@@ -74,7 +75,7 @@ assertions.push(
 respDoc = sc.executeStateByJobDoc(xdmp.toJSON(respDoc), false);
 
 assertions.push(
-  test.assertEqual(sc.FLOW_STATUS_WORKING, respDoc.flowStatus, "excecuted step 2"),
+  test.assertEqual(sc.FLOW_STATUS_WORKING, respDoc.flowStatus, 'excecuted step 2'),
   test.assertEqual('Success', respDoc.flowState),
   test.assertEqual(1, respDoc.context['PersonFlow']['2'].totalCount),
   test.assertEqual(0, respDoc.context['PersonFlow']['2'].errorCount),
@@ -83,22 +84,22 @@ assertions.push(
 
 // test executing custom flow step
 jobDoc = xdmp.toJSON(
-{
-  "id": "0405536f-dd84-4ca6-8de8-c57062b2252d",
-  "flowName": "custom-steps-flow",
-  "flowStatus": "working",
-  "flowState": "runStep1",
-  "uri": "/data/janedoe.json",
-  "database": xdmp.database(),
-  "modules": xdmp.modulesDatabase(),
-  "provenance": []
-});
+  {
+    'id': '0405536f-dd84-4ca6-8de8-c57062b2252d',
+    'flowName': 'custom-steps-flow',
+    'flowStatus': 'working',
+    'flowState': 'runStep1',
+    'uri': '/data/janedoe.json',
+    'database': xdmp.database(),
+    'modules': xdmp.modulesDatabase(),
+    'provenance': []
+  });
 
 respDoc = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
 updated = isolate(() => cts.doc('/data/janedoe.json').toObject());
 
 assertions.push(
-  test.assertEqual(sc.FLOW_STATUS_WORKING, respDoc.flowStatus, "excecuted step 1"),
+  test.assertEqual(sc.FLOW_STATUS_WORKING, respDoc.flowStatus, 'excecuted step 1'),
   test.assertEqual('Success', respDoc.flowState),
   test.assertEqual(1, respDoc.context['CustomFlow']['1'].totalCount),
   test.assertEqual(0, respDoc.context['CustomFlow']['1'].errorCount),

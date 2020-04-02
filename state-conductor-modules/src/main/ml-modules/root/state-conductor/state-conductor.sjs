@@ -84,7 +84,7 @@ function setDefaultconfiguration(configuration){
  * @param {*} name
  * @returns
  */
-function invokeOrApplyFunction(functionIn, optionsIn){
+function invokeOrApplyFunction(functionIn, optionsIn) {
   // is used incase they dont set one of these
   // often tiems the moduels database isnt set
   const defaultOptions = {
@@ -823,6 +823,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
  */
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
   let resp = invokeOrApplyFunction(() => {
+    declareUpdate();
     const actionModule = require(modulePath);
     if (typeof actionModule.performAction === 'function') {
       return actionModule.performAction(uri, lib.materializeParameters(params, context), context);

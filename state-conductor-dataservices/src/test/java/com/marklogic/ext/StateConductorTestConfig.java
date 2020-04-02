@@ -59,6 +59,13 @@ public class StateConductorTestConfig {
 		return new SimpleDatabaseClientProvider(databaseClientConfig());
 	}
 
+	@Bean
+	public DatabaseClientProvider jobsDatabaseClientProvider() {
+	  DatabaseClientConfig config = new DatabaseClientConfig(getHost(), getRestPort(), getUsername(), getPassword());
+	  config.setDatabase("state-conductor-jobs");
+	  return new SimpleDatabaseClientProvider(config);
+  }
+
 	public String getUsername() {
 		return username;
 	}

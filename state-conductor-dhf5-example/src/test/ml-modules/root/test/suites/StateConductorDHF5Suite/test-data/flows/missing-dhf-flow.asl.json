@@ -14,19 +14,10 @@
         "step": 1,
         "flowOptions": {}
       },
-      "Next": "Success",
-      "Catch": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "Next": "FailState"
-        }
-      ]
+      "Next": "Success"
     },
     "Success": {
       "Type": "Succeed"
-    },
-    "FailState": {
-      "Type": "Fail"
     }
   }
 }

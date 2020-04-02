@@ -3,13 +3,14 @@ package com.marklogic.ext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.StateConductorJob;
 import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.document.JSONDocumentManager;
 import com.marklogic.client.ext.helper.DatabaseClientProvider;
 import com.marklogic.client.io.FileHandle;
+import com.marklogic.client.io.StringHandle;
 import com.marklogic.junit5.AbstractMarkLogicTest;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -17,6 +18,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.util.Map;
 
 /**
  * Extends JUnit5 with Spring's support for tests.
@@ -35,7 +38,10 @@ import java.net.URL;
  */
 public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
 
+  protected ObjectMapper mapper = new ObjectMapper();
+
 	@Autowired
+  @Qualifier("databaseClientProvider")
 	protected DatabaseClientProvider databaseClientProvider;
 
 	@Override
@@ -43,12 +49,15 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
 		return databaseClientProvider.getDatabaseClient();
 	}
 
-  protected ObjectMapper mapper = new ObjectMapper();
+	@Autowired
+  @Qualifier("jobsDatabaseClientProvider")
+	protected DatabaseClientProvider jobsDatabaseClientProvider;
 
-	// TODO pull config from properties
-	protected DatabaseClient jobsClient = DatabaseClientFactory.newClient("vm1", 8886, "state-conductor-jobs", new DatabaseClientFactory.DigestAuthContext("admin", "admin"));
+	protected DatabaseClient getJobsDatabaseClient() {
+	  return jobsDatabaseClientProvider.getDatabaseClient();
+  }
 
-  protected JSONDocumentManager contentManager;
+  private JSONDocumentManager contentManager;
   protected JSONDocumentManager getContentManager() {
     if (contentManager == null) {
       contentManager = getDatabaseClient().newJSONDocumentManager();
@@ -56,12 +65,34 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
     return contentManager;
   }
 
-  protected JSONDocumentManager jobsManager;
+  private JSONDocumentManager jobsManager;
   protected JSONDocumentManager getJobsManager() {
     if (jobsManager == null) {
-      jobsManager = jobsClient.newJSONDocumentManager();
+      jobsManager = getJobsDatabaseClient().newJSONDocumentManager();
     }
     return jobsManager;
+  }
+
+  private String contentDatabaseId;
+  protected String getContentDatabaseId() {
+    if (contentDatabaseId == null) {
+      contentDatabaseId = getDatabaseClient()
+        .newServerEval()
+        .xquery("xdmp:database(\"state-conductor-dataservices-test-content\")")
+        .evalAs(String.class);
+    }
+    return contentDatabaseId;
+  }
+
+  private String modulesDatabaseId;
+  protected String getModulesDatabaseId() {
+    if (modulesDatabaseId == null) {
+      modulesDatabaseId = getDatabaseClient()
+        .newServerEval()
+        .xquery("xdmp:database(\"state-conductor-dataservices-modules\")")
+        .evalAs(String.class);
+    }
+    return modulesDatabaseId;
   }
 
   /*
@@ -81,6 +112,22 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
       File file = new File(resource.getFile());
       return new FileHandle(file);
     }
+  }
+
+  protected StringHandle loadTokenizedResource(String name, Map<String, String> tokens) throws IOException {
+    URL resource = getClass().getClassLoader().getResource(name);
+    if (resource == null) {
+      throw new FileNotFoundException(name);
+    }
+
+    File file = new File(resource.getFile());
+    String content = Files.readString(file.toPath());
+
+    for (Map.Entry<String, String> token : tokens.entrySet()) {
+      content = content.replaceAll(token.getKey(), token.getValue());
+    }
+
+    return new StringHandle(content);
   }
 
   protected StateConductorJob getJobDocument(String uri) throws IOException {

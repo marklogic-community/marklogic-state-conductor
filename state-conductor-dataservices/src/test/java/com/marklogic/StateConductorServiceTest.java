@@ -9,9 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,20 +29,27 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   StateConductorService service;
 
   @BeforeEach
-  public void setup() throws FileNotFoundException {
+  public void setup() throws IOException {
     // setup the service
     mockService = new StateConductorServiceMock();
     service = StateConductorService.on(getDatabaseClient());
+
+    // replacement tokens
+    Map<String, String> tokens = new HashMap<>();
+    tokens.put("%DATABASE%", getContentDatabaseId());
+    tokens.put("%MODULES%", getModulesDatabaseId());
 
     // add job docs
     DocumentWriteSet batch = getJobsManager().newWriteSet();
     DocumentMetadataHandle jobMeta = new DocumentMetadataHandle();
     jobMeta.getCollections().add("stateConductorJob");
-    batch.add("/test/stateConductorJob/job1.json", jobMeta, loadFileResource("jobs/job1.json"));
-    batch.add("/test/stateConductorJob/job2.json", jobMeta, loadFileResource("jobs/job2.json"));
-    batch.add("/test/stateConductorJob/job3.json", jobMeta, loadFileResource("jobs/job3.json"));
-    batch.add("/test/stateConductorJob/job4.json", jobMeta, loadFileResource("jobs/job4.json"));
-    batch.add("/test/stateConductorJob/job5.json", jobMeta, loadFileResource("jobs/job5.json"));
+    jobMeta.getPermissions().add("state-conductor-reader-role", DocumentMetadataHandle.Capability.READ);
+    jobMeta.getPermissions().add("state-conductor-job-writer-role", DocumentMetadataHandle.Capability.UPDATE);
+    batch.add("/test/stateConductorJob/job1.json", jobMeta, loadTokenizedResource("jobs/job1.json", tokens));
+    batch.add("/test/stateConductorJob/job2.json", jobMeta, loadTokenizedResource("jobs/job2.json", tokens));
+    batch.add("/test/stateConductorJob/job3.json", jobMeta, loadTokenizedResource("jobs/job3.json", tokens));
+    batch.add("/test/stateConductorJob/job4.json", jobMeta, loadTokenizedResource("jobs/job4.json", tokens));
+    batch.add("/test/stateConductorJob/job5.json", jobMeta, loadTokenizedResource("jobs/job5.json", tokens));
     getJobsManager().write(batch);
 
     // add data docs
@@ -76,7 +84,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     StateConductorJob jobDoc;
 
     uris = service.getJobs(1000, null, null).toArray(String[]::new);
-    assertTrue(5 <= uris.length);
+    assertTrue(3 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
       String flowStatus = getJobDocument(uris[i]).getFlowStatus();
       assertTrue((flowStatus.equals("new") || flowStatus.equals("working")));

@@ -857,6 +857,7 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
  * @returns boolean response of the module
  */
 function executeConditionModule(modulePath, uri, params, context, { database, modules }) {
+
   let resp = invokeOrApplyFunction(() => {
     const conditionModule = require(modulePath);
     if (typeof conditionModule.checkCondition === 'function') {
@@ -1149,6 +1150,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
   let uris =
 
     invokeOrApplyFunction(() => {
+declareUpdate();
       let waitingURIJobsForEvent =
 
         cts.uris(null, null,
@@ -1208,7 +1210,7 @@ function getJobDocuments(options) {
     const count = options.count || 100;
     const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
     const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
-    const resumeWait = Array.isArray(options.resumeWait) ? options.resumeWait : true;
+    const resumeWait = (options.resumeWait) ? options.resumeWait : true;
 
     let uris = [];
 

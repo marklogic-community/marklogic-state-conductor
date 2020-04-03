@@ -21,7 +21,8 @@ let options = {
   flowStatus: [sc.FLOW_STATUS_NEW, sc.FLOW_STATUS_WORKING],
   flowNames: flowNames,
   startDate: null,
-  endDate: null
+  endDate: null,
+  resumeWait: true
 };
 
 const uris = sc.getJobDocuments(options);

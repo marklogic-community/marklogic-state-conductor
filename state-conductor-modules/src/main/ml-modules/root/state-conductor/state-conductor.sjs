@@ -28,12 +28,12 @@ const FLOW_STATUS_FAILED = 'failed';
 const FLOW_NEW_STEP = 'NEW';
 const DATE_TIME_REGEX = '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
-const STATE_CHOICE = 'choice';
-const STATE_FAIL = 'fail';
-const STATE_PASS = 'pass';
-const STATE_SUCCEED = 'succeed';
-const STATE_TASK = 'task';
-const STATE_WAIT = 'wait';
+const STATE_CHOICE = "choice";
+const STATE_FAIL = "fail";
+const STATE_PASS = "pass";
+const STATE_SUCCEED = "succeed";
+const STATE_TASK = "task";
+const STATE_WAIT = "wait";
 
 const SUPPORTED_STATE_TYPES = [
   STATE_CHOICE,
@@ -343,18 +343,26 @@ function processJob(uri) {
     executeStateByJobDoc(jobDoc);
     // continue processing
     return true;
+  } else if (FLOW_STATUS_WATING === status) {
+           // execute resume
+           resumeWaitingJobByJobDoc(jobDoc, "processJob");
+           // continue processing
+           return true;
   } else if (FLOW_STATUS_NEW === status) {
-    // job document is not being processed, grab the embedded flow, and start the initial state
-    // begin the flow processing
-    startProcessingFlowByJobDoc(jobDoc);
-    // continue processing
-    return true;
+           // job document is not being processed, grab the embedded flow, and start the initial state
+           // begin the flow processing
+           startProcessingFlowByJobDoc(jobDoc);
+           // continue processing
+           return true;
   } else {
-    // we're done processing the flow
-    xdmp.trace(TRACE_EVENT, `state-conductor flow completed for job document "${uri}"`);
-    // end processing
-    return false;
-  }
+           // we're done processing the flow
+           xdmp.trace(
+             TRACE_EVENT,
+             `state-conductor flow completed for job document "${uri}"`
+           );
+           // end processing
+           return false;
+   }
 }
 
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
@@ -885,7 +893,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
   }
 
   let jobObj;
-  
+
   if (save) {
      let jobDoc = cts.doc(uri);
      jobObj = jobDoc.toObject();
@@ -1196,32 +1204,58 @@ function getJobDocuments(options) {
     "http://marklogic.com/state-conductor/privilege/execute",
     "execute"
   );
-  const count = options.count || 100;
-  const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
-  const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
-  let uris = [];
+    const count = options.count || 100;
+    const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
+    const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
+    const resumeWait = Array.isArray(options.resumeWait) ? options.resumeWait : true;
 
-  invokeOrApplyFunction(() => {
-    const queries = [
-      cts.collectionQuery('stateConductorJob'),
-      cts.jsonPropertyValueQuery('flowStatus', flowStatus)
-    ];
+    let uris = [];
 
-    if (flowNames.length > 0) {
-      queries.push(cts.jsonPropertyValueQuery('flowName', flowNames));
-    }
-    if (options.startDate) {
-      queries.push(cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(options.startDate)));
-    }
-    if (options.endDate) {
-      queries.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(options.endDate)));
-    }
+    invokeOrApplyFunction(
+      () => {
+        const queries = [
+          cts.collectionQuery("stateConductorJob"),
+          cts.jsonPropertyValueQuery("flowStatus", flowStatus)
+        ];
 
-    uris = uris.concat(cts.uris('', ['document', `limit=${count}`], cts.andQuery(queries)).toArray());
-  }, {
-    database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
-  });
-
+        if (flowNames.length > 0) {
+          queries.push(cts.jsonPropertyValueQuery("flowName", flowNames));
+        }
+        if (options.startDate) {
+          queries.push(
+            cts.jsonPropertyRangeQuery(
+              "createdDate",
+              ">=",
+              xs.dateTime(options.startDate)
+            )
+          );
+        }
+        if (options.endDate) {
+          queries.push(
+            cts.jsonPropertyRangeQuery(
+              "createdDate",
+              "<=",
+              xs.dateTime(options.endDate)
+            )
+          );
+        }
+        if (!resumeWait) {
+          uris = uris.concat(
+            cts
+              .uris("", ["document", `limit=${count}`], cts.andQuery(queries))
+              .toArray()
+          );
+        } else {
+          uris = uris.concat(cts .uris( "",["document", `limit=${count}`], cts.orQuery([
+                  cts.andQuery(queries), cts.andQuery([cts.collectionQuery("stateConductorJob"),
+                    cts.jsonPropertyScopeQuery( "currentlyWaiting",
+                    cts.jsonPropertyRangeQuery(  "nextTaskTime", "<=", fn.currentDateTime())) ]) ]) ) .toArray());
+              }
+      },
+      {
+        database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
+      }
+    );
   return uris;
 }
 

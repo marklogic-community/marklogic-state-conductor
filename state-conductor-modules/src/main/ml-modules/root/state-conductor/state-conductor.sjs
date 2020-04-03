@@ -831,6 +831,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
  */
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
   let resp = invokeOrApplyFunction(() => {
+  declareUpdate ()
     const actionModule = require(modulePath);
     if (typeof actionModule.performAction === 'function') {
       return actionModule.performAction(uri, lib.materializeParameters(params, context), context);

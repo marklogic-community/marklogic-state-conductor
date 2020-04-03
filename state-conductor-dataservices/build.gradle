@@ -17,15 +17,6 @@ plugins {
   id 'com.marklogic.ml-development-tools' version '4.2.0'
 }
 
-repositories {
-  jcenter()
-  mavenLocal()
-  maven {url "http://developer.marklogic.com/maven2/"}
-}
-
-group = "com.marklogic"
-version = "0.5.0"
-
 test {
   useJUnitPlatform()
 }

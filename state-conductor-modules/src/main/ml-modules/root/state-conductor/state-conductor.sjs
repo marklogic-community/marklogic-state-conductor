@@ -1210,8 +1210,7 @@ function getJobDocuments(options) {
     const count = options.count || 100;
     const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
     const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
-    const resumeWait = (options.resumeWait) ? options.resumeWait : true;
-
+    const resumeWait = options.resumeWait
     let uris = [];
 
     invokeOrApplyFunction(
@@ -1242,18 +1241,36 @@ function getJobDocuments(options) {
             )
           );
         }
-        if (!resumeWait) {
+        if (fn.exists(resumeWait) && resumeWait === false) {
           uris = uris.concat(
             cts
               .uris("", ["document", `limit=${count}`], cts.andQuery(queries))
               .toArray()
           );
         } else {
-          uris = uris.concat(cts .uris( "",["document", `limit=${count}`], cts.orQuery([
-                  cts.andQuery(queries), cts.andQuery([cts.collectionQuery("stateConductorJob"),
-                    cts.jsonPropertyScopeQuery( "currentlyWaiting",
-                    cts.jsonPropertyRangeQuery(  "nextTaskTime", "<=", fn.currentDateTime())) ]) ]) ) .toArray());
-              }
+          uris = uris.concat(
+            cts
+              .uris(
+                "",
+                ["document", `limit=${count}`],
+                cts.orQuery([
+                  cts.andQuery(queries),
+                  cts.andQuery([
+                    cts.collectionQuery("stateConductorJob"),
+                    cts.jsonPropertyScopeQuery(
+                      "currentlyWaiting",
+                      cts.jsonPropertyRangeQuery(
+                        "nextTaskTime",
+                        "<=",
+                        fn.currentDateTime()
+                      )
+                    )
+                  ])
+                ])
+              )
+              .toArray()
+          );
+        }
       },
       {
         database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)

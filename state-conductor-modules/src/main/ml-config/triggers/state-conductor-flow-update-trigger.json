@@ -1,0 +1,21 @@
+{
+  "name": "state-conductor-flow-update-trigger",
+  "description": "Validate condctor Flow Files at deployment",
+  "event": {
+    "data-event": {
+      "collection-scope": {
+        "uri": "state-conductor-flow"
+      },
+      "document-content": {
+        "update-kind": "modify"
+      },
+      "when": "pre-commit"
+    }
+  },
+  "module": "state-conductor/trigger/state-conductor-flow-trigger.sjs",
+  "module-db": "%%MODULES_DATABASE%%",
+  "module-root": "/",
+  "enabled": true,
+  "recursive": false,
+  "task-priority": "normal"
+}

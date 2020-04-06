@@ -1,7 +1,7 @@
 .gradle
+.idea
 .tmp
 build
 gradle-local.properties
-state-conductor-cpf/.*
 *.settings*
 *.classpath

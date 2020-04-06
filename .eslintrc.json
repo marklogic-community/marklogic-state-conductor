@@ -1,5 +1,5 @@
 {
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended", "prettier"],
   "env": {
     "commonjs": true,
     "es6": true
@@ -27,7 +27,8 @@
     "XMLDocument": false,
     "ObjectNode": false,
     "Document": false,
-    "Value": false,
-    "declareUpdate": false
+    "declareUpdate": false,
+    "console": false,
+    "Value": false
   }
 }

@@ -1,0 +1,15 @@
+{
+  "functionName": "processJob",
+  "desc": "Invokes the processing of a MarkLogic State Conductor Job",
+  "params": [
+    {
+      "name": "uri",
+      "datatype": "string",
+      "desc": "The uri of a State Conductor Job document to be processed",
+      "nullable": false
+    }
+  ],
+  "return": {
+    "datatype": "boolean"
+  }
+}

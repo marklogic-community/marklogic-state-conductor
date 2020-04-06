@@ -9,11 +9,14 @@ var count;
 var flowNames;
 var flowStatus;
 
-xdmp.trace(sc.TRACE_EVENT, Sequence.from([
-  `Count: ${count}`,
-  `flowNames: ${xdmp.describe(flowNames)}`,
-  `flowStatus: ${xdmp.describe(flowStatus)}`
-]));
+xdmp.trace(
+  sc.TRACE_EVENT,
+  Sequence.from([
+    `Count: ${count}`,
+    `flowNames: ${xdmp.describe(flowNames)}`,
+    `flowStatus: ${xdmp.describe(flowStatus)}`,
+  ])
+);
 
 if (!count) {
   count = 1000;
@@ -38,7 +41,7 @@ let options = {
   flowStatus: flowStatus,
   flowNames: flowNames,
   startDate: null,
-  endDate: null
+  endDate: null,
 };
 
 const uris = sc.getJobDocuments(options);

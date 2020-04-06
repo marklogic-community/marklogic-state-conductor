@@ -2,7 +2,9 @@
 
 const lib = require('/state-conductor/state-conductor-lib.sjs');
 
-const configuration  = setDefaultconfiguration(require('/state-conductor/configuration.sjs').configuration);
+const configuration = setDefaultconfiguration(
+  require('/state-conductor/configuration.sjs').configuration
+);
 
 // configurable //
 const STATE_CONDUCTOR_JOBS_DB = configuration.databases.jobs;
@@ -13,7 +15,6 @@ const JOB_COLLECTION = configuration.collections.job;
 const FLOW_COLLECTION = configuration.collections.flow;
 const FLOW_DIRECTORY = configuration.URIPrefixes.flow;
 const JOB_DIRECTORY = configuration.URIPrefixes.job;
-
 
 // non-configurable //
 const JOB_DOC_READ_PERMISSION = 'state-conductor-reader-role';
@@ -27,14 +28,15 @@ const FLOW_STATUS_WATING = 'waiting';
 const FLOW_STATUS_COMPLETE = 'complete';
 const FLOW_STATUS_FAILED = 'failed';
 const FLOW_NEW_STEP = 'NEW';
-const DATE_TIME_REGEX = '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
+const DATE_TIME_REGEX =
+  '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
-const STATE_CHOICE = "choice";
-const STATE_FAIL = "fail";
-const STATE_PASS = "pass";
-const STATE_SUCCEED = "succeed";
-const STATE_TASK = "task";
-const STATE_WAIT = "wait";
+const STATE_CHOICE = 'choice';
+const STATE_FAIL = 'fail';
+const STATE_PASS = 'pass';
+const STATE_SUCCEED = 'succeed';
+const STATE_TASK = 'task';
+const STATE_WAIT = 'wait';
 
 const SUPPORTED_STATE_TYPES = [
   STATE_CHOICE,
@@ -42,7 +44,7 @@ const SUPPORTED_STATE_TYPES = [
   STATE_PASS,
   STATE_SUCCEED,
   STATE_TASK,
-  STATE_WAIT
+  STATE_WAIT,
 ];
 
 const parseSerializedQuery = (serializedQuery) => {
@@ -55,22 +57,22 @@ const parseSerializedQuery = (serializedQuery) => {
  * @param {*} configuration
  * @returns configuration
  */
-function setDefaultconfiguration(configuration){
+function setDefaultconfiguration(configuration) {
   const defaults = {
-    'databases': {
-      'jobs': 'state-conductor-jobs',
-      'triggers': 'state-conductor-triggers',
-      'schemas': 'state-conductor-schemas'
+    databases: {
+      jobs: 'state-conductor-jobs',
+      triggers: 'state-conductor-triggers',
+      schemas: 'state-conductor-schemas',
     },
-    'collections': {
-      'item': 'state-conductor-item',
-      'job': 'stateConductorJob',
-      'flow': 'state-conductor-flow'
+    collections: {
+      item: 'state-conductor-item',
+      job: 'stateConductorJob',
+      flow: 'state-conductor-flow',
     },
-    'URIPrefixes': {
-      'flow': '/state-conductor-flow/',
-      'job': '/stateConductorJob/'
-    }
+    URIPrefixes: {
+      flow: '/state-conductor-flow/',
+      job: '/stateConductorJob/',
+    },
   };
 
   return Object.assign(defaults, configuration);
@@ -89,11 +91,14 @@ function invokeOrApplyFunction(functionIn, optionsIn) {
   // often tiems the moduels database isnt set
   const defaultOptions = {
     database: xdmp.database(),
-    modules: xdmp.modulesDatabase()
+    modules: xdmp.modulesDatabase(),
   };
   const options = Object.assign(defaultOptions, optionsIn);
 
-  if (options.database.toString() === xdmp.database().toString() && options.modules.toString() === xdmp.modulesDatabase().toString()) {
+  if (
+    options.database.toString() === xdmp.database().toString() &&
+    options.modules.toString() === xdmp.modulesDatabase().toString()
+  ) {
     //the content and the modules database are already in this context
     //we just apply the function and convert it to a sequence so that it makes the invoke function
     return fn.subsequence(functionIn(), 1);
@@ -112,27 +117,34 @@ function invokeOrApplyFunction(functionIn, optionsIn) {
  */
 function getFlowDocument(name) {
   let nameWithExtension = fn.normalizeSpace(name) + FLOW_FILE_EXTENSION;
-  const uri = fn.head(cts.uriMatch('*' + nameWithExtension,
-    [
-      'document',
-      'case-sensitive'
-    ],
-    cts.collectionQuery(FLOW_COLLECTION)
-  ));
+  const uri = fn.head(
+    cts.uriMatch(
+      '*' + nameWithExtension,
+      ['document', 'case-sensitive'],
+      cts.collectionQuery(FLOW_COLLECTION)
+    )
+  );
 
   if (fn.docAvailable(uri)) {
     return cts.doc(uri);
   } else {
-    return fn.error(null, 'MISSING-FLOW-FILE', 'Cannot find a a flow file with the name: ' + name);
+    return fn.error(
+      null,
+      'MISSING-FLOW-FILE',
+      'Cannot find a a flow file with the name: ' + name
+    );
   }
 }
 
 function getFlowDocumentFromDatabase(name, databaseId) {
-  let resp = invokeOrApplyFunction(() => {
-    return getFlowDocument(name);
-  }, {
-    database: databaseId
-  });
+  let resp = invokeOrApplyFunction(
+    () => {
+      return getFlowDocument(name);
+    },
+    {
+      database: databaseId,
+    }
+  );
   return fn.head(resp);
 }
 
@@ -151,7 +163,10 @@ function getFlowDocuments() {
  * @returns
  */
 function getFlowNames() {
-  return cts.uris('/', ['document'], cts.collectionQuery(FLOW_COLLECTION)).toArray().map(uri => getFlowNameFromUri(uri));
+  return cts
+    .uris('/', ['document'], cts.collectionQuery(FLOW_COLLECTION))
+    .toArray()
+    .map((uri) => getFlowNameFromUri(uri));
 }
 
 /**
@@ -163,7 +178,9 @@ function getFlowNames() {
 function getFlowNameFromUri(uri) {
   uri = uri.toString();
   uri = uri.slice(uri.lastIndexOf('/') + 1);
-  return uri.lastIndexOf(FLOW_FILE_EXTENSION) !== -1 ? uri.slice(0, uri.lastIndexOf(FLOW_FILE_EXTENSION)) : uri;
+  return uri.lastIndexOf(FLOW_FILE_EXTENSION) !== -1
+    ? uri.slice(0, uri.lastIndexOf(FLOW_FILE_EXTENSION))
+    : uri;
 }
 
 /**
@@ -174,11 +191,14 @@ function getFlowNameFromUri(uri) {
  */
 function getInitialState({ flowName, StartAt }) {
   if (!StartAt || StartAt.length === 0) {
-    fn.error(null, 'INVALID-STATE-DEFINITION', `no "StartAt" defined for state machine "${flowName}"`);
+    fn.error(
+      null,
+      'INVALID-STATE-DEFINITION',
+      `no "StartAt" defined for state machine "${flowName}"`
+    );
   }
   return StartAt;
 }
-
 
 /**
  * Gets the value of the property which links a document to a State Conductor job
@@ -188,18 +208,19 @@ function getInitialState({ flowName, StartAt }) {
  * @returns
  */
 function getJobMetadatProperty(uri, flowName) {
-
   xdmp.securityAssert(
     'http://marklogic.com/state-conductor/privilege/execute',
     'execute'
   );
   if (fn.docAvailable(uri)) {
-    return xdmp.documentGetProperties(uri, fn.QName('', FLOW_JOBID_PROP_NAME))
+    return xdmp
+      .documentGetProperties(uri, fn.QName('', FLOW_JOBID_PROP_NAME))
       .toArray()
-      .filter(prop => prop.getAttributeNode('flow-name').nodeValue === flowName);
+      .filter(
+        (prop) => prop.getAttributeNode('flow-name').nodeValue === flowName
+      );
   }
 }
-
 
 /**
  * Links the given document to a state conductor job
@@ -213,7 +234,7 @@ function addJobMetadata(uri, flowName, jobId) {
   builder.startElement(FLOW_JOBID_PROP_NAME);
   builder.addAttribute('flow-name', flowName);
   builder.addAttribute('job-id', jobId);
-  builder.addAttribute('date', (new Date()).toISOString());
+  builder.addAttribute('date', new Date().toISOString());
   builder.endElement();
   let jobMetaElem = builder.toNode();
   xdmp.documentAddProperties(uri, [jobMetaElem]);
@@ -225,7 +246,7 @@ function getJobIds(uri, flowName) {
     'execute'
   );
   const jobProps = getJobMetadatProperty(uri, flowName);
-  return jobProps.map(prop => prop.getAttributeNode('job-id').nodeValue);
+  return jobProps.map((prop) => prop.getAttributeNode('job-id').nodeValue);
 }
 
 /**
@@ -238,10 +259,11 @@ function getJobIds(uri, flowName) {
 function checkFlowContext(uri, flow) {
   if (fn.docAvailable(uri)) {
     const query = getFlowContextQuery(flow);
-    const uris = cts.uris('', 'limit=1', cts.andQuery([
-      cts.documentQuery(uri),
-      query
-    ]));
+    const uris = cts.uris(
+      '',
+      'limit=1',
+      cts.andQuery([cts.documentQuery(uri), query])
+    );
     return uri === fn.string(fn.head(uris));
   }
 
@@ -256,15 +278,18 @@ function checkFlowContext(uri, flow) {
  * @returns
  */
 function getApplicableFlows(uri) {
-  const flows = getFlowDocuments().toArray().filter(flow => {
-    let flowName = getFlowNameFromUri(fn.documentUri(flow));
-    let flowOjb = flow.toObject();
-    return getJobIds(uri, flowName).length === 0 && checkFlowContext(uri, flowOjb);
-  });
+  const flows = getFlowDocuments()
+    .toArray()
+    .filter((flow) => {
+      let flowName = getFlowNameFromUri(fn.documentUri(flow));
+      let flowOjb = flow.toObject();
+      return (
+        getJobIds(uri, flowName).length === 0 && checkFlowContext(uri, flowOjb)
+      );
+    });
 
   return flows;
 }
-
 
 /**
  * Given a flow, generate a cts query for it's context
@@ -275,7 +300,7 @@ function getApplicableFlows(uri) {
 function getFlowContextQuery(flow) {
   const domain = flow.mlDomain;
   const context = domain.context || [];
-  let queries = context.map(ctx => {
+  let queries = context.map((ctx) => {
     if (ctx.scope === 'collection') {
       return cts.collectionQuery(ctx.value);
     } else if (ctx.scope === 'directory') {
@@ -297,14 +322,15 @@ function getFlowContextQuery(flow) {
   return queries;
 }
 
-
 /**
  * Generate a cts query matching the context of all flows
  *
  * @returns
  */
 function getAllFlowsContextQuery() {
-  let queries = getFlowDocuments().toArray().map(flow => getFlowContextQuery(flow.toObject()));
+  let queries = getFlowDocuments()
+    .toArray()
+    .map((flow) => getFlowContextQuery(flow.toObject()));
 
   if (queries.length === 0) {
     queries = cts.falseQuery();
@@ -317,7 +343,6 @@ function getAllFlowsContextQuery() {
   return queries;
 }
 
-
 /**
  * Main unit of processing for a job document.  Performs state actions and transitions to next state.
  *
@@ -329,10 +354,17 @@ function processJob(uri) {
     'http://marklogic.com/state-conductor/privilege/execute',
     'execute'
   );
-  xdmp.trace(TRACE_EVENT, `state-conductor job processing for job document "${uri}"`);
+  xdmp.trace(
+    TRACE_EVENT,
+    `state-conductor job processing for job document "${uri}"`
+  );
   // sanity check
   if (!fn.docAvailable(uri)) {
-    fn.error(null, 'INVALID-JOB-DOCUMENT', `State Conductor job document "${uri}" not found!`);
+    fn.error(
+      null,
+      'INVALID-JOB-DOCUMENT',
+      `State Conductor job document "${uri}" not found!`
+    );
   }
   const jobDoc = cts.doc(uri);
   const job = jobDoc.toObject();
@@ -345,25 +377,25 @@ function processJob(uri) {
     // continue processing
     return true;
   } else if (FLOW_STATUS_WATING === status) {
-           // execute resume
-           resumeWaitingJobByJobDoc(jobDoc, "processJob");
-           // continue processing
-           return true;
+    // execute resume
+    resumeWaitingJobByJobDoc(jobDoc, 'processJob');
+    // continue processing
+    return true;
   } else if (FLOW_STATUS_NEW === status) {
-           // job document is not being processed, grab the embedded flow, and start the initial state
-           // begin the flow processing
-           startProcessingFlowByJobDoc(jobDoc);
-           // continue processing
-           return true;
+    // job document is not being processed, grab the embedded flow, and start the initial state
+    // begin the flow processing
+    startProcessingFlowByJobDoc(jobDoc);
+    // continue processing
+    return true;
   } else {
-           // we're done processing the flow
-           xdmp.trace(
-             TRACE_EVENT,
-             `state-conductor flow completed for job document "${uri}"`
-           );
-           // end processing
-           return false;
-   }
+    // we're done processing the flow
+    xdmp.trace(
+      TRACE_EVENT,
+      `state-conductor flow completed for job document "${uri}"`
+    );
+    // end processing
+    return false;
+  }
 }
 
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
@@ -376,14 +408,20 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
   const status = jobObj.flowStatus;
 
   try {
-
     // sanity check
     if (FLOW_STATUS_NEW !== status) {
-      fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
+      fn.error(
+        null,
+        'INVALID-FLOW-STATUS',
+        'Cannot start a flow not in the NEW status'
+      );
     }
 
     // grab the flow definition from the correct db
-    const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
+    const currFlow = getFlowDocumentFromDatabase(
+      currFlowName,
+      jobObj.database
+    ).toObject();
     currFlow.flowName = jobObj.flowName;
     let initialState = getInitialState(currFlow);
 
@@ -391,20 +429,29 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
     jobObj.flowStatus = FLOW_STATUS_WORKING;
     jobObj.flowState = initialState;
 
-    xdmp.trace(TRACE_EVENT, `adding document to flow: "${currFlowName}" in state: "${initialState}"`);
+    xdmp.trace(
+      TRACE_EVENT,
+      `adding document to flow: "${currFlowName}" in state: "${initialState}"`
+    );
 
     jobObj.provenance.push({
-      date: (new Date()).toISOString(),
+      date: new Date().toISOString(),
       from: FLOW_NEW_STEP,
-      to: initialState
+      to: initialState,
     });
 
     if (save) {
       xdmp.nodeReplace(jobDoc.root, jobObj);
     }
-
   } catch (err) {
-    handleError(err.name, `startProcessingFlowByJobDoc error for flow "${currFlowName}"`, err, jobDoc, jobObj, save);
+    handleError(
+      err.name,
+      `startProcessingFlowByJobDoc error for flow "${currFlowName}"`,
+      err,
+      jobDoc,
+      jobObj,
+      save
+    );
   }
   return jobObj;
 }
@@ -421,7 +468,7 @@ function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
   );
 
   // checks if document is there
-  if (!fn.docAvailable(uri)){
+  if (!fn.docAvailable(uri)) {
     fn.error(null, 'INVALID-JOB-DOCUMENT', `Document Job "${uri}" not found."`);
   }
 
@@ -447,10 +494,15 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   xdmp.trace(TRACE_EVENT, `resumeWaitingJob flow state "${stateName}"`);
 
   try {
-
     // sanity check
     if (FLOW_STATUS_WATING !== flowStatus) {
-      return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot resume a flow that is not in the '+ FLOW_STATUS_WATING +' status');
+      return fn.error(
+        null,
+        'INVALID-FLOW-STATUS',
+        'Cannot resume a flow that is not in the ' +
+          FLOW_STATUS_WATING +
+          ' status'
+      );
     }
 
     flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
@@ -458,11 +510,21 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
     try {
       state = flowObj.States[stateName];
     } catch (e) {
-      return fn.error(null, 'INVALID-STATE-DEFINITION', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+      return fn.error(
+        null,
+        'INVALID-STATE-DEFINITION',
+        `Can't Find the state "${stateName}" in flow "${flowName}"`
+      );
     }
-
   } catch (err) {
-    handleError(err.name, `resumeWaitingJobByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
+    handleError(
+      err.name,
+      `resumeWaitingJobByJobDoc error for flow "${flowName}"`,
+      err,
+      jobDoc,
+      jobObj,
+      save
+    );
   }
 
   try {
@@ -471,16 +533,23 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
 
     jobObj.flowStatus = FLOW_STATUS_WORKING;
     jobObj.provenance.push({
-      date: (new Date()).toISOString(),
+      date: new Date().toISOString(),
       state: stateName,
-      resumeBy: resumeBy
+      resumeBy: resumeBy,
     });
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } catch (err) {
-    return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobDoc);
+    return handleStateFailure(
+      uri,
+      flowName,
+      flowObj,
+      stateName,
+      err,
+      save,
+      jobDoc
+    );
   }
-
 }
 
 /**
@@ -488,10 +557,14 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
  *
  * @param {*} uri - the job document's uri
  */
-function retryJobAtState(uri, stateName = FLOW_NEW_STEP, retriedBy = 'unspecified', save = true) {
-
+function retryJobAtState(
+  uri,
+  stateName = FLOW_NEW_STEP,
+  retriedBy = 'unspecified',
+  save = true
+) {
   // checks if document is there
-  if (!fn.docAvailable(uri)){
+  if (!fn.docAvailable(uri)) {
     fn.error(null, 'INVALID-JOB-DOCUMENT', `Document Job "${uri}" not found."`);
   }
 
@@ -512,10 +585,13 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
   xdmp.trace(TRACE_EVENT, `retryJobAtStateByJobDoc flow state "${stateName}"`);
 
   try {
-
     // sanity check
     if (FLOW_STATUS_FAILED !== flowStatus) {
-      return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot try a flow that is not in the '+ FLOW_STATUS_FAILED +' status');
+      return fn.error(
+        null,
+        'INVALID-FLOW-STATUS',
+        'Cannot try a flow that is not in the ' + FLOW_STATUS_FAILED + ' status'
+      );
     }
 
     flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
@@ -523,11 +599,21 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
     try {
       state = flowObj.States[stateName];
     } catch (e) {
-      return fn.error(null, 'INVALID-STATE-DEFINITION', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+      return fn.error(
+        null,
+        'INVALID-STATE-DEFINITION',
+        `Can't Find the state "${stateName}" in flow "${flowName}"`
+      );
     }
-
   } catch (err) {
-    handleError(err.name, `retryJobAtStateByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
+    handleError(
+      err.name,
+      `retryJobAtStateByJobDoc error for flow "${flowName}"`,
+      err,
+      jobDoc,
+      jobObj,
+      save
+    );
   }
 
   try {
@@ -536,14 +622,22 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
 
     jobObj.flowStatus = FLOW_STATUS_WORKING;
     jobObj.provenance.push({
-      date: (new Date()).toISOString(),
+      date: new Date().toISOString(),
       state: stateName,
-      retriedBy: retriedBy
+      retriedBy: retriedBy,
     });
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } catch (err) {
-    return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
+    return handleStateFailure(
+      uri,
+      flowName,
+      flowObj,
+      stateName,
+      err,
+      save,
+      jobObj
+    );
   }
 }
 
@@ -557,7 +651,6 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
  * @param {*} flowObj - the flow object
  */
 function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
-
   xdmp.securityAssert(
     'http://marklogic.com/state-conductor/privilege/execute',
     'execute'
@@ -567,19 +660,24 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     // determine the next target state and transition
     let targetState = null;
 
-    xdmp.trace(TRACE_EVENT, `executing transitions for state: ${stateName} with status of ${jobObj.flowStatus}`);
+    xdmp.trace(
+      TRACE_EVENT,
+      `executing transitions for state: ${stateName} with status of ${jobObj.flowStatus}`
+    );
 
     if (jobObj.flowStatus === FLOW_STATUS_WATING) {
       xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
 
       jobObj.provenance.push({
-        date: (new Date()).toISOString(),
+        date: new Date().toISOString(),
         state: stateName,
-        waiting: jobObj.currentlyWaiting
+        waiting: jobObj.currentlyWaiting,
       });
-
     } else if (!inTerminalState(jobObj, flowObj)) {
-      xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
+      xdmp.trace(
+        TRACE_EVENT,
+        `transition from non-terminal state: ${stateName}`
+      );
 
       if (STATE_TASK === state.Type.toLowerCase()) {
         targetState = state.Next;
@@ -590,7 +688,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       } else if (STATE_CHOICE === state.Type.toLowerCase()) {
         try {
           if (state.Choices && state.Choices.length > 0) {
-            state.Choices.forEach(choice => {
+            state.Choices.forEach((choice) => {
               if (!targetState) {
                 if (choice.Resource) {
                   let resp = fn.head(
@@ -601,25 +699,46 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
                       jobObj.context,
                       {
                         database: jobObj.database,
-                        modules: jobObj.modules
+                        modules: jobObj.modules,
                       }
                     )
                   );
                   targetState = resp ? choice.Next : null;
                 } else {
-                  fn.error(null, 'INVALID-STATE-DEFINITION', `Choices defined without "Resource" in state "${stateName}"`);
+                  fn.error(
+                    null,
+                    'INVALID-STATE-DEFINITION',
+                    `Choices defined without "Resource" in state "${stateName}"`
+                  );
                 }
               }
             });
             targetState = targetState || state.Default;
           } else {
-            fn.error(null, 'INVALID-STATE-DEFINITION', `no "Choices" defined for Choice state "${stateName}" `);
+            fn.error(
+              null,
+              'INVALID-STATE-DEFINITION',
+              `no "Choices" defined for Choice state "${stateName}" `
+            );
           }
         } catch (err) {
-          return handleStateFailure(xdmp.nodeUri(jobDoc), flowObj.flowName, flowObj, stateName, err, save, jobObj);
+          return handleStateFailure(
+            xdmp.nodeUri(jobDoc),
+            flowObj.flowName,
+            flowObj,
+            stateName,
+            err,
+            save,
+            jobObj
+          );
         }
       } else {
-        fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported transition from state type "${stateName.Type}"` + xdmp.quote(state));
+        fn.error(
+          null,
+          'INVALID-STATE-DEFINITION',
+          `unsupported transition from state type "${stateName.Type}"` +
+            xdmp.quote(state)
+        );
       }
 
       // perform the transition
@@ -627,25 +746,27 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
         jobObj.flowState = targetState;
 
         jobObj.provenance.push({
-          date: (new Date()).toISOString(),
+          date: new Date().toISOString(),
           from: stateName,
-          to: targetState
+          to: targetState,
         });
-
       } else {
-        fn.error(null, 'INVALID-STATE-DEFINITION', `No suitable transition found in non-terminal state "${stateName}"`);
+        fn.error(
+          null,
+          'INVALID-STATE-DEFINITION',
+          `No suitable transition found in non-terminal state "${stateName}"`
+        );
       }
     } else {
-
       xdmp.trace(TRACE_EVENT, `transition complete: ${stateName}`);
 
       // terminal states have no "Next" target state
       jobObj.flowStatus = FLOW_STATUS_COMPLETE; // TODO if is a "Fail" state shouldn't we change to the "failed" status?
 
       jobObj.provenance.push({
-        date: (new Date()).toISOString(),
+        date: new Date().toISOString(),
         from: stateName,
-        to: 'COMPLETED'
+        to: 'COMPLETED',
       });
     }
 
@@ -653,9 +774,15 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     if (save) {
       xdmp.nodeReplace(jobDoc.root, jobObj);
     }
-
   } catch (err) {
-    handleError('TRANSITIONERROR', `transition error for state "${stateName}"`, err, jobDoc, jobObj, save);
+    handleError(
+      'TRANSITIONERROR',
+      `transition error for state "${stateName}"`,
+      err,
+      jobDoc,
+      jobObj,
+      save
+    );
   }
 
   return jobObj;
@@ -667,7 +794,6 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
  * @param {*} jobDoc - the job document
  */
 function executeStateByJobDoc(jobDoc, save = true) {
-
   xdmp.securityAssert(
     'http://marklogic.com/state-conductor/privilege/execute',
     'execute'
@@ -683,10 +809,13 @@ function executeStateByJobDoc(jobDoc, save = true) {
   xdmp.trace(TRACE_EVENT, `flow state "${stateName}"`);
 
   try {
-
     // sanity check
     if (FLOW_STATUS_WORKING !== jobObj.flowStatus) {
-      return fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot execute a flow that is not in the WORKING status');
+      return fn.error(
+        null,
+        'INVALID-FLOW-STATUS',
+        'Cannot execute a flow that is not in the WORKING status'
+      );
     }
 
     flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
@@ -694,11 +823,21 @@ function executeStateByJobDoc(jobDoc, save = true) {
     try {
       state = flowObj.States[stateName];
     } catch (e) {
-      return fn.error(null, 'INVALID-STATE-DEFINITION', `Can't Find the state "${stateName}" in flow "${flowName}"`);
+      return fn.error(
+        null,
+        'INVALID-STATE-DEFINITION',
+        `Can't Find the state "${stateName}" in flow "${flowName}"`
+      );
     }
-
   } catch (err) {
-    handleError(err.name, `executeStateByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
+    handleError(
+      err.name,
+      `executeStateByJobDoc error for flow "${flowName}"`,
+      err,
+      jobDoc,
+      jobObj,
+      save
+    );
   }
 
   if (state) {
@@ -726,47 +865,67 @@ function executeStateByJobDoc(jobDoc, save = true) {
             context,
             {
               database: jobObj.database,
-              modules: jobObj.modules
-            });
+              modules: jobObj.modules,
+            }
+          );
 
           // add the data from the result to the job's context
           if (state.OutputPath && state.OutputPath !== '$') {
             // update the job context with the response optionally modified by the OutputPath config
-            jobObj.context = lib.materializeReferencePath(state.OutputPath, resp);
+            jobObj.context = lib.materializeReferencePath(
+              state.OutputPath,
+              resp
+            );
           } else {
             jobObj.context = resp;
           }
         } else {
-          fn.error(null, 'INVALID-STATE-DEFINITION', `no "Resource" defined for Task state "${stateName}"`);
+          fn.error(
+            null,
+            'INVALID-STATE-DEFINITION',
+            `no "Resource" defined for Task state "${stateName}"`
+          );
         }
       } else if (state.Type && state.Type.toLowerCase() === STATE_PASS) {
-
         if (state.Result) {
           let result = state.Result;
 
           // add the data from the result to the job's context
           if (state.OutputPath && state.OutputPath !== '$') {
             // update the job context with the result data optionally modified by the OutputPath config
-            jobObj.context = lib.materializeReferencePath(state.OutputPath, result);
+            jobObj.context = lib.materializeReferencePath(
+              state.OutputPath,
+              result
+            );
           } else {
             jobObj.context = result;
           }
         }
-
-      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Event) {
+      } else if (
+        state.Type &&
+        state.Type.toLowerCase() === STATE_WAIT &&
+        state.Event
+      ) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
         if (state.Event) {
           jobObj.currentlyWaiting = {
-            event: state.Event
+            event: state.Event,
           };
           jobObj.flowStatus = FLOW_STATUS_WATING;
         } else {
-          fn.error(null, 'INVALID-STATE-DEFINITION', `no "Event" defined for Task state "${stateName}"`);
+          fn.error(
+            null,
+            'INVALID-STATE-DEFINITION',
+            `no "Event" defined for Task state "${stateName}"`
+          );
         }
-      }
-      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Seconds) {
+      } else if (
+        state.Type &&
+        state.Type.toLowerCase() === STATE_WAIT &&
+        state.Seconds
+      ) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
         if (state.Seconds) {
@@ -774,48 +933,94 @@ function executeStateByJobDoc(jobDoc, save = true) {
           let WaitTimeToMinutes = Math.floor(waitTime / 60);
           let currentTime = fn.currentDateTime();
           let WaitTimeToSeconds = waitTime - WaitTimeToMinutes * 60;
-          let nextTaskTime = currentTime.add(xs.dayTimeDuration('PT' + WaitTimeToMinutes + 'M' + WaitTimeToSeconds + 'S'));
-          xdmp.trace(TRACE_EVENT, `waiting for state nextTaskTime : ${nextTaskTime}`);
+          let nextTaskTime = currentTime.add(
+            xs.dayTimeDuration(
+              'PT' + WaitTimeToMinutes + 'M' + WaitTimeToSeconds + 'S'
+            )
+          );
+          xdmp.trace(
+            TRACE_EVENT,
+            `waiting for state nextTaskTime : ${nextTaskTime}`
+          );
           jobObj.currentlyWaiting = {
             seconds: state.Seconds,
-            nextTaskTime: nextTaskTime
+            nextTaskTime: nextTaskTime,
           };
           jobObj.flowStatus = FLOW_STATUS_WATING;
         } else {
-          fn.error(null, 'INVALID-STATE-DEFINITION', `no "Seconds" defined for Task state "${stateName}"`);
+          fn.error(
+            null,
+            'INVALID-STATE-DEFINITION',
+            `no "Seconds" defined for Task state "${stateName}"`
+          );
         }
-      }
-      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Timestamp) {
+      } else if (
+        state.Type &&
+        state.Type.toLowerCase() === STATE_WAIT &&
+        state.Timestamp
+      ) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state Timestamp : ${stateName}`);
         if (state.Timestamp) {
           xdmp.trace(TRACE_EVENT, ` timestamp  value is : ${state.Timestamp}`);
           let timestamp = state.Timestamp;
           if (fn.matches(timestamp, DATE_TIME_REGEX)) {
-            xdmp.trace(TRACE_EVENT, ` pass regex check  value is : ${timestamp}`);
-            let nextTaskTime = xdmp.parseDateTime('[Y0001]-[M01]-[D01]T[H01]:[m01]:[f1]', timestamp);
+            xdmp.trace(
+              TRACE_EVENT,
+              ` pass regex check  value is : ${timestamp}`
+            );
+            let nextTaskTime = xdmp.parseDateTime(
+              '[Y0001]-[M01]-[D01]T[H01]:[m01]:[f1]',
+              timestamp
+            );
             if (nextTaskTime < fn.currentDateTime()) {
-              xdmp.trace(TRACE_EVENT, `Time for Schedule task has passed : ${nextTaskTime}`);
+              xdmp.trace(
+                TRACE_EVENT,
+                `Time for Schedule task has passed : ${nextTaskTime}`
+              );
             }
             jobObj.currentlyWaiting = {
               timestamp: timestamp,
-              nextTaskTime: nextTaskTime
+              nextTaskTime: nextTaskTime,
             };
           } else {
-            fn.error(null, 'INVALID-STATE-DEFINITION', ` "Timestamp" not valid time for Task state "${stateName}"`);
+            fn.error(
+              null,
+              'INVALID-STATE-DEFINITION',
+              ` "Timestamp" not valid time for Task state "${stateName}"`
+            );
           }
 
           jobObj.flowStatus = FLOW_STATUS_WATING;
         } else {
-          fn.error(null, 'INVALID-STATE-DEFINITION', `no "Timestamp" defined for Task state "${stateName}"`);
+          fn.error(
+            null,
+            'INVALID-STATE-DEFINITION',
+            `no "Timestamp" defined for Task state "${stateName}"`
+          );
         }
       }
     } catch (err) {
-      return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
+      return handleStateFailure(
+        uri,
+        flowName,
+        flowObj,
+        stateName,
+        err,
+        save,
+        jobObj
+      );
     }
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } else {
-    handleError('INVALID-STATE-DEFINITION', Sequence.from([`state "${stateName}" not found in flow`]), null, jobDoc, jobObj, save);
+    handleError(
+      'INVALID-STATE-DEFINITION',
+      Sequence.from([`state "${stateName}" not found in flow`]),
+      null,
+      jobDoc,
+      jobObj,
+      save
+    );
   }
 }
 
@@ -829,22 +1034,38 @@ function executeStateByJobDoc(jobDoc, save = true) {
  * @param {*} options { database, modules } the execution context of the module
  * @returns the action module's resposne
  */
-function executeActionModule(modulePath, uri, params, context, { database, modules }) {
-  let resp = invokeOrApplyFunction(() => {
-    declareUpdate();
-    const actionModule = require(modulePath);
-    if (typeof actionModule.performAction === 'function') {
-      return actionModule.performAction(uri, lib.materializeParameters(params, context), context);
-    } else {
-      fn.error(null, 'INVALID-STATE-DEFINITION', `no "performAction" function defined for action module "${modulePath}"`);
+function executeActionModule(
+  modulePath,
+  uri,
+  params,
+  context,
+  { database, modules }
+) {
+  let resp = invokeOrApplyFunction(
+    () => {
+      declareUpdate();
+      const actionModule = require(modulePath);
+      if (typeof actionModule.performAction === 'function') {
+        return actionModule.performAction(
+          uri,
+          lib.materializeParameters(params, context),
+          context
+        );
+      } else {
+        fn.error(
+          null,
+          'INVALID-STATE-DEFINITION',
+          `no "performAction" function defined for action module "${modulePath}"`
+        );
+      }
+    },
+    {
+      database: database ? database : xdmp.database(),
+      modules: modules ? modules : xdmp.modulesDatabase(),
     }
-  }, {
-    database: database ? database : xdmp.database(),
-    modules: modules ? modules : xdmp.modulesDatabase()
-  });
+  );
   return fn.head(resp);
 }
-
 
 /**
  * Invokes a Choice state's condition module
@@ -856,19 +1077,35 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
  * @param {*} options { database, modules } the execution context of the module
  * @returns boolean response of the module
  */
-function executeConditionModule(modulePath, uri, params, context, { database, modules }) {
-
-  let resp = invokeOrApplyFunction(() => {
-    const conditionModule = require(modulePath);
-    if (typeof conditionModule.checkCondition === 'function') {
-      return conditionModule.checkCondition(uri, lib.materializeParameters(params, context), context);
-    } else {
-      fn.error(null, 'INVALID-STATE-DEFINITION', `no "checkCondition" function defined for condition module "${modulePath}"`);
+function executeConditionModule(
+  modulePath,
+  uri,
+  params,
+  context,
+  { database, modules }
+) {
+  let resp = invokeOrApplyFunction(
+    () => {
+      const conditionModule = require(modulePath);
+      if (typeof conditionModule.checkCondition === 'function') {
+        return conditionModule.checkCondition(
+          uri,
+          lib.materializeParameters(params, context),
+          context
+        );
+      } else {
+        fn.error(
+          null,
+          'INVALID-STATE-DEFINITION',
+          `no "checkCondition" function defined for condition module "${modulePath}"`
+        );
+      }
+    },
+    {
+      database: database ? database : xdmp.database(),
+      modules: modules ? modules : xdmp.modulesDatabase(),
     }
-  }, {
-    database: database ? database : xdmp.database(),
-    modules: modules ? modules : xdmp.modulesDatabase()
-  });
+  );
   return fn.head(resp);
 }
 
@@ -885,13 +1122,25 @@ function executeConditionModule(modulePath, uri, params, context, { database, mo
  * @param {*} jobDoc
  * @returns
  */
-function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jobDocIn) {
+function handleStateFailure(
+  uri,
+  flowName,
+  flow,
+  stateName,
+  err,
+  save = true,
+  jobDocIn
+) {
   const currState = flow.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
 
   if (save && !fn.docAvailable(uri)) {
-    return fn.error(null, 'DOCUMENT-NOT-FOUND', Sequence.from([`the document URI of "${uri}" was not found.`, err]));
+    return fn.error(
+      null,
+      'DOCUMENT-NOT-FOUND',
+      Sequence.from([`the document URI of "${uri}" was not found.`, err])
+    );
   }
 
   let jobDoc;
@@ -904,9 +1153,11 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
     jobObj = jobDocIn;
   }
 
-  if (currState && (
-    STATE_TASK === currState.Type.toLowerCase() ||
-    STATE_CHOICE === currState.Type.toLowerCase())) {
+  if (
+    currState &&
+    (STATE_TASK === currState.Type.toLowerCase() ||
+      STATE_CHOICE === currState.Type.toLowerCase())
+  ) {
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
       let target = currState.Catch.reduce((acc, fallback) => {
@@ -928,9 +1179,9 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
         jobObj.flowStatus = FLOW_STATUS_WORKING;
         jobObj.flowState = target;
         jobObj.provenance.push({
-          date: (new Date()).toISOString(),
+          date: new Date().toISOString(),
           from: stateName,
-          to: target
+          to: target,
         });
         // capture error message in context
         jobObj.errors[stateName] = err;
@@ -943,7 +1194,14 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
       }
     }
   }
-  return handleError('INVALID-STATE-DEFINITION', `no Catch defined for error "${err.name}" in state "${stateName}"`, err, jobDoc, jobObj, save);
+  return handleError(
+    'INVALID-STATE-DEFINITION',
+    `no Catch defined for error "${err.name}" in state "${stateName}"`,
+    err,
+    jobDoc,
+    jobObj,
+    save
+  );
 }
 
 /**
@@ -957,8 +1215,15 @@ function inTerminalState(job, flow) {
   const currStateName = job.flowState;
   let currState = flow.States[currStateName];
 
-  if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
-    fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported state type: "${currState.Type}"`);
+  if (
+    currState &&
+    !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())
+  ) {
+    fn.error(
+      null,
+      'INVALID-STATE-DEFINITION',
+      `unsupported state type: "${currState.Type}"`
+    );
   }
   return (
     !currState ||
@@ -975,38 +1240,51 @@ function inTerminalState(job, flow) {
  * @returns
  */
 function getFlowCounts(flowName, { startDate, endDate }) {
-
   const flow = getFlowDocument(flowName).toObject();
   const states = Object.keys(flow.States);
 
   let baseQuery = [];
   if (startDate) {
-    baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(startDate)));
+    baseQuery.push(
+      cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(startDate))
+    );
   }
   if (endDate) {
-    baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)));
+    baseQuery.push(
+      cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate))
+    );
   }
 
-  const numInStatus = (status) => fn.count(
-    cts.uris('', null,
-      cts.andQuery([].concat(
-        baseQuery,
-        cts.jsonPropertyValueQuery('flowName', flowName),
-        cts.jsonPropertyValueQuery('flowStatus', status)
-      ))
-    )
-  );
+  const numInStatus = (status) =>
+    fn.count(
+      cts.uris(
+        '',
+        null,
+        cts.andQuery(
+          [].concat(
+            baseQuery,
+            cts.jsonPropertyValueQuery('flowName', flowName),
+            cts.jsonPropertyValueQuery('flowStatus', status)
+          )
+        )
+      )
+    );
 
-  const numInState = (status, state) => fn.count(
-    cts.uris('', null,
-      cts.andQuery([].concat(
-        baseQuery,
-        cts.jsonPropertyValueQuery('flowName', flowName),
-        cts.jsonPropertyValueQuery('flowStatus', status),
-        cts.jsonPropertyValueQuery('flowState', state)
-      ))
-    )
-  );
+  const numInState = (status, state) =>
+    fn.count(
+      cts.uris(
+        '',
+        null,
+        cts.andQuery(
+          [].concat(
+            baseQuery,
+            cts.jsonPropertyValueQuery('flowName', flowName),
+            cts.jsonPropertyValueQuery('flowStatus', status),
+            cts.jsonPropertyValueQuery('flowState', state)
+          )
+        )
+      )
+    );
 
   let numComplete = 0;
   let numWorking = 0;
@@ -1018,24 +1296,27 @@ function getFlowCounts(flowName, { startDate, endDate }) {
     totalComplete: numComplete,
     totalWorking: numWorking,
     totalFailed: numFailed,
-    totalNew: numNew
+    totalNew: numNew,
   };
 
-  invokeOrApplyFunction(() => {
-    resp.totalComplete = numInStatus(FLOW_STATUS_COMPLETE);
-    resp.totalWorking = numInStatus(FLOW_STATUS_WORKING);
-    resp.totalNew = numInStatus(FLOW_STATUS_NEW);
-    resp.totalFailed = numInStatus(FLOW_STATUS_FAILED);
+  invokeOrApplyFunction(
+    () => {
+      resp.totalComplete = numInStatus(FLOW_STATUS_COMPLETE);
+      resp.totalWorking = numInStatus(FLOW_STATUS_WORKING);
+      resp.totalNew = numInStatus(FLOW_STATUS_NEW);
+      resp.totalFailed = numInStatus(FLOW_STATUS_FAILED);
 
-    [FLOW_STATUS_WORKING, FLOW_STATUS_COMPLETE].forEach(status => {
-      resp[status] = {};
-      states.forEach(state => {
-        resp[status][state] = numInState(status, state);
+      [FLOW_STATUS_WORKING, FLOW_STATUS_COMPLETE].forEach((status) => {
+        resp[status] = {};
+        states.forEach((state) => {
+          resp[status][state] = numInState(status, state);
+        });
       });
-    });
-  }, {
-    database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
-  });
+    },
+    {
+      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
+    }
+  );
 
   return resp;
 }
@@ -1046,7 +1327,6 @@ function getFlowCounts(flowName, { startDate, endDate }) {
  * @param {*} jobDoc
  */
 function scaffoldJobDoc(jobDoc) {
-
   const needProps = {
     id: null,
     flowName: null,
@@ -1058,7 +1338,7 @@ function scaffoldJobDoc(jobDoc) {
     createdDate: null,
     context: {},
     provenance: [],
-    errors: {}
+    errors: {},
   };
 
   return Object.assign(needProps, jobDoc);
@@ -1074,7 +1354,6 @@ function scaffoldJobDoc(jobDoc) {
  * @param {*} [options={}]
  */
 function createStateConductorJob(flowName, uri, context = {}, options = {}) {
-
   xdmp.securityAssert(
     'http://marklogic.com/state-conductor/privilege/execute',
     'execute'
@@ -1097,25 +1376,31 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     uri: uri,
     database: database,
     modules: modules,
-    createdDate: (new Date()).toISOString(),
+    createdDate: new Date().toISOString(),
     context: context,
-    provenance: []
+    provenance: [],
   });
 
   // insert the job document
-  xdmp.trace(TRACE_EVENT, `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`);
-  invokeOrApplyFunction(() => {
-    declareUpdate();
-    xdmp.documentInsert(jobUri, job, {
-      permissions: [
-        xdmp.permission(JOB_DOC_READ_PERMISSION, 'read'),
-        xdmp.permission(JOB_DOC_WRITE_PERMISSION, 'update')
-      ],
-      collections: collections
-    });
-  }, {
-    database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
-  });
+  xdmp.trace(
+    TRACE_EVENT,
+    `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`
+  );
+  invokeOrApplyFunction(
+    () => {
+      declareUpdate();
+      xdmp.documentInsert(jobUri, job, {
+        permissions: [
+          xdmp.permission(JOB_DOC_READ_PERMISSION, 'read'),
+          xdmp.permission(JOB_DOC_WRITE_PERMISSION, 'update'),
+        ],
+        collections: collections,
+      });
+    },
+    {
+      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
+    }
+  );
 
   // add job metadata to the target document (if one was passed)
   if (uri) {
@@ -1135,8 +1420,15 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
  * @param {*} [options={}]
  * @returns
  */
-function batchCreateStateConductorJob(flowName, uris = [], context = {}, options = {}) {
-  const ids = uris.map(uri => createStateConductorJob(flowName, uri, context, options));
+function batchCreateStateConductorJob(
+  flowName,
+  uris = [],
+  context = {},
+  options = {}
+) {
+  const ids = uris.map((uri) =>
+    createStateConductorJob(flowName, uri, context, options)
+  );
   return ids;
 }
 
@@ -1148,19 +1440,23 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
  * @returns
  */
 function emmitEvent(event, batchSize = 100, save = true) {
-  let uris =
-
-    invokeOrApplyFunction(() => {
+  let uris = invokeOrApplyFunction(
+    () => {
       declareUpdate();
-      let waitingURIJobsForEvent =
-
-        cts.uris(null, null,
+      let waitingURIJobsForEvent = cts
+        .uris(
+          null,
+          null,
           cts.andQuery([
             cts.collectionQuery(JOB_COLLECTION),
             cts.jsonPropertyValueQuery('flowStatus', FLOW_STATUS_WATING),
-            cts.jsonPropertyScopeQuery('currentlyWaiting', cts.jsonPropertyValueQuery('event', event))
+            cts.jsonPropertyScopeQuery(
+              'currentlyWaiting',
+              cts.jsonPropertyValueQuery('event', event)
+            ),
           ])
-        ).toArray();
+        )
+        .toArray();
       /*
       splits the array into groups of the batchSize
       this is to handle the the case where there are many waiting jobs
@@ -1168,32 +1464,29 @@ function emmitEvent(event, batchSize = 100, save = true) {
       var arrayOfwaitingURIJobsForEvent = [];
 
       for (var i = 0; i < waitingURIJobsForEvent.length; i += batchSize) {
-        arrayOfwaitingURIJobsForEvent.push(waitingURIJobsForEvent.slice(i, i + batchSize));
+        arrayOfwaitingURIJobsForEvent.push(
+          waitingURIJobsForEvent.slice(i, i + batchSize)
+        );
       }
 
       //loops through all the arrays
       if (save) {
         arrayOfwaitingURIJobsForEvent.forEach(function (uriArray) {
-
-          xdmp.spawn(
-            '/state-conductor/resumeWaitingJobs.sjs',
-            {
-              'uriArray': uriArray,
-              'resumeBy': 'emmit event: ' + event,
-              'save': save
-            }
-          );
-
+          xdmp.spawn('/state-conductor/resumeWaitingJobs.sjs', {
+            uriArray: uriArray,
+            resumeBy: 'emmit event: ' + event,
+            save: save,
+          });
         });
       }
       return waitingURIJobsForEvent;
-    }, {
-      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
-    });
-
+    },
+    {
+      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
+    }
+  );
 
   return fn.head(uris);
-
 }
 
 /**
@@ -1203,80 +1496,81 @@ function emmitEvent(event, batchSize = 100, save = true) {
  * @returns
  */
 function getJobDocuments(options) {
-
   xdmp.securityAssert(
     'http://marklogic.com/state-conductor/privilege/execute',
     'execute'
   );
-    const count = options.count || 100;
-    const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
-    const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
-    const resumeWait = options.resumeWait
-    let uris = [];
+  const count = options.count || 100;
+  const flowStatus = Array.isArray(options.flowStatus)
+    ? options.flowStatus
+    : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
+  const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
+  const resumeWait = options.resumeWait;
+  let uris = [];
 
-    invokeOrApplyFunction(
-      () => {
-        const queries = [
-          cts.collectionQuery("stateConductorJob"),
-          cts.jsonPropertyValueQuery("flowStatus", flowStatus)
-        ];
+  invokeOrApplyFunction(
+    () => {
+      const queries = [
+        cts.collectionQuery('stateConductorJob'),
+        cts.jsonPropertyValueQuery('flowStatus', flowStatus),
+      ];
 
-        if (flowNames.length > 0) {
-          queries.push(cts.jsonPropertyValueQuery("flowName", flowNames));
-        }
-        if (options.startDate) {
-          queries.push(
-            cts.jsonPropertyRangeQuery(
-              "createdDate",
-              ">=",
-              xs.dateTime(options.startDate)
-            )
-          );
-        }
-        if (options.endDate) {
-          queries.push(
-            cts.jsonPropertyRangeQuery(
-              "createdDate",
-              "<=",
-              xs.dateTime(options.endDate)
-            )
-          );
-        }
-        if (fn.exists(resumeWait) && resumeWait === false) {
-          uris = uris.concat(
-            cts
-              .uris("", ["document", `limit=${count}`], cts.andQuery(queries))
-              .toArray()
-          );
-        } else {
-          uris = uris.concat(
-            cts
-              .uris(
-                "",
-                ["document", `limit=${count}`],
-                cts.orQuery([
-                  cts.andQuery(queries),
-                  cts.andQuery([
-                    cts.collectionQuery("stateConductorJob"),
-                    cts.jsonPropertyScopeQuery(
-                      "currentlyWaiting",
-                      cts.jsonPropertyRangeQuery(
-                        "nextTaskTime",
-                        "<=",
-                        fn.currentDateTime()
-                      )
-                    )
-                  ])
-                ])
-              )
-              .toArray()
-          );
-        }
-      },
-      {
-        database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
+      if (flowNames.length > 0) {
+        queries.push(cts.jsonPropertyValueQuery('flowName', flowNames));
       }
-    );
+      if (options.startDate) {
+        queries.push(
+          cts.jsonPropertyRangeQuery(
+            'createdDate',
+            '>=',
+            xs.dateTime(options.startDate)
+          )
+        );
+      }
+      if (options.endDate) {
+        queries.push(
+          cts.jsonPropertyRangeQuery(
+            'createdDate',
+            '<=',
+            xs.dateTime(options.endDate)
+          )
+        );
+      }
+      if (fn.exists(resumeWait) && resumeWait === false) {
+        uris = uris.concat(
+          cts
+            .uris('', ['document', `limit=${count}`], cts.andQuery(queries))
+            .toArray()
+        );
+      } else {
+        uris = uris.concat(
+          cts
+            .uris(
+              '',
+              ['document', `limit=${count}`],
+              cts.orQuery([
+                cts.andQuery(queries),
+                cts.andQuery([
+                  cts.collectionQuery('stateConductorJob'),
+                  cts.jsonPropertyScopeQuery(
+                    'currentlyWaiting',
+                    cts.jsonPropertyRangeQuery(
+                      'nextTaskTime',
+                      '<=',
+                      fn.currentDateTime()
+                    )
+                  ),
+                ]),
+              ])
+            )
+            .toArray()
+        );
+      }
+    },
+    {
+      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
+    }
+  );
   return uris;
 }
 
@@ -1291,7 +1585,7 @@ function getJobDocuments(options) {
  * @param {*} err the error object if gotten from a catch
  * @param {*} jobObj the job object
  * @param {*} save while to update the job document
-**/
+ **/
 function handleError(name, message, err, jobDoc, jobObj, save = true) {
   xdmp.trace(TRACE_EVENT, name + ':' + message);
   const state = jobObj.flowState || FLOW_NEW_STEP;
@@ -1306,10 +1600,7 @@ function handleError(name, message, err, jobDoc, jobObj, save = true) {
 
   // trigger CPF error state
 
-  fn.error(null, name, Sequence.from([
-    message,
-    err
-  ]));
+  fn.error(null, name, Sequence.from([message, err]));
 
   return jobObj;
 }
@@ -1353,5 +1644,5 @@ module.exports = {
   startProcessingFlowByJobDoc,
   emmitEvent,
   getJobDocuments,
-  invokeOrApplyFunction
+  invokeOrApplyFunction,
 };

@@ -3,7 +3,11 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 function returnError(statusCode, statusMsg, body) {
-  fn.error(null, 'RESTAPI-SRVEXERR', Sequence.from([statusCode, statusMsg, body]));
+  fn.error(
+    null,
+    'RESTAPI-SRVEXERR',
+    Sequence.from([statusCode, statusMsg, body])
+  );
 }
 
 /**
@@ -21,7 +25,7 @@ function get(context, params) {
   const resp = flowNames.reduce((acc, name) => {
     acc[name] = sc.getFlowCounts(name, {
       startDate: startDate,
-      endDate: endDate
+      endDate: endDate,
     });
     return acc;
   }, {});

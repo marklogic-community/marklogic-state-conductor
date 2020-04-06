@@ -3,7 +3,11 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 function returnError(statusCode, statusMsg, body) {
-  fn.error(null, 'RESTAPI-SRVEXERR', Sequence.from([statusCode, statusMsg, body]));
+  fn.error(
+    null,
+    'RESTAPI-SRVEXERR',
+    Sequence.from([statusCode, statusMsg, body])
+  );
 }
 
 /**
@@ -23,7 +27,7 @@ function get(context, params) {
   if (!sc.getFlowDocument(params.flowName)) {
     returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
   }
-  
+
   context.outputStatus = [200, 'Success'];
   return sc.getJobIds(params.uri, params.flowName);
 }

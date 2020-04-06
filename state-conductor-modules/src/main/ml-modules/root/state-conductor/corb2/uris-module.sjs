@@ -23,7 +23,7 @@ let options = {
   flowNames: flowNames,
   startDate: null,
   endDate: null,
-  resumeWait: resumeWait
+  resumeWait: resumeWait,
 };
 
 const uris = sc.getJobDocuments(options);

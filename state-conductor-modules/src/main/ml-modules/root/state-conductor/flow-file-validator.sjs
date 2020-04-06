@@ -17,36 +17,36 @@ const schema = {
               properties: {
                 Type: {
                   type: 'string',
-                  pattern: '^Pass$'
-                }
-              }
+                  pattern: '^Pass$',
+                },
+              },
             },
             {
               type: 'object',
               properties: {
                 Type: {
                   type: 'string',
-                  pattern: '^Succeed$'
-                }
-              }
+                  pattern: '^Succeed$',
+                },
+              },
             },
             {
               type: 'object',
               properties: {
                 Type: {
                   type: 'string',
-                  pattern: '^Fail$'
-                }
-              }
+                  pattern: '^Fail$',
+                },
+              },
             },
             {
               type: 'object',
               properties: {
                 Type: {
                   type: 'string',
-                  pattern: '^Task$'
-                }
-              }
+                  pattern: '^Task$',
+                },
+              },
             },
             {
               type: 'object',
@@ -54,31 +54,31 @@ const schema = {
                 Type: {
                   type: 'string',
                   pattern: '^Wait$',
-                }
-              }
+                },
+              },
             },
             {
               type: 'object',
               properties: {
                 Type: {
                   type: 'string',
-                  pattern: '^Choice$'
-                }
-              }
+                  pattern: '^Choice$',
+                },
+              },
             },
             {
               type: 'object',
               properties: {
                 Type: {
                   type: 'string',
-                  pattern: '^Wait$'
-                }
-              }
-            }
-          ]
-        }
+                  pattern: '^Wait$',
+                },
+              },
+            },
+          ],
+        },
       },
-      additionalProperties: false
+      additionalProperties: false,
     },
     Version: { type: 'string' },
     mlDomain: {
@@ -92,47 +92,47 @@ const schema = {
             properties: {
               scope: {
                 type: 'string',
-                pattern: '^(collection|directory|query|scheduled)$'
+                pattern: '^(collection|directory|query|scheduled)$',
               },
               value: { type: 'string' },
               period: {
                 type: 'number',
-                minimum: 1
+                minimum: 1,
               },
               minute: {
                 type: 'number',
                 minimum: 0,
-                maximum: 59
+                maximum: 59,
               },
               startDate: { type: 'string' },
               startTime: { type: 'string' },
               monthDay: {
                 type: 'number',
                 minimum: 1,
-                maximum: 31
+                maximum: 31,
               },
               days: {
                 type: 'array',
                 minItems: 1,
                 items: {
                   type: 'string',
-                  pattern: '^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$'
-                }
-              }
+                  pattern:
+                    '^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$',
+                },
+              },
             },
             additionalProperties: false,
-            required: ['scope', 'value']
-          }
-        }
+            required: ['scope', 'value'],
+          },
+        },
       },
       additionalProperties: false,
-      required: ['context']
-    }
+      required: ['context'],
+    },
   },
   additionalProperties: false,
-  required: ['StartAt', 'States', 'mlDomain']
+  required: ['StartAt', 'States', 'mlDomain'],
 };
-
 
 /**
  * Given a state conductor flow, validate against the
@@ -145,11 +145,11 @@ function validateFlowFile(flow) {
   try {
     xdmp.jsonValidateNode(flow, schema);
     return true;
-  } catch(err) {
+  } catch (err) {
     return false;
   }
 }
 
 module.exports = {
-  validateFlowFile
+  validateFlowFile,
 };

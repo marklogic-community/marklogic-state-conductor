@@ -3,7 +3,11 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 function returnError(statusCode, statusMsg, body) {
-  fn.error(null, 'RESTAPI-SRVEXERR', Sequence.from([statusCode, statusMsg, body]));
+  fn.error(
+    null,
+    'RESTAPI-SRVEXERR',
+    Sequence.from([statusCode, statusMsg, body])
+  );
 }
 
 /**
@@ -19,7 +23,7 @@ function put(context, params, input) {
   const uris = sc.emmitEvent(event);
 
   const resp = {
-    jobDocumentsResumed: uris
+    jobDocumentsResumed: uris,
   };
 
   context.outputStatus = [200, 'OK'];

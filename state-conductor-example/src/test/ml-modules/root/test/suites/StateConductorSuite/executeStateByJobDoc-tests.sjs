@@ -16,7 +16,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc3.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 error = null;
@@ -43,7 +43,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc3.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 error = null;
@@ -71,7 +71,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc3.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 assertion = sc.executeStateByJobDoc(jobDoc, false);
@@ -89,7 +89,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc3.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 error = null;
@@ -117,7 +117,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 assertion = sc.executeStateByJobDoc(jobDoc, false);
@@ -135,7 +135,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 assertion = sc.executeStateByJobDoc(jobDoc, false);
@@ -157,7 +157,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 assertion = sc.executeStateByJobDoc(jobDoc, false);
@@ -182,7 +182,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc3.json',
   database: 1233456,
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 error = null;
@@ -205,7 +205,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc3.json',
   database: xdmp.database(),
   modules: 12345,
-  provenance: []
+  provenance: [],
 });
 
 error = null;
@@ -228,7 +228,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc3.json',
   database: 12345,
   modules: 12345,
-  provenance: []
+  provenance: [],
 });
 
 error = null;
@@ -251,7 +251,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc3.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 error = null;
@@ -276,7 +276,7 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc3.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 error = null;

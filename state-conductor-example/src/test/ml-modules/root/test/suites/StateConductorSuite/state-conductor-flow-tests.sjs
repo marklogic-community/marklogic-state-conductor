@@ -1,6 +1,6 @@
 'use strict';
 
-const sc   = require('/state-conductor/state-conductor.sjs');
+const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 const assertions = [];
@@ -39,7 +39,10 @@ assertions.push(
 );
 
 assertions.push(
-  test.assertEqual('branching-flow', sc.getFlowNameFromUri(fn.documentUri(branchingFlow))),
+  test.assertEqual(
+    'branching-flow',
+    sc.getFlowNameFromUri(fn.documentUri(branchingFlow))
+  ),
   test.assertEqual('test-flow', sc.getFlowNameFromUri(fn.documentUri(testFlow)))
 );
 

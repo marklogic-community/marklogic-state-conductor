@@ -10,3 +10,5 @@ The proxy service provides the follow functions:
 * `processJob` - invokes the State Conductor processing of a job
 
 The `com.marklogic.StateConductorDriver` main class provides an implemenation of a Driver which can be run stand-alone, or integrated into an existing application.
+ 
+to run the unit tests use the command `gradle test` in this folder after doing the `gradle mldeploy` from the root folder.

@@ -5,14 +5,14 @@ buildscript {
   }
   dependencies {
     classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
-    classpath "com.marklogic:ml-gradle:3.16.1"
+    classpath "com.marklogic:ml-gradle:${mlgradleVersion}"
   }
 }
 
 plugins {
   id "java"
   id "net.saliman.properties" version "1.5.1"
-  id "com.marklogic.ml-gradle" version "3.16.1"
+  id "com.marklogic.ml-gradle" version "${mlgradleVersion}"
 }
 
 dependencies {

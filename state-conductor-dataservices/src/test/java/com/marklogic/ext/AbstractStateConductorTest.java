@@ -136,3 +136,11 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
   }
 
 }
+
+// cpf:restart
+// cpf:any-property state-conductor-domain
+// cpf:create state-conductor-domain
+// cpf:delete state-conductor-domain
+// cpf:state state-conductor-domain
+// cpf:status state-conductor-domain
+// cpf:update state-conductor-domain

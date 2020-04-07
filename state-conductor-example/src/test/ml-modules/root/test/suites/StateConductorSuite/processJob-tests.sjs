@@ -7,7 +7,7 @@ const assertions = [];
 let jobDoc, error, assertion;
 
 //checks a waiting state working
-jobDoc = "/randomUIR/thatis/not/here.json"
+jobDoc = '/randomUIR/thatis/not/here.json';
 
 error = null;
 
@@ -17,6 +17,6 @@ try {
   error = e;
 }
 
-assertions.push(test.assertEqual("INVALID-JOB-DOCUMENT", error.name, "check if job doc is there"))
+assertions.push(test.assertEqual('INVALID-JOB-DOCUMENT', error.name, 'check if job doc is there'));
 
-assertions
+assertions;

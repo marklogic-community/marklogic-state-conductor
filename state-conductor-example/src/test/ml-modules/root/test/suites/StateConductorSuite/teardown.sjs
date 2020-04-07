@@ -2,7 +2,7 @@
 
 declareUpdate();
 
-const sc   = require('/state-conductor/state-conductor.sjs');
+const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 xdmp.directoryDelete('/data/');

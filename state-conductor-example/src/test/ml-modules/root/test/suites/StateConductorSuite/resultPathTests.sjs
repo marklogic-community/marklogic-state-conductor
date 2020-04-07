@@ -9,13 +9,18 @@ let jobDoc, resp, colls;
 let uri = '/data/test-doc1.json';
 
 function isolate(func) {
-  return fn.head(xdmp.invokeFunction(() => {
-    declareUpdate();
-    return func();
-  }, {
-    isolation: 'different-transaction',
-    commit: 'auto'
-  }));
+  return fn.head(
+    xdmp.invokeFunction(
+      () => {
+        declareUpdate();
+        return func();
+      },
+      {
+        isolation: 'different-transaction',
+        commit: 'auto',
+      }
+    )
+  );
 }
 
 // test filtering output by OutputPath
@@ -27,7 +32,7 @@ jobDoc = xdmp.toJSON({
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 resp = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
@@ -38,7 +43,11 @@ assertions.push(
   test.assertEqual('test-col-1', resp.context.collections, 'context was filtered by OutputPath'),
   test.assertEqual('John', resp.context.name.first, 'context was filtered by OutputPath'),
   test.assertEqual('Doe', resp.context.name.last, 'context was filtered by OutputPath'),
-  test.assertEqual('testing, testing, 1-2-3', resp.context.test, 'context was filtered by OutputPath'),
+  test.assertEqual(
+    'testing, testing, 1-2-3',
+    resp.context.test,
+    'context was filtered by OutputPath'
+  ),
   test.assertEqual('add-collections', resp.flowState),
   test.assertFalse(colls.includes('test-col-1'), 'doc does not yet have collection')
 );
@@ -63,14 +72,18 @@ jobDoc = xdmp.toJSON({
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 resp = sc.executeStateByJobDoc(jobDoc, false);
 
 assertions.push(
   test.assertTrue(resp.context !== null, 'context was set'),
-  test.assertEqual(JSON.stringify({ inner: { name: { test: 'test' } } }), JSON.stringify(resp.context), 'context was returned at root level'),
+  test.assertEqual(
+    JSON.stringify({ inner: { name: { test: 'test' } } }),
+    JSON.stringify(resp.context),
+    'context was returned at root level'
+  ),
   test.assertEqual('success', resp.flowState)
 );
 
@@ -82,7 +95,7 @@ jobDoc = xdmp.toJSON({
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
-  provenance: []
+  provenance: [],
 });
 
 resp = sc.executeStateByJobDoc(jobDoc, false);
@@ -107,18 +120,16 @@ jobDoc = xdmp.toJSON({
       nested: {
         deep: {
           collections: 'test-col-2',
-          test: 'hello world'
-        }
-      }
-    }
+          test: 'hello world',
+        },
+      },
+    },
   },
-  provenance: []
+  provenance: [],
 });
 
 colls = isolate(() => xdmp.documentGetCollections(uri));
-assertions.push(
-  test.assertFalse(colls.includes('test-col-2'), 'doc does not yet have collection')
-);
+assertions.push(test.assertFalse(colls.includes('test-col-2'), 'doc does not yet have collection'));
 
 resp = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
 colls = isolate(() => xdmp.documentGetCollections(uri));

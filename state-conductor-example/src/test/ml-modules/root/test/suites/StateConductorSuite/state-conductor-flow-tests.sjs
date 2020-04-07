@@ -1,14 +1,12 @@
 'use strict';
 
-const sc   = require('/state-conductor/state-conductor.sjs');
+const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 const assertions = [];
 
 const flowDocuments = sc.getFlowDocuments().toArray();
-assertions.push(
-  test.assertEqual(10, flowDocuments.length, 'Flow files are present')
-);
+assertions.push(test.assertEqual(10, flowDocuments.length, 'Flow files are present'));
 
 const flowNames = sc.getFlowNames().sort();
 assertions.push(

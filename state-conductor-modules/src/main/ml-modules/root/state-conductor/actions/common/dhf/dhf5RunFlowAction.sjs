@@ -2,7 +2,6 @@ const DataHub = require('/data-hub/5/datahub.sjs');
 const datahub = new DataHub();
 
 function performAction(uri, options = {}, context = {}) {
-
   // find the dhf flow to execute
   const flowName = options.flowName || null;
   const flowOptions = options.flowOptions || {};
@@ -16,14 +15,16 @@ function performAction(uri, options = {}, context = {}) {
   // get the steps for the given flow
   const numSteps = Object.keys(flow.steps).length;
 
-  xdmp.log(Sequence.from([
-    'Execute DHF flow:',
-    '  uri:         ' + uri,
-    '  flowName:    ' + flowName,
-    '  numSteps:    ' + numSteps,
-    '  flowOptions: ' + flowOptions,
-    '  flowContext: ' + flowContext
-  ]));
+  xdmp.log(
+    Sequence.from([
+      'Execute DHF flow:',
+      '  uri:         ' + uri,
+      '  flowName:    ' + flowName,
+      '  numSteps:    ' + numSteps,
+      '  flowOptions: ' + flowOptions,
+      '  flowContext: ' + flowContext,
+    ])
+  );
 
   const resp = {};
 
@@ -33,7 +34,7 @@ function performAction(uri, options = {}, context = {}) {
     const contentObj = {
       uri: uri,
       context: flowContext,
-      value: fn.head(xdmp.invokeFunction(() => cts.doc(uri)))
+      value: fn.head(xdmp.invokeFunction(() => cts.doc(uri))),
     };
     // execute the flows step
     xdmp.log(`Executing Flow: "${flowName}" Step: "${i}"`);

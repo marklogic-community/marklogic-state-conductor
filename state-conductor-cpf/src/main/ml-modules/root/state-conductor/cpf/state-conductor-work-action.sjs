@@ -3,7 +3,7 @@ declareUpdate();
 
 const cpf = require('/MarkLogic/cpf/cpf.xqy');
 const json = require('/MarkLogic/json/json.xqy');
-const sc  = require('/state-conductor/state-conductor.sjs');
+const sc = require('/state-conductor/state-conductor.sjs');
 
 var uri;
 var transition;

@@ -1,7 +1,7 @@
 'use strict';
 
 const cpf = require('/MarkLogic/cpf/cpf.xqy');
-const sc  = require('/state-conductor/state-conductor.sjs');
+const sc = require('/state-conductor/state-conductor.sjs');
 
 var uri;
 

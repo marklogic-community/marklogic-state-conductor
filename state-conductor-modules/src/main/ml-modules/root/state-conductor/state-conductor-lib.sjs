@@ -2,30 +2,29 @@
 
 const TRACE_EVENT = 'state-conductor';
 
-
 /**
- * is used to get the configuration 
+ * is used to get the configuration
  * will return a default configuration if there is no configuration.sjs file
  * @returns configuration
  */
 function getConfiguration() {
   const defaultconfigurationDefaults = {
-    'databases': {
-      'jobs': 'state-conductor-jobs',
-      'triggers': 'state-conductor-triggers',
-      'schemas': 'state-conductor-schemas'
+    databases: {
+      jobs: 'state-conductor-jobs',
+      triggers: 'state-conductor-triggers',
+      schemas: 'state-conductor-schemas',
     },
-    'collections': {
-      'item': 'state-conductor-item',
-      'job': 'stateConductorJob',
-      'flow': 'state-conductor-flow'
+    collections: {
+      item: 'state-conductor-item',
+      job: 'stateConductorJob',
+      flow: 'state-conductor-flow',
     },
-    'URIPrefixes': {
-      'flow': '/state-conductor-flow/',
-      'job': '/stateConductorJob/'
-    }
+    URIPrefixes: {
+      flow: '/state-conductor-flow/',
+      job: '/stateConductorJob/',
+    },
   };
-  
+
   let configuration = {};
   try {
     configuration = require('/state-conductor/configuration.sjs').configuration;
@@ -33,7 +32,7 @@ function getConfiguration() {
   } catch {
     configuration.foundCustomConfiguration = false;
   }
-  
+
   return setDefaultconfiguration(defaultconfigurationDefaults, configuration);
 }
 
@@ -43,10 +42,9 @@ function getConfiguration() {
  * @param {*} configuration
  * @returns configuration
  */
-function setDefaultconfiguration(defaults, configuration){
+function setDefaultconfiguration(defaults, configuration) {
   return Object.assign(defaults, configuration);
 }
-
 
 /**
  * Transforms referencePath (JsonPath) expressions to XPath
@@ -58,7 +56,6 @@ function referencePathToXpath(path = '$') {
   // replace JsonPath anchors with xpath ones
   return path.replace(/^\$\.?/, '/').replace(/\./g, '/');
 }
-
 
 /**
  * Transforms a reference path expression into a materialized value
@@ -129,41 +126,62 @@ function hasScheduleElapsed(context, now) {
   try {
     if ('minutely' === context.value) {
       // checks periodicity
-      return (minutes % context.period) === 0;
+      return minutes % context.period === 0;
     } else if ('hourly' === context.value) {
       // checks periodicity and the number of minutes past the hour
-      const periodMatch = (hours % context.period) === 0;
+      const periodMatch = hours % context.period === 0;
       const m = context.minute;
-      return periodMatch && (fn.minutesFromDateTime(now) === parseInt(m));
+      return periodMatch && fn.minutesFromDateTime(now) === parseInt(m);
     } else if ('daily' === context.value) {
       // checks periodicity and if we've arrived at the specified time
-      const periodMatch = (days % context.period) === 0;
+      const periodMatch = days % context.period === 0;
       const [h, m] = context.startTime.split(':');
-      return periodMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
+      return (
+        periodMatch &&
+        fn.hoursFromDateTime(now) === parseInt(h) &&
+        fn.minutesFromDateTime(now) === parseInt(m)
+      );
     } else if ('weekly' === context.value) {
       // checks periodicity and if we've arrived at the specified time and day(s) of the week
       // periodicity check uses the week number for the current year (1-52)
-      const periodMatch = (xdmp.weekFromDate(now) % context.period) === 0;
-      const dayMatch = context.days.map(day => day.toLowerCase()).includes(dayname.toLowerCase());
+      const periodMatch = xdmp.weekFromDate(now) % context.period === 0;
+      const dayMatch = context.days.map((day) => day.toLowerCase()).includes(dayname.toLowerCase());
       const [h, m] = context.startTime.split(':');
-      return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
+      return (
+        periodMatch &&
+        dayMatch &&
+        fn.hoursFromDateTime(now) === parseInt(h) &&
+        fn.minutesFromDateTime(now) === parseInt(m)
+      );
     } else if ('monthly' === context.value) {
       // checks periodicity and if we've arrived at the specified time and day of the week
       // periodicity check uses the month number for the current year (1-12)
       // day check uses the day number of the month (1 - 31)
-      const periodMatch = (fn.monthFromDate(now) % context.period) === 0;
+      const periodMatch = fn.monthFromDate(now) % context.period === 0;
       const dayMatch = fn.dayFromDateTime(now) === context.monthDay;
       const [h, m] = context.startTime.split(':');
-      return periodMatch && dayMatch && (fn.hoursFromDateTime(now) === parseInt(h)) && (fn.minutesFromDateTime(now) === parseInt(m));
+      return (
+        periodMatch &&
+        dayMatch &&
+        fn.hoursFromDateTime(now) === parseInt(h) &&
+        fn.minutesFromDateTime(now) === parseInt(m)
+      );
     } else if ('once' === context.value) {
       // checks if we've arrived at the specified date and time
       // generates a range of one minute from specified time and validates the current time is within that minute
-      const start = xdmp.parseDateTime('[M01]/[D01]/[Y0001]-[H01]:[m01][Z]', `${context.startDate}-${context.startTime}Z`);
+      const start = xdmp.parseDateTime(
+        '[M01]/[D01]/[Y0001]-[H01]:[m01][Z]',
+        `${context.startDate}-${context.startTime}Z`
+      );
       const upper = start.add('PT1M');
       return start.le(now) && upper.gt(now);
     }
   } catch (ex) {
-    fn.error(null, 'INVALID-STATE-DEFINITION', `error parsing schedule values: ${JSON.stringify(context)}`);
+    fn.error(
+      null,
+      'INVALID-STATE-DEFINITION',
+      `error parsing schedule values: ${JSON.stringify(context)}`
+    );
   }
 
   return false;
@@ -175,12 +193,12 @@ function isLatestTemporalDocument(uri) {
   const temporalCollections = temporal.collections().toArray();
   const documentCollections = xdmp.documentGetCollections(uri);
 
-  const hasTemporalCollection = temporalCollections.some(collection => {
+  const hasTemporalCollection = temporalCollections.some((collection) => {
     //the temporalCollections are not strings so we need to convert them into strings
     return documentCollections.includes(collection.toString());
   });
 
-  return ((hasTemporalCollection.length > 0) && documentCollections.includes('latest'));
+  return hasTemporalCollection.length > 0 && documentCollections.includes('latest');
 }
 
 module.exports = {
@@ -190,5 +208,5 @@ module.exports = {
   materializeReferencePath,
   referencePathToXpath,
   getConfiguration,
-  setDefaultconfiguration
+  setDefaultconfiguration,
 };

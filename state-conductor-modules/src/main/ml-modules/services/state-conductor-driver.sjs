@@ -3,7 +3,11 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 function returnError(statusCode, statusMsg, body) {
-  fn.error(null, 'RESTAPI-SRVEXERR', Sequence.from([statusCode, statusMsg, body]));
+  fn.error(
+    null,
+    'RESTAPI-SRVEXERR',
+    Sequence.from([statusCode, statusMsg, body])
+  );
 }
 
 function parseArrayParam(input, delim = ',') {
@@ -26,7 +30,7 @@ function get(context, params) {
     flowStatus: parseArrayParam(params.flowStatus),
     flowNames: parseArrayParam(params.flowNames),
     startDate: params.startDate,
-    endDate: params.endDate
+    endDate: params.endDate,
   };
 
   context.outputStatus = [200, 'OK'];
@@ -41,15 +45,20 @@ function put(context, { uri = '' }) {
     returnError(400, 'Bad Request', 'Missing required parameter "uri"');
   }
 
-  const continueJob = fn.head(xdmp.invokeFunction(() => {
-    declareUpdate();
-    return sc.processJob(uri);
-  }, {
-    database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB)
-  }));
+  const continueJob = fn.head(
+    xdmp.invokeFunction(
+      () => {
+        declareUpdate();
+        return sc.processJob(uri);
+      },
+      {
+        database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
+      }
+    )
+  );
 
   const resp = {
-    reschedule: continueJob
+    reschedule: continueJob,
   };
 
   context.outputStatus = [200, 'OK'];

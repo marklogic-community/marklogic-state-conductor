@@ -3,8 +3,8 @@
 function performAction(uri, options = {}, context = {}) {
   declareUpdate();
   xdmp.log('performing action "create-doc.sjs"');
-  let {uriPrefix, collections} = options;
-  let {newDocUri} = context;
+  let { uriPrefix, collections } = options;
+  let { newDocUri } = context;
 
   // use uri, or the value from context
   let oldDocUri = newDocUri ? newDocUri : uri;
@@ -13,13 +13,13 @@ function performAction(uri, options = {}, context = {}) {
   const obj = doc.toObject();
 
   const envelope = {
-    old: obj
+    old: obj,
   };
 
   newDocUri = uriPrefix + sem.uuidString() + '.json';
 
   xdmp.documentInsert(newDocUri, envelope, {
-    collections: collections
+    collections: collections,
   });
 
   context.newDocUri = newDocUri;

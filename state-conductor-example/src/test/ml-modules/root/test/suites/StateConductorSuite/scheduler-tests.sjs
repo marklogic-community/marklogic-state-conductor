@@ -1,7 +1,7 @@
 'use strict';
 
 const scLib = require('/state-conductor/state-conductor-lib.sjs');
-const test  = require('/test/test-helper.xqy');
+const test = require('/test/test-helper.xqy');
 
 const assertions = [];
 let context = {};
@@ -13,9 +13,9 @@ function addMinutes(date, minutes) {
 
 // minutely tests
 context = {
-  'scope': 'scheduled',
-  'value': 'minutely',
-  'period': 1
+  scope: 'scheduled',
+  value: 'minutely',
+  period: 1,
 };
 assertions.push(
   test.assertTrue(scLib.hasScheduleElapsed(context, dt)),
@@ -23,9 +23,9 @@ assertions.push(
   test.assertTrue(scLib.hasScheduleElapsed(context, addMinutes(dt, 61)))
 );
 context = {
-  'scope': 'scheduled',
-  'value': 'minutely',
-  'period': 2
+  scope: 'scheduled',
+  value: 'minutely',
+  period: 2,
 };
 dt = new Date('2000-01-01T00:00:00');
 assertions.push(
@@ -35,9 +35,9 @@ assertions.push(
   test.assertFalse(scLib.hasScheduleElapsed(context, addMinutes(dt, 3)))
 );
 context = {
-  'scope': 'scheduled',
-  'value': 'minutely',
-  'period': 5
+  scope: 'scheduled',
+  value: 'minutely',
+  period: 5,
 };
 dt = new Date('2000-01-01T00:00:00');
 assertions.push(
@@ -51,10 +51,10 @@ assertions.push(
 
 // hourly tests
 context = {
-  'scope': 'scheduled',
-  'value': 'hourly',
-  'period': 1,
-  'minute': 0
+  scope: 'scheduled',
+  value: 'hourly',
+  period: 1,
+  minute: 0,
 };
 dt = new Date('2000-01-01T00:00:00');
 assertions.push(
@@ -67,10 +67,10 @@ assertions.push(
   test.assertFalse(scLib.hasScheduleElapsed(context, new Date('2020-01-05T10:30:00')))
 );
 context = {
-  'scope': 'scheduled',
-  'value': 'hourly',
-  'period': 2,
-  'minute': 30
+  scope: 'scheduled',
+  value: 'hourly',
+  period: 2,
+  minute: 30,
 };
 dt = new Date('2000-01-01T00:00:00');
 assertions.push(
@@ -84,10 +84,10 @@ assertions.push(
 
 // daily tests
 context = {
-  'scope': 'scheduled',
-  'value': 'daily',
-  'period': 1,
-  'startTime': '12:00'
+  scope: 'scheduled',
+  value: 'daily',
+  period: 1,
+  startTime: '12:00',
 };
 dt = new Date('2000-01-01T00:00:00Z');
 assertions.push(
@@ -99,10 +99,10 @@ assertions.push(
   test.assertFalse(scLib.hasScheduleElapsed(context, new Date('2020-12-12T11:59:00')))
 );
 context = {
-  'scope': 'scheduled',
-  'value': 'daily',
-  'period': 2,
-  'startTime': '19:15'
+  scope: 'scheduled',
+  value: 'daily',
+  period: 2,
+  startTime: '19:15',
 };
 dt = new Date('2000-01-01T19:00:00Z');
 assertions.push(
@@ -117,11 +117,11 @@ assertions.push(
 
 // weekly tests
 context = {
-  'scope': 'scheduled',
-  'value': 'weekly',
-  'period': 1,
-  'days': ['monday', 'wednesday', 'friday'],
-  'startTime': '12:00'
+  scope: 'scheduled',
+  value: 'weekly',
+  period: 1,
+  days: ['monday', 'wednesday', 'friday'],
+  startTime: '12:00',
 };
 dt = new Date('2020-01-06T12:00:00Z');
 assertions.push(
@@ -136,11 +136,11 @@ assertions.push(
   test.assertFalse(scLib.hasScheduleElapsed(context, new Date('2020-01-08T12:01:00Z')))
 );
 context = {
-  'scope': 'scheduled',
-  'value': 'weekly',
-  'period': 1,
-  'days': ['tuesday', 'thursday', 'saturday', 'sunday'],
-  'startTime': '12:00'
+  scope: 'scheduled',
+  value: 'weekly',
+  period: 1,
+  days: ['tuesday', 'thursday', 'saturday', 'sunday'],
+  startTime: '12:00',
 };
 dt = new Date('2020-01-06T12:00:00Z');
 assertions.push(
@@ -153,11 +153,11 @@ assertions.push(
   test.assertTrue(scLib.hasScheduleElapsed(context, new Date('2020-01-12T12:00:00Z')))
 );
 context = {
-  'scope': 'scheduled',
-  'value': 'weekly',
-  'period': 2,
-  'days': ['monday', 'friday'],
-  'startTime': '02:30'
+  scope: 'scheduled',
+  value: 'weekly',
+  period: 2,
+  days: ['monday', 'friday'],
+  startTime: '02:30',
 };
 dt = new Date('2020-01-06T02:30:00Z');
 assertions.push(
@@ -171,11 +171,11 @@ assertions.push(
 
 // monthly tests
 context = {
-  'scope': 'scheduled',
-  'value': 'monthly',
-  'period': 1,
-  'monthDay': 1,
-  'startTime': '20:00'
+  scope: 'scheduled',
+  value: 'monthly',
+  period: 1,
+  monthDay: 1,
+  startTime: '20:00',
 };
 dt = new Date('2020-01-01T20:00:00Z');
 assertions.push(
@@ -189,11 +189,11 @@ assertions.push(
   test.assertTrue(scLib.hasScheduleElapsed(context, new Date('2020-12-01T20:00:00Z')))
 );
 context = {
-  'scope': 'scheduled',
-  'value': 'monthly',
-  'period': 3,
-  'monthDay': 5,
-  'startTime': '01:27'
+  scope: 'scheduled',
+  value: 'monthly',
+  period: 3,
+  monthDay: 5,
+  startTime: '01:27',
 };
 dt = new Date('2020-01-05T01:27:00Z');
 assertions.push(
@@ -208,11 +208,11 @@ assertions.push(
   test.assertTrue(scLib.hasScheduleElapsed(context, new Date('2020-12-05T01:27:00Z')))
 );
 context = {
-  'scope': 'scheduled',
-  'value': 'monthly',
-  'period': 1,
-  'monthDay': 31,
-  'startTime': '20:00'
+  scope: 'scheduled',
+  value: 'monthly',
+  period: 1,
+  monthDay: 31,
+  startTime: '20:00',
 };
 dt = new Date('2020-01-31T20:00:00Z');
 assertions.push(
@@ -225,10 +225,10 @@ assertions.push(
 
 // once tests
 context = {
-  'scope': 'scheduled',
-  'value': 'once',
-  'startDate': '01/15/2020',
-  'startTime': '10:59'
+  scope: 'scheduled',
+  value: 'once',
+  startDate: '01/15/2020',
+  startTime: '10:59',
 };
 dt = new Date('2020-01-15T10:59:00Z');
 assertions.push(

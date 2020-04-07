@@ -1,6 +1,6 @@
 'use strict';
 
-const sc   = require('/state-conductor/state-conductor.sjs');
+const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 const assertions = [];
@@ -10,13 +10,18 @@ const textFileSplitter = require('/state-conductor/actions/common/text-file-spli
 const doc1 = '/data/lorem.txt';
 
 function isolate(func) {
-  return fn.head(xdmp.invokeFunction(() => {
-    declareUpdate();
-    return func();
-  }, {
-    isolation: 'different-transaction',
-    commit: 'auto'
-  }));
+  return fn.head(
+    xdmp.invokeFunction(
+      () => {
+        declareUpdate();
+        return func();
+      },
+      {
+        isolation: 'different-transaction',
+        commit: 'auto',
+      }
+    )
+  );
 }
 
 // text file splitter tests
@@ -29,10 +34,8 @@ assertions.push(
   test.assertEqual(10, result.splits.uris.length)
 );
 isolate(() => {
-  result.splits.uris.forEach(uri => {
-    assertions.push(
-      test.assertEqual(true, fn.docAvailable(uri))
-    );
+  result.splits.uris.forEach((uri) => {
+    assertions.push(test.assertEqual(true, fn.docAvailable(uri)));
   });
 });
 isolate(() => {
@@ -45,9 +48,11 @@ isolate(() => {
 });
 
 // split retaining header
-result = isolate(() => textFileSplitter.performAction(doc1, {
-  skipHeader: false
-}));
+result = isolate(() =>
+  textFileSplitter.performAction(doc1, {
+    skipHeader: false,
+  })
+);
 assertions.push(
   test.assertEqual(11, result.splits.total),
   test.assertEqual(true, Array.isArray(result.splits.uris)),
@@ -63,9 +68,11 @@ isolate(() => {
 });
 
 // split skipping trailing EOF
-result = isolate(() => textFileSplitter.performAction(doc1, {
-  skipTrailingEOF: true
-}));
+result = isolate(() =>
+  textFileSplitter.performAction(doc1, {
+    skipTrailingEOF: true,
+  })
+);
 assertions.push(
   test.assertEqual(9, result.splits.total),
   test.assertEqual(true, Array.isArray(result.splits.uris)),
@@ -81,11 +88,13 @@ isolate(() => {
 });
 
 // split on periods
-result = isolate(() => textFileSplitter.performAction(doc1, {
-  delimiterPattern: '\\.',
-  skipHeader: false,
-  skipTrailingEOF: true
-}));
+result = isolate(() =>
+  textFileSplitter.performAction(doc1, {
+    delimiterPattern: '\\.',
+    skipHeader: false,
+    skipTrailingEOF: true,
+  })
+);
 assertions.push(
   test.assertEqual(66, result.splits.total),
   test.assertEqual(true, Array.isArray(result.splits.uris)),

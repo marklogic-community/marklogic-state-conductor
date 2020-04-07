@@ -116,8 +116,7 @@ const schema = {
                 minItems: 1,
                 items: {
                   type: 'string',
-                  pattern:
-                    '^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$',
+                  pattern: '^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)$',
                 },
               },
             },

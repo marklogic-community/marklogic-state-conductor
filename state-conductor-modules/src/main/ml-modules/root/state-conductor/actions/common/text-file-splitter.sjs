@@ -19,16 +19,11 @@ function performAction(uri, options = {}, context = {}) {
   declareUpdate();
 
   let delimiterPattern = options.delimiterPattern || '\n';
-  let skipHeader = !(
-    options.skipHeader === 'false' || options.skipHeader === false
-  );
-  let skipTrailingEOF =
-    options.skipTrailingEOF === 'true' || options.skipTrailingEOF === true;
+  let skipHeader = !(options.skipHeader === 'false' || options.skipHeader === false);
+  let skipTrailingEOF = options.skipTrailingEOF === 'true' || options.skipTrailingEOF === true;
   let targetPrefix = options.targetPrefix || uri;
   let targetExtension = options.targetExtension || 'txt';
-  let targetCollections = Array.isArray(options.targetCollections)
-    ? options.targetCollections
-    : [];
+  let targetCollections = Array.isArray(options.targetCollections) ? options.targetCollections : [];
 
   // grab the source document's permissions
   let targetPermissions = xdmp.documentGetPermissions(uri);
@@ -36,11 +31,7 @@ function performAction(uri, options = {}, context = {}) {
   const sourceDoc = cts.doc(uri);
 
   if (!isTextNode(sourceDoc)) {
-    fn.error(
-      null,
-      'States.TaskFailed',
-      Sequence.from([`Document "${uri}" is not a text node`])
-    );
+    fn.error(null, 'States.TaskFailed', Sequence.from([`Document "${uri}" is not a text node`]));
   }
 
   const content = fn.string(sourceDoc.root);

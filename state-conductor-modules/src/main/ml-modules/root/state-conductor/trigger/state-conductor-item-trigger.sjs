@@ -13,10 +13,7 @@ function executeContextRegQuery(uri, regQueryId) {
   return cts.uris(
     '',
     'limit=1',
-    cts.andQuery([
-      cts.documentQuery(uri),
-      cts.registeredQuery(regQueryId, 'unfiltered'),
-    ])
+    cts.andQuery([cts.documentQuery(uri), cts.registeredQuery(regQueryId, 'unfiltered')])
   );
 }
 
@@ -53,10 +50,7 @@ function checkUriAgainstContext(uri) {
     resp = executeContextRegQuery(uri, regCtxQueryId);
   } catch (err) {
     if (err.name === 'XDMP-UNREGISTERED') {
-      xdmp.trace(
-        sc.TRACE_EVENT,
-        'registered query not found - reregistering context query'
-      );
+      xdmp.trace(sc.TRACE_EVENT, 'registered query not found - reregistering context query');
       // need to register a new query
       regCtxQueryId = registerCtxQuery();
       // execute the query
@@ -76,10 +70,7 @@ xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger check for "${uri}"`);
 if (checkUriAgainstContext(uri)) {
   // find the specific flow that applies
   const flows = sc.getApplicableFlows(uri);
-  xdmp.trace(
-    sc.TRACE_EVENT,
-    `state-conductor-item-trigger found "${flows.length}" matching flows`
-  );
+  xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger found "${flows.length}" matching flows`);
   // create a state conductor job for each flow that applies
   flows.forEach((flow) => {
     const flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
@@ -87,7 +78,4 @@ if (checkUriAgainstContext(uri)) {
   });
 }
 
-xdmp.trace(
-  sc.TRACE_EVENT,
-  `state-conductor-item-trigger completed in "${xdmp.elapsedTime()}"`
-);
+xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger completed in "${xdmp.elapsedTime()}"`);

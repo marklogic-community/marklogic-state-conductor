@@ -50,10 +50,7 @@ const flows = cts
   .search(
     cts.andQuery([
       cts.collectionQuery(sc.FLOW_COLLECTION),
-      cts.jsonPropertyScopeQuery(
-        'mlDomain',
-        cts.jsonPropertyValueQuery('scope', 'scheduled')
-      ),
+      cts.jsonPropertyScopeQuery('mlDomain', cts.jsonPropertyValueQuery('scope', 'scheduled')),
     ])
   )
   .toArray();
@@ -75,13 +72,7 @@ flows
     // create a state conductor job for the elapsed flows
     let flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
     let resp = sc.createStateConductorJob(flowName, null);
-    xdmp.trace(
-      sc.TRACE_EVENT,
-      `created state conductor job for scheduled flow: ${resp}`
-    );
+    xdmp.trace(sc.TRACE_EVENT, `created state conductor job for scheduled flow: ${resp}`);
   });
 
-xdmp.trace(
-  sc.TRACE_EVENT,
-  `state-conductor-scheduler-task completed in "${xdmp.elapsedTime()}"`
-);
+xdmp.trace(sc.TRACE_EVENT, `state-conductor-scheduler-task completed in "${xdmp.elapsedTime()}"`);

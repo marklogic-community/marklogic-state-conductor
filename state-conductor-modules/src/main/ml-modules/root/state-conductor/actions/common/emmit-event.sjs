@@ -8,11 +8,7 @@ function performAction(uri, options = {}, context = {}) {
   const event = options.event;
 
   if (!event) {
-    fn.error(
-      null,
-      'EVENT-NOT-FOUND',
-      Sequence.from([`No event found in the parameters `])
-    );
+    fn.error(null, 'EVENT-NOT-FOUND', Sequence.from([`No event found in the parameters `]));
   }
 
   const uris = sc.emmitEvent(options.event);

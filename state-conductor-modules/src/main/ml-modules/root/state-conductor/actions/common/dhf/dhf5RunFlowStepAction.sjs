@@ -30,22 +30,12 @@ function performAction(uri, options = {}, context = {}) {
   // utilizing an invoke to avoid locking on the batched documents
   let flowResponse;
   xdmp.invokeFunction(() => {
-    flowResponse = datahub.flow.runFlow(
-      flowName,
-      null,
-      [contentObjs],
-      flowOptions,
-      step
-    );
+    flowResponse = datahub.flow.runFlow(flowName, null, [contentObjs], flowOptions, step);
   });
 
   if (flowResponse.errors && flowResponse.errors.length) {
     datahub.debug.log(flowResponse.errors[0]);
-    fn.error(
-      null,
-      flowResponse.errors[0].message,
-      flowResponse.errors[0].stack
-    );
+    fn.error(null, flowResponse.errors[0].message, flowResponse.errors[0].stack);
   }
 
   context[flowName] = context[flowName] || {};

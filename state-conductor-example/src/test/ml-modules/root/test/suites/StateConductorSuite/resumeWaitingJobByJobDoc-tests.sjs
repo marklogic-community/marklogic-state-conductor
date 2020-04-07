@@ -26,9 +26,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check working')
-);
+assertions.push(test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check working'));
 
 //checks a waiting state working
 jobDoc = xdmp.toJSON({
@@ -50,9 +48,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check new')
-);
+assertions.push(test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check new'));
 
 //resume waiting
 jobDoc = xdmp.toJSON({
@@ -68,14 +64,9 @@ jobDoc = xdmp.toJSON({
 
 assertion = sc.resumeWaitingJobByJobDoc(jobDoc, 'testing', false);
 
+assertions.push(test.assertEqual('working', assertion.flowStatus, 'working flowStatus'));
 assertions.push(
-  test.assertEqual('working', assertion.flowStatus, 'working flowStatus')
-);
-assertions.push(
-  test.assertFalse(
-    assertion.hasOwnProperty('currentlyWaiting'),
-    'waiting currentlyWaiting'
-  )
+  test.assertFalse(assertion.hasOwnProperty('currentlyWaiting'), 'waiting currentlyWaiting')
 );
 
 //unKnown database (content)
@@ -97,9 +88,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('XDMP-NODB', error.name, 'unKnown database content')
-);
+assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
 
 //unKnown module database
 jobDoc = xdmp.toJSON({
@@ -115,14 +104,9 @@ jobDoc = xdmp.toJSON({
 
 assertion = sc.resumeWaitingJobByJobDoc(jobDoc, 'testing', false);
 
+assertions.push(test.assertEqual('working', assertion.flowStatus, 'working flowStatus'));
 assertions.push(
-  test.assertEqual('working', assertion.flowStatus, 'working flowStatus')
-);
-assertions.push(
-  test.assertFalse(
-    assertion.hasOwnProperty('currentlyWaiting'),
-    'waiting currentlyWaiting'
-  )
+  test.assertFalse(assertion.hasOwnProperty('currentlyWaiting'), 'waiting currentlyWaiting')
 );
 
 //unKnown database both

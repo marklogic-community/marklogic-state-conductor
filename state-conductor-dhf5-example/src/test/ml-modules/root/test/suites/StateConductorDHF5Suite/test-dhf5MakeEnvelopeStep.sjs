@@ -37,10 +37,7 @@ assertions.push(
   test.assertTrue(updated.envelope !== null),
   test.assertTrue(updated.envelope.headers !== null),
   test.assertTrue(updated.envelope.triples !== null),
-  test.assertEqual(
-    JSON.stringify(original),
-    JSON.stringify(updated.envelope.instance)
-  )
+  test.assertEqual(JSON.stringify(original), JSON.stringify(updated.envelope.instance))
 );
 
 // return

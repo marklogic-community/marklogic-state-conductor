@@ -27,13 +27,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual(
-    'INVALID-FLOW-STATUS',
-    error.name,
-    'status check working || new'
-  )
-);
+assertions.push(test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check working || new'));
 
 jobDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
@@ -55,11 +49,7 @@ try {
 }
 
 assertions.push(
-  test.assertEqual(
-    'INVALID-FLOW-STATUS',
-    error.name,
-    'status check working || waiting'
-  )
+  test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check working || waiting')
 );
 
 //checks see the working statuts
@@ -76,9 +66,7 @@ jobDoc = xdmp.toJSON({
 
 assertion = sc.executeStateByJobDoc(jobDoc, false);
 
-assertions.push(
-  test.assertEqual(1, assertion.provenance.length, 'provenance check')
-);
+assertions.push(test.assertEqual(1, assertion.provenance.length, 'provenance check'));
 
 //checks see if there are states
 jobDoc = xdmp.toJSON({
@@ -100,13 +88,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual(
-    'INVALID-STATE-DEFINITION',
-    error.name,
-    'status check working'
-  )
-);
+assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'status check working'));
 
 //checks see if the context was updated with a task
 jobDoc = xdmp.toJSON({
@@ -122,9 +104,7 @@ jobDoc = xdmp.toJSON({
 
 assertion = sc.executeStateByJobDoc(jobDoc, false);
 
-assertions.push(
-  test.assertEqual('Hello Word', assertion.context, 'context check')
-);
+assertions.push(test.assertEqual('Hello Word', assertion.context, 'context check'));
 
 //checks see if the the parameters is used
 jobDoc = xdmp.toJSON({
@@ -162,9 +142,7 @@ jobDoc = xdmp.toJSON({
 
 assertion = sc.executeStateByJobDoc(jobDoc, false);
 
-assertions.push(
-  test.assertEqual('waiting', assertion.flowStatus, 'waiting flowStatus')
-);
+assertions.push(test.assertEqual('waiting', assertion.flowStatus, 'waiting flowStatus'));
 assertions.push(
   test.assertEqual(
     'series-of-clicks-and-beeps-connected',
@@ -192,9 +170,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('XDMP-NODB', error.name, 'unKnown database content')
-);
+assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
 
 //unKnown module database
 jobDoc = xdmp.toJSON({
@@ -215,9 +191,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('TRANSITIONERROR', error.name, 'unKnown database module')
-);
+assertions.push(test.assertEqual('TRANSITIONERROR', error.name, 'unKnown database module'));
 
 //unKnown database both
 jobDoc = xdmp.toJSON({
@@ -238,9 +212,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('XDMP-NODB', error.name, 'unKnown database both')
-);
+assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database both'));
 
 // missing action modules test
 jobDoc = xdmp.toJSON({
@@ -261,10 +233,7 @@ try {
   error = e;
 }
 assertions.push(
-  test.assertTrue(
-    error.data[1].includes('XDMP-MODNOTFOUND'),
-    'detected missing action module'
-  )
+  test.assertTrue(error.data[1].includes('XDMP-MODNOTFOUND'), 'detected missing action module')
 );
 
 // missing condition modules test
@@ -286,10 +255,7 @@ try {
   error = e;
 }
 assertions.push(
-  test.assertTrue(
-    error.data[1].includes('XDMP-MODNOTFOUND'),
-    'detected missing action module'
-  )
+  test.assertTrue(error.data[1].includes('XDMP-MODNOTFOUND'), 'detected missing action module')
 );
 
 assertions;

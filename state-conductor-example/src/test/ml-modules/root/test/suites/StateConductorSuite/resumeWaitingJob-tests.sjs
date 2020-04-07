@@ -17,12 +17,6 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual(
-    'INVALID-JOB-DOCUMENT',
-    error.name,
-    'check if job doc is there'
-  )
-);
+assertions.push(test.assertEqual('INVALID-JOB-DOCUMENT', error.name, 'check if job doc is there'));
 
 assertions;

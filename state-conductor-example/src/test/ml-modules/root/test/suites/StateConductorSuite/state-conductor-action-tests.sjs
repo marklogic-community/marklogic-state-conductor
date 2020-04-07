@@ -42,10 +42,7 @@ isolate(() => {
   let split1 = cts.doc('/data/lorem.txt/0.txt').root;
   let split9 = cts.doc('/data/lorem.txt/9.txt').root;
   assertions.push(
-    test.assertNotEqual(
-      'Sample Multiline Text Document',
-      split1.toString().trim()
-    ),
+    test.assertNotEqual('Sample Multiline Text Document', split1.toString().trim()),
     test.assertEqual(null, split9)
   );
 });
@@ -65,10 +62,7 @@ isolate(() => {
   let split1 = cts.doc('/data/lorem.txt/0.txt').root;
   let split9 = cts.doc('/data/lorem.txt/10.txt').root;
   assertions.push(
-    test.assertEqual(
-      'Sample Multiline Text Document',
-      split1.toString().trim()
-    ),
+    test.assertEqual('Sample Multiline Text Document', split1.toString().trim()),
     test.assertEqual(null, split9)
   );
 });
@@ -88,14 +82,8 @@ isolate(() => {
   let split1 = cts.doc('/data/lorem.txt/0.txt').root;
   let split8 = cts.doc('/data/lorem.txt/8.txt').root;
   assertions.push(
-    test.assertNotEqual(
-      'Sample Multiline Text Document',
-      split1.toString().trim()
-    ),
-    test.assertEqual(
-      true,
-      split8.toString().startsWith('Nam quis interdum leo')
-    )
+    test.assertNotEqual('Sample Multiline Text Document', split1.toString().trim()),
+    test.assertEqual(true, split8.toString().startsWith('Nam quis interdum leo'))
   );
 });
 
@@ -118,14 +106,8 @@ isolate(() => {
   let split65 = cts.doc('/data/lorem.txt/65.txt').root;
   xdmp.log(split65);
   assertions.push(
-    test.assertEqual(
-      true,
-      split1.toString().startsWith('Sample Multiline Text Document')
-    ),
-    test.assertEqual(
-      true,
-      split64.toString().startsWith(' Nam eu nunc non nibh sodales eleifend')
-    ),
+    test.assertEqual(true, split1.toString().startsWith('Sample Multiline Text Document')),
+    test.assertEqual(true, split64.toString().startsWith(' Nam eu nunc non nibh sodales eleifend')),
     test.assertEqual(null, split65)
   );
 });

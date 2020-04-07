@@ -77,10 +77,7 @@ assertions.push(
 
 // check no context flow's empty context produces a false query
 assertions.push(
-  test.assertEqual(
-    cts.falseQuery().toString(),
-    sc.getFlowContextQuery(noContextFlow).toString()
-  )
+  test.assertEqual(cts.falseQuery().toString(), sc.getFlowContextQuery(noContextFlow).toString())
 );
 
 assertions;

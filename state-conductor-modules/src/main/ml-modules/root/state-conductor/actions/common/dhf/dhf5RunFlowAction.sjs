@@ -9,11 +9,7 @@ function performAction(uri, options = {}, context = {}) {
   const flow = datahub.flow.getFlow(flowName);
 
   if (!flow) {
-    fn.error(
-      null,
-      'DHF-FLOW-NOT-FOUND',
-      Sequence.from([`DHF flow "${flowName}" not found.`])
-    );
+    fn.error(null, 'DHF-FLOW-NOT-FOUND', Sequence.from([`DHF flow "${flowName}" not found.`]));
   }
 
   // get the steps for the given flow
@@ -44,23 +40,13 @@ function performAction(uri, options = {}, context = {}) {
     xdmp.log(`Executing Flow: "${flowName}" Step: "${i}"`);
     let flowResponse = fn.head(
       xdmp.invokeFunction(() => {
-        return datahub.flow.runFlow(
-          flowName,
-          null,
-          [contentObj],
-          flowOptions,
-          i
-        );
+        return datahub.flow.runFlow(flowName, null, [contentObj], flowOptions, i);
       })
     );
     // abort on error
     if (flowResponse.errors && flowResponse.errors.length) {
       datahub.debug.log(flowResponse.errors[0]);
-      fn.error(
-        null,
-        flowResponse.errors[0].message,
-        flowResponse.errors[0].stack
-      );
+      fn.error(null, flowResponse.errors[0].message, flowResponse.errors[0].stack);
     }
 
     resp['' + i] = flowResponse;

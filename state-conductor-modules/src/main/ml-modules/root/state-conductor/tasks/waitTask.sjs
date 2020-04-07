@@ -15,20 +15,13 @@ sc.invokeOrApplyFunction(
           cts.collectionQuery('stateConductorJob'),
           cts.jsonPropertyScopeQuery(
             'currentlyWaiting',
-            cts.jsonPropertyRangeQuery(
-              'nextTaskTime',
-              '<=',
-              fn.currentDateTime()
-            )
+            cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
           ),
         ])
       )
       .toArray();
 
-    xdmp.trace(
-      sc.TRACE_EVENT,
-      `Reporting from waitTask. Docs to be process are: ${uris.length}`
-    );
+    xdmp.trace(sc.TRACE_EVENT, `Reporting from waitTask. Docs to be process are: ${uris.length}`);
 
     if (uris.length > 0) {
       uris.forEach((uri) => {
@@ -41,7 +34,4 @@ sc.invokeOrApplyFunction(
   }
 );
 
-xdmp.trace(
-  sc.TRACE_EVENT,
-  `state-conductor-waitTask completed in "${xdmp.elapsedTime()}"`
-);
+xdmp.trace(sc.TRACE_EVENT, `state-conductor-waitTask completed in "${xdmp.elapsedTime()}"`);

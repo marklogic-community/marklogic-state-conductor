@@ -11,15 +11,9 @@ assertions.push(
   test.assertEqual('/', scLib.referencePathToXpath('$')),
   test.assertEqual('/name', scLib.referencePathToXpath('$.name')),
   test.assertEqual('/name/first', scLib.referencePathToXpath('$.name.first')),
-  test.assertEqual(
-    '/address/street/zip',
-    scLib.referencePathToXpath('$.address.street.zip')
-  ),
+  test.assertEqual('/address/street/zip', scLib.referencePathToXpath('$.address.street.zip')),
   test.assertEqual('/context[1]', scLib.referencePathToXpath('$.context[1]')),
-  test.assertEqual(
-    '/context[1]/name',
-    scLib.referencePathToXpath('$.context[1]/name')
-  )
+  test.assertEqual('/context[1]/name', scLib.referencePathToXpath('$.context[1]/name'))
 );
 
 let context = {
@@ -69,10 +63,7 @@ assertions.push(
   ),
   test.assertEqual(
     'bar',
-    scLib.materializeReferencePath(
-      '$.address.nested.nested.nested.foo',
-      context
-    )
+    scLib.materializeReferencePath('$.address.nested.nested.nested.foo', context)
   )
 );
 
@@ -102,10 +93,7 @@ assertions.push(
   test.assertEqual('{}', JSON.stringify(scLib.materializeParameters())),
   test.assertEqual('{}', JSON.stringify(scLib.materializeParameters({}))),
   test.assertEqual('{}', JSON.stringify(scLib.materializeParameters({}, {}))),
-  test.assertEqual(
-    '{}',
-    JSON.stringify(scLib.materializeParameters({}, context))
-  )
+  test.assertEqual('{}', JSON.stringify(scLib.materializeParameters({}, context)))
 );
 
 let resp = scLib.materializeParameters(params, context);
@@ -116,10 +104,7 @@ assertions.push(
   test.assertEqual('one', resp.static1),
   test.assertEqual(2, resp.static2),
   test.assertEqual(false, resp.static3),
-  test.assertEqual(
-    JSON.stringify(params.static4),
-    JSON.stringify(resp.static4)
-  ),
+  test.assertEqual(JSON.stringify(params.static4), JSON.stringify(resp.static4)),
   test.assertEqual(1, resp.rp1),
   test.assertEqual('two', resp.rp2),
   test.assertEqual(true, resp.rp3),
@@ -143,16 +128,8 @@ assertions.push(
     JSON.stringify(resp.arr2),
     'xpath uses 1 based array origin'
   ),
-  test.assertEqual(
-    'first',
-    resp.arr1name,
-    'xpath uses 1 based array origin - sub selection'
-  ),
-  test.assertEqual(
-    'second',
-    resp.arr2name,
-    'xpath uses 1 based array origin - sub selection'
-  )
+  test.assertEqual('first', resp.arr1name, 'xpath uses 1 based array origin - sub selection'),
+  test.assertEqual('second', resp.arr2name, 'xpath uses 1 based array origin - sub selection')
 );
 
 // return

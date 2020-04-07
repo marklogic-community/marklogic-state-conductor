@@ -23,11 +23,7 @@ function performAction(uri, options = {}, context = {}) {
 
   // capture any errors
   if (flowResponse.errors && flowResponse.errors.length) {
-    fn.error(
-      null,
-      flowResponse.errors[0].message,
-      flowResponse.errors[0].stack
-    );
+    fn.error(null, flowResponse.errors[0].message, flowResponse.errors[0].stack);
   }
 
   // save the enveloped response

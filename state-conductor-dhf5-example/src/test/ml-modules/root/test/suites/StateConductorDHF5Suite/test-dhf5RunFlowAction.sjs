@@ -33,10 +33,7 @@ let resp = isolate(() =>
   })
 );
 let ingested = isolate(() => cts.doc(uri).toObject());
-let mapped = isolate(
-  () => cts.doc(uri).toObject(),
-  xdmp.database('sce-dh5-FINAL')
-);
+let mapped = isolate(() => cts.doc(uri).toObject(), xdmp.database('sce-dh5-FINAL'));
 
 let flowResult = resp[flowName];
 assertions.push(test.assertTrue(flowResult !== null));
@@ -60,26 +57,13 @@ assertions.push(
   test.assertTrue(ingested.envelope.instance != null),
   test.assertEqual('John', ingested.envelope.instance.firstName),
   test.assertEqual('Doe', ingested.envelope.instance.lastName),
-  test.assertEqual(
-    JSON.stringify(original),
-    JSON.stringify(ingested.envelope.instance)
+  test.assertEqual(JSON.stringify(original), JSON.stringify(ingested.envelope.instance)),
+  test.assertTrue(isolate(() => xdmp.documentGetCollections(uri).includes('default-ingestion'))),
+  test.assertTrue(
+    isolate(() => xdmp.documentGetMetadata(uri).datahubCreatedInFlow === 'PersonFlow')
   ),
   test.assertTrue(
-    isolate(() =>
-      xdmp.documentGetCollections(uri).includes('default-ingestion')
-    )
-  ),
-  test.assertTrue(
-    isolate(
-      () => xdmp.documentGetMetadata(uri).datahubCreatedInFlow === 'PersonFlow'
-    )
-  ),
-  test.assertTrue(
-    isolate(
-      () =>
-        xdmp.documentGetMetadata(uri).datahubCreatedByStep ===
-        'default-ingestion'
-    )
+    isolate(() => xdmp.documentGetMetadata(uri).datahubCreatedByStep === 'default-ingestion')
   )
 );
 
@@ -98,30 +82,17 @@ assertions.push(
   test.assertEqual('0.0.1', mapped.envelope.instance.info.version),
   test.assertEqual('John', mapped.envelope.instance.Person.firstName),
   test.assertEqual('Doe', mapped.envelope.instance.Person.lastName),
-  test.assertEqual(
-    JSON.stringify(ingested),
-    JSON.stringify(mapped.envelope.attachments)
-  ),
+  test.assertEqual(JSON.stringify(ingested), JSON.stringify(mapped.envelope.attachments)),
   test.assertEqual(
     JSON.stringify(original),
     JSON.stringify(mapped.envelope.attachments.envelope.instance)
   ),
+  test.assertTrue(isolate(() => xdmp.documentGetCollections(uri).includes('default-ingestion'))),
   test.assertTrue(
-    isolate(() =>
-      xdmp.documentGetCollections(uri).includes('default-ingestion')
-    )
+    isolate(() => xdmp.documentGetMetadata(uri).datahubCreatedInFlow === 'PersonFlow')
   ),
   test.assertTrue(
-    isolate(
-      () => xdmp.documentGetMetadata(uri).datahubCreatedInFlow === 'PersonFlow'
-    )
-  ),
-  test.assertTrue(
-    isolate(
-      () =>
-        xdmp.documentGetMetadata(uri).datahubCreatedByStep ===
-        'default-ingestion'
-    )
+    isolate(() => xdmp.documentGetMetadata(uri).datahubCreatedByStep === 'default-ingestion')
   )
 );
 

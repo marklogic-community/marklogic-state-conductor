@@ -99,9 +99,7 @@ function hasScheduleElapsed(context, now) {
       // checks periodicity and if we've arrived at the specified time and day(s) of the week
       // periodicity check uses the week number for the current year (1-52)
       const periodMatch = xdmp.weekFromDate(now) % context.period === 0;
-      const dayMatch = context.days
-        .map((day) => day.toLowerCase())
-        .includes(dayname.toLowerCase());
+      const dayMatch = context.days.map((day) => day.toLowerCase()).includes(dayname.toLowerCase());
       const [h, m] = context.startTime.split(':');
       return (
         periodMatch &&
@@ -154,9 +152,7 @@ function isLatestTemporalDocument(uri) {
     return documentCollections.includes(collection.toString());
   });
 
-  return (
-    hasTemporalCollection.length > 0 && documentCollections.includes('latest')
-  );
+  return hasTemporalCollection.length > 0 && documentCollections.includes('latest');
 }
 
 module.exports = {

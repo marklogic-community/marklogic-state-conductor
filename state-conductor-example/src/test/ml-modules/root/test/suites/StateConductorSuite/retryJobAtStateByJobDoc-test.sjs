@@ -26,9 +26,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check working')
-);
+assertions.push(test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check working'));
 
 //checks a waiting state new
 jobDoc = xdmp.toJSON({
@@ -50,9 +48,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check new')
-);
+assertions.push(test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check new'));
 
 //checks a waiting state waitting
 jobDoc = xdmp.toJSON({
@@ -74,9 +70,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check new')
-);
+assertions.push(test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check new'));
 
 //checks a waiting state complete
 jobDoc = xdmp.toJSON({
@@ -98,9 +92,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check new')
-);
+assertions.push(test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check new'));
 
 //retry failed flowStatus
 jobDoc = xdmp.toJSON({
@@ -116,15 +108,8 @@ jobDoc = xdmp.toJSON({
 
 assertion = sc.retryJobAtStateByJobDoc(jobDoc, 'dialUp', 'testing', false);
 
-assertions.push(
-  test.assertEqual('working', assertion.flowStatus, 'working retry')
-);
-assertions.push(
-  test.assertFalse(
-    assertion.hasOwnProperty('parameters-check'),
-    'next step retry'
-  )
-);
+assertions.push(test.assertEqual('working', assertion.flowStatus, 'working retry'));
+assertions.push(test.assertFalse(assertion.hasOwnProperty('parameters-check'), 'next step retry'));
 
 //retry an unknown state
 jobDoc = xdmp.toJSON({
@@ -146,9 +131,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'unknownStep')
-);
+assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'unknownStep'));
 
 //retry an NEW state
 jobDoc = xdmp.toJSON({
@@ -170,9 +153,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'NEW')
-);
+assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'NEW'));
 
 //unKnown database (content)
 jobDoc = xdmp.toJSON({
@@ -193,9 +174,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('XDMP-NODB', error.name, 'unKnown database content')
-);
+assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
 
 //unKnown module database
 jobDoc = xdmp.toJSON({
@@ -211,15 +190,8 @@ jobDoc = xdmp.toJSON({
 
 assertion = sc.retryJobAtStateByJobDoc(jobDoc, 'dialUp', 'testing', false);
 
-assertions.push(
-  test.assertEqual('working', assertion.flowStatus, 'working retry')
-);
-assertions.push(
-  test.assertFalse(
-    assertion.hasOwnProperty('parameters-check'),
-    'next step retry'
-  )
-);
+assertions.push(test.assertEqual('working', assertion.flowStatus, 'working retry'));
+assertions.push(test.assertFalse(assertion.hasOwnProperty('parameters-check'), 'next step retry'));
 
 //unKnown database both
 jobDoc = xdmp.toJSON({
@@ -240,7 +212,5 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('XDMP-NODB', error.name, 'unKnown database content')
-);
+assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
 assertions;

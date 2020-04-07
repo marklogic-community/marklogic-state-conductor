@@ -26,9 +26,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check working')
-);
+assertions.push(test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check working'));
 
 //check waiting status
 jobDoc = xdmp.toJSON({
@@ -49,9 +47,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check waiting')
-);
+assertions.push(test.assertEqual('INVALID-FLOW-STATUS', error.name, 'status check waiting'));
 
 //check for missing flow file
 jobDoc = xdmp.toJSON({
@@ -72,9 +68,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('MISSING-FLOW-FILE', error.name, 'missing flow file')
-);
+assertions.push(test.assertEqual('MISSING-FLOW-FILE', error.name, 'missing flow file'));
 
 //check for missing flow file
 jobDoc = xdmp.toJSON({
@@ -95,9 +89,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'no StartAt step')
-);
+assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'no StartAt step'));
 
 //check for missing flow file
 jobDoc = xdmp.toJSON({
@@ -134,9 +126,7 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('XDMP-NODB', error.name, 'unKnown database content')
-);
+assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
 
 //unKnown database (module)
 jobDoc = xdmp.toJSON({
@@ -152,9 +142,7 @@ jobDoc = xdmp.toJSON({
 
 assertion = sc.startProcessingFlowByJobDoc(jobDoc, false);
 
-assertions.push(
-  test.assertEqual('working', assertion.flowStatus, 'unKnown database module')
-);
+assertions.push(test.assertEqual('working', assertion.flowStatus, 'unKnown database module'));
 
 //unKnown database (both)
 jobDoc = xdmp.toJSON({
@@ -175,8 +163,6 @@ try {
   error = e;
 }
 
-assertions.push(
-  test.assertEqual('XDMP-NODB', error.name, 'unKnown database both')
-);
+assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database both'));
 
 assertions;

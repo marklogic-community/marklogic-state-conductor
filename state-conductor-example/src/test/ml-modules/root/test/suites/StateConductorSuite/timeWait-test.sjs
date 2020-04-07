@@ -22,14 +22,9 @@ jobDoc = xdmp.toJSON({
 
 //"test excute job")
 assertion = sc.executeStateByJobDoc(jobDoc, false);
+assertions.push(test.assertEqual('waiting', assertion.flowStatus, 'waiting flowStatus'));
 assertions.push(
-  test.assertEqual('waiting', assertion.flowStatus, 'waiting flowStatus')
-);
-assertions.push(
-  test.assertTrue(
-    assertion.hasOwnProperty('currentlyWaiting'),
-    'waiting currentlyWaiting'
-  )
+  test.assertTrue(assertion.hasOwnProperty('currentlyWaiting'), 'waiting currentlyWaiting')
 );
 
 jobDoc = xdmp.toJSON({
@@ -66,23 +61,12 @@ jobDoc = xdmp.toJSON({
 
 //"found waiting job")
 assertion = sc.resumeWaitingJobByJobDoc(jobDoc, 'waitTask', false);
+assertions.push(test.assertEqual('working', assertion.flowStatus, 'working flowStatus'));
 assertions.push(
-  test.assertEqual('working', assertion.flowStatus, 'working flowStatus')
+  test.assertEqual('needs-envelope', assertion.provenance[3].to, 'went to next state')
 );
 assertions.push(
-  test.assertEqual(
-    'needs-envelope',
-    assertion.provenance[3].to,
-    'went to next state'
-  )
+  test.assertFalse(assertion.hasOwnProperty('currentlyWaiting'), 'waiting currentlyWaiting')
 );
-assertions.push(
-  test.assertFalse(
-    assertion.hasOwnProperty('currentlyWaiting'),
-    'waiting currentlyWaiting'
-  )
-);
-assertions.push(
-  test.assertEqual('needs-envelope', assertion.flowState, 'working flowStatus')
-);
+assertions.push(test.assertEqual('needs-envelope', assertion.flowState, 'working flowStatus'));
 assertions;

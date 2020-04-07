@@ -13,10 +13,7 @@ assertion = sc.emmitEvent('series-of-clicks-and-beeps-connected', 100, false);
 assertion = assertion.map((item) => item.toString());
 
 assertions.push(
-  test.assertTrue(
-    assertion.includes('/stateConductorJob/test-wait-job.json'),
-    'found waiting job'
-  )
+  test.assertTrue(assertion.includes('/stateConductorJob/test-wait-job.json'), 'found waiting job')
 );
 
 //random event jobs shouldnt be found

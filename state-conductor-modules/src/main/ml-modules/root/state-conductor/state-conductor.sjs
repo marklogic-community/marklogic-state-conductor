@@ -2,9 +2,7 @@
 
 const lib = require('/state-conductor/state-conductor-lib.sjs');
 
-const configuration = setDefaultconfiguration(
-  require('/state-conductor/configuration.sjs').configuration
-);
+const configuration = lib.getConfiguration();
 
 // configurable //
 const STATE_CONDUCTOR_JOBS_DB = configuration.databases.jobs;
@@ -50,33 +48,6 @@ const SUPPORTED_STATE_TYPES = [
 const parseSerializedQuery = (serializedQuery) => {
   return cts.query(fn.head(xdmp.fromJsonString(serializedQuery)));
 };
-
-/**
- * is used to set the defults on the configuration file
- * incase something was missed
- * @param {*} configuration
- * @returns configuration
- */
-function setDefaultconfiguration(configuration) {
-  const defaults = {
-    databases: {
-      jobs: 'state-conductor-jobs',
-      triggers: 'state-conductor-triggers',
-      schemas: 'state-conductor-schemas',
-    },
-    collections: {
-      item: 'state-conductor-item',
-      job: 'stateConductorJob',
-      flow: 'state-conductor-flow',
-    },
-    URIPrefixes: {
-      flow: '/state-conductor-flow/',
-      job: '/stateConductorJob/',
-    },
-  };
-
-  return Object.assign(defaults, configuration);
-}
 
 /**
  * This function should be called when ever we are
@@ -1288,7 +1259,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
       /*
       splits the array into groups of the batchSize
       this is to handle the the case where there are many waiting jobs
-    */
+      */
       var arrayOfwaitingURIJobsForEvent = [];
 
       for (var i = 0; i < waitingURIJobsForEvent.length; i += batchSize) {

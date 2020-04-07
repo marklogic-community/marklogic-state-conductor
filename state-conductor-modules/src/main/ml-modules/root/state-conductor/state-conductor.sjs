@@ -1,3 +1,4 @@
+'use strict';
 
 const lib = require('/state-conductor/state-conductor-lib.sjs');
 
@@ -15,8 +16,8 @@ const JOB_DIRECTORY = configuration.URIPrefixes.job;
 
 
 // non-configurable //
-const JOB_DOC_READ_PERMISSION = "state-conductor-reader-role";
-const JOB_DOC_WRITE_PERMISSION = "state-conductor-job-writer-role";
+const JOB_DOC_READ_PERMISSION = 'state-conductor-reader-role';
+const JOB_DOC_WRITE_PERMISSION = 'state-conductor-job-writer-role';
 const TRACE_EVENT = 'state-conductor';
 const FLOW_FILE_EXTENSION = '.asl.json';
 const FLOW_JOBID_PROP_NAME = 'state-conductor-job';
@@ -28,12 +29,12 @@ const FLOW_STATUS_FAILED = 'failed';
 const FLOW_NEW_STEP = 'NEW';
 const DATE_TIME_REGEX = '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|\.[0-9]{4}|[-|\+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
-const STATE_CHOICE = 'choice';
-const STATE_FAIL = 'fail';
-const STATE_PASS = 'pass';
-const STATE_SUCCEED = 'succeed';
-const STATE_TASK = 'task';
-const STATE_WAIT = 'wait';
+const STATE_CHOICE = "choice";
+const STATE_FAIL = "fail";
+const STATE_PASS = "pass";
+const STATE_SUCCEED = "succeed";
+const STATE_TASK = "task";
+const STATE_WAIT = "wait";
 
 const SUPPORTED_STATE_TYPES = [
   STATE_CHOICE,
@@ -83,7 +84,7 @@ function setDefaultconfiguration(configuration){
  * @param {*} name
  * @returns
  */
-function invokeOrApplyFunction(functionIn, optionsIn){
+function invokeOrApplyFunction(functionIn, optionsIn) {
   // is used incase they dont set one of these
   // often tiems the moduels database isnt set
   const defaultOptions = {
@@ -92,7 +93,7 @@ function invokeOrApplyFunction(functionIn, optionsIn){
   };
   const options = Object.assign(defaultOptions, optionsIn);
 
-  if (options.database.toString() === xdmp.database().toString() && options.modules.toString() === xdmp.modulesDatabase().toString()){
+  if (options.database.toString() === xdmp.database().toString() && options.modules.toString() === xdmp.modulesDatabase().toString()) {
     //the content and the modules database are already in this context
     //we just apply the function and convert it to a sequence so that it makes the invoke function
     return fn.subsequence(functionIn(), 1);
@@ -189,8 +190,8 @@ function getInitialState({ flowName, StartAt }) {
 function getJobMetadatProperty(uri, flowName) {
 
   xdmp.securityAssert(
-    "http://marklogic.com/state-conductor/privilege/execute",
-    "execute"
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
   );
   if (fn.docAvailable(uri)) {
     return xdmp.documentGetProperties(uri, fn.QName('', FLOW_JOBID_PROP_NAME))
@@ -219,10 +220,10 @@ function addJobMetadata(uri, flowName, jobId) {
 }
 
 function getJobIds(uri, flowName) {
-xdmp.securityAssert(
-  "http://marklogic.com/state-conductor/privilege/execute",
-  "execute"
-);
+  xdmp.securityAssert(
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
+  );
   const jobProps = getJobMetadatProperty(uri, flowName);
   return jobProps.map(prop => prop.getAttributeNode('job-id').nodeValue);
 }
@@ -325,8 +326,8 @@ function getAllFlowsContextQuery() {
  */
 function processJob(uri) {
   xdmp.securityAssert(
-    "http://marklogic.com/state-conductor/privilege/execute",
-    "execute"
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
   );
   xdmp.trace(TRACE_EVENT, `state-conductor job processing for job document "${uri}"`);
   // sanity check
@@ -343,24 +344,32 @@ function processJob(uri) {
     executeStateByJobDoc(jobDoc);
     // continue processing
     return true;
+  } else if (FLOW_STATUS_WATING === status) {
+           // execute resume
+           resumeWaitingJobByJobDoc(jobDoc, "processJob");
+           // continue processing
+           return true;
   } else if (FLOW_STATUS_NEW === status) {
-    // job document is not being processed, grab the embedded flow, and start the initial state
-    // begin the flow processing
-    startProcessingFlowByJobDoc(jobDoc);
-    // continue processing
-    return true;
+           // job document is not being processed, grab the embedded flow, and start the initial state
+           // begin the flow processing
+           startProcessingFlowByJobDoc(jobDoc);
+           // continue processing
+           return true;
   } else {
-    // we're done processing the flow
-    xdmp.trace(TRACE_EVENT, `state-conductor flow completed for job document "${uri}"`);
-    // end processing
-    return false;
-  }
+           // we're done processing the flow
+           xdmp.trace(
+             TRACE_EVENT,
+             `state-conductor flow completed for job document "${uri}"`
+           );
+           // end processing
+           return false;
+   }
 }
 
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
   xdmp.securityAssert(
-    "http://marklogic.com/state-conductor/privilege/execute",
-    "execute"
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
   );
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const currFlowName = jobObj.flowName;
@@ -407,8 +416,8 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
  */
 function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
   xdmp.securityAssert(
-    "http://marklogic.com/state-conductor/privilege/execute",
-    "execute"
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
   );
 
   // checks if document is there
@@ -422,8 +431,8 @@ function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
 
 function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   xdmp.securityAssert(
-    "http://marklogic.com/state-conductor/privilege/execute",
-    "execute"
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
   );
   const uri = xdmp.nodeUri(jobDoc);
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
@@ -521,7 +530,7 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
     handleError(err.name, `retryJobAtStateByJobDoc error for flow "${flowName}"`, err, jobDoc, jobObj, save);
   }
 
- try {
+  try {
     //removes old waiting data
     delete jobObj.currentlyWaiting;
 
@@ -534,9 +543,8 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } catch (err) {
-   return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
- }
-
+    return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
+  }
 }
 
 /**
@@ -551,8 +559,8 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
 function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
 
   xdmp.securityAssert(
-    "http://marklogic.com/state-conductor/privilege/execute",
-    "execute"
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
   );
 
   try {
@@ -661,8 +669,8 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
 function executeStateByJobDoc(jobDoc, save = true) {
 
   xdmp.securityAssert(
-    "http://marklogic.com/state-conductor/privilege/execute",
-    "execute"
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
   );
 
   const uri = xdmp.nodeUri(jobDoc);
@@ -745,7 +753,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
           }
         }
 
-      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Event')) {
+      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Event) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
@@ -758,7 +766,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Event" defined for Task state "${stateName}"`);
         }
       }
-      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Seconds')) {
+      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Seconds) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
         if (state.Seconds) {
@@ -777,7 +785,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
           fn.error(null, 'INVALID-STATE-DEFINITION', `no "Seconds" defined for Task state "${stateName}"`);
         }
       }
-      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.hasOwnProperty('Timestamp')) {
+      else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Timestamp) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state Timestamp : ${stateName}`);
         if (state.Timestamp) {
@@ -823,6 +831,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
  */
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
   let resp = invokeOrApplyFunction(() => {
+    declareUpdate();
     const actionModule = require(modulePath);
     if (typeof actionModule.performAction === 'function') {
       return actionModule.performAction(uri, lib.materializeParameters(params, context), context);
@@ -848,6 +857,7 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
  * @returns boolean response of the module
  */
 function executeConditionModule(modulePath, uri, params, context, { database, modules }) {
+
   let resp = invokeOrApplyFunction(() => {
     const conditionModule = require(modulePath);
     if (typeof conditionModule.checkCondition === 'function') {
@@ -884,13 +894,14 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
     return fn.error(null, 'DOCUMENT-NOT-FOUND', Sequence.from([`the document URI of "${uri}" was not found.`, err]));
   }
 
+  let jobDoc;
   let jobObj;
-  
+
   if (save) {
-     let jobDoc = cts.doc(uri);
-     jobObj = jobDoc.toObject();
+    jobDoc = cts.doc(uri);
+    jobObj = jobDoc.toObject();
   } else {
-   jobObj = jobDocIn;
+    jobObj = jobDocIn;
   }
 
   if (currState && (
@@ -1065,8 +1076,8 @@ function scaffoldJobDoc(jobDoc) {
 function createStateConductorJob(flowName, uri, context = {}, options = {}) {
 
   xdmp.securityAssert(
-    "http://marklogic.com/state-conductor/privilege/execute",
-    "execute"
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
   );
 
   const collections = [JOB_COLLECTION].concat(options.collections || []);
@@ -1097,8 +1108,8 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     declareUpdate();
     xdmp.documentInsert(jobUri, job, {
       permissions: [
-        xdmp.permission(JOB_DOC_READ_PERMISSION, "read"),
-        xdmp.permission(JOB_DOC_WRITE_PERMISSION, "update")
+        xdmp.permission(JOB_DOC_READ_PERMISSION, 'read'),
+        xdmp.permission(JOB_DOC_WRITE_PERMISSION, 'update')
       ],
       collections: collections
     });
@@ -1140,6 +1151,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
   let uris =
 
     invokeOrApplyFunction(() => {
+      declareUpdate();
       let waitingURIJobsForEvent =
 
         cts.uris(null, null,
@@ -1193,35 +1205,78 @@ function emmitEvent(event, batchSize = 100, save = true) {
 function getJobDocuments(options) {
 
   xdmp.securityAssert(
-    "http://marklogic.com/state-conductor/privilege/execute",
-    "execute"
+    'http://marklogic.com/state-conductor/privilege/execute',
+    'execute'
   );
-  const count = options.count || 100;
-  const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
-  const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
-  let uris = [];
+    const count = options.count || 100;
+    const flowStatus = Array.isArray(options.flowStatus) ? options.flowStatus : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
+    const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
+    const resumeWait = options.resumeWait
+    let uris = [];
 
-  invokeOrApplyFunction(() => {
-    const queries = [
-      cts.collectionQuery('stateConductorJob'),
-      cts.jsonPropertyValueQuery('flowStatus', flowStatus)
-    ];
+    invokeOrApplyFunction(
+      () => {
+        const queries = [
+          cts.collectionQuery("stateConductorJob"),
+          cts.jsonPropertyValueQuery("flowStatus", flowStatus)
+        ];
 
-    if (flowNames.length > 0) {
-      queries.push(cts.jsonPropertyValueQuery('flowName', flowNames));
-    }
-    if (options.startDate) {
-      queries.push(cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(options.startDate)));
-    }
-    if (options.endDate) {
-      queries.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(options.endDate)));
-    }
-
-    uris = uris.concat(cts.uris('', ['document', `limit=${count}`], cts.andQuery(queries)).toArray());
-  }, {
-    database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
-  });
-
+        if (flowNames.length > 0) {
+          queries.push(cts.jsonPropertyValueQuery("flowName", flowNames));
+        }
+        if (options.startDate) {
+          queries.push(
+            cts.jsonPropertyRangeQuery(
+              "createdDate",
+              ">=",
+              xs.dateTime(options.startDate)
+            )
+          );
+        }
+        if (options.endDate) {
+          queries.push(
+            cts.jsonPropertyRangeQuery(
+              "createdDate",
+              "<=",
+              xs.dateTime(options.endDate)
+            )
+          );
+        }
+        if (fn.exists(resumeWait) && resumeWait === false) {
+          uris = uris.concat(
+            cts
+              .uris("", ["document", `limit=${count}`], cts.andQuery(queries))
+              .toArray()
+          );
+        } else {
+          uris = uris.concat(
+            cts
+              .uris(
+                "",
+                ["document", `limit=${count}`],
+                cts.orQuery([
+                  cts.andQuery(queries),
+                  cts.andQuery([
+                    cts.collectionQuery("stateConductorJob"),
+                    cts.jsonPropertyScopeQuery(
+                      "currentlyWaiting",
+                      cts.jsonPropertyRangeQuery(
+                        "nextTaskTime",
+                        "<=",
+                        fn.currentDateTime()
+                      )
+                    )
+                  ])
+                ])
+              )
+              .toArray()
+          );
+        }
+      },
+      {
+        database: xdmp.database(STATE_CONDUCTOR_JOBS_DB)
+      }
+    );
   return uris;
 }
 

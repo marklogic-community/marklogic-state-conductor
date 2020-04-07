@@ -1,0 +1,59 @@
+buildscript {
+  repositories {
+    jcenter()
+    mavenLocal()
+  }
+  dependencies {
+    classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
+    classpath "com.marklogic:ml-gradle:${mlgradleVersion}"
+  }
+}
+
+plugins {
+  id "java"
+  id "application"
+  id "net.saliman.properties" version "1.5.1"
+  id "com.marklogic.ml-gradle" version "${mlgradleVersion}"
+  id 'com.marklogic.ml-development-tools' version '4.2.0'
+}
+
+test {
+  useJUnitPlatform()
+}
+
+dependencies {
+  mlBundle "com.marklogic:marklogic-state-conductor:${version}"
+  mlBundle "com.marklogic:marklogic-unit-test-modules:1.0.0"
+
+  implementation 'org.slf4j:slf4j-api:1.7.21'
+	implementation 'com.marklogic:marklogic-client-api:4.2.0'
+  implementation 'commons-cli:commons-cli:1.4'
+
+  runtimeOnly "javax.xml.bind:jaxb-api:2.3.0"
+  testImplementation "com.marklogic:marklogic-junit5:1.0.0"
+	testImplementation "org.junit.jupiter:junit-jupiter-api:5.4.1"
+	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.4.1"
+
+	// Force usage of logback for logging
+	runtimeOnly "ch.qos.logback:logback-classic:1.1.8"
+	runtimeOnly group: "org.slf4j", name: "jcl-over-slf4j", version: "1.7.22"
+	runtimeOnly group: "org.slf4j", name: "slf4j-api", version: "1.7.22"
+}
+
+mainClassName = 'com.marklogic.StateConductorDriver'
+
+jar {
+  manifest {
+    attributes(
+      'Main-Class': 'com.marklogic.StateConductorDriver'
+    )
+  }
+  from {
+    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+  }
+}
+
+task generateStateConductorProxy(type: com.marklogic.client.tools.gradle.EndpointProxiesGenTask) {
+  dependsOn 'mlPrepareBundles'
+  serviceDeclarationFile = 'build/mlBundle/marklogic-state-conductor/ml-modules/root/state-conductor/dataservices/service.json'
+}

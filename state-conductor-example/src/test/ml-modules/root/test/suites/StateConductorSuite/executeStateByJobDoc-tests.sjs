@@ -1,4 +1,5 @@
 'use strict';
+declareUpdate();
 
 const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');

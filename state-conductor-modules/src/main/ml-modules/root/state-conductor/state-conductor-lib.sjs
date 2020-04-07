@@ -2,6 +2,52 @@
 
 const TRACE_EVENT = 'state-conductor';
 
+
+/**
+ * is used to get the configuration 
+ * will return a default configuration if there is no configuration.sjs file
+ * @returns configuration
+ */
+function getConfiguration() {
+  const defaultconfigurationDefaults = {
+    'databases': {
+      'jobs': 'state-conductor-jobs',
+      'triggers': 'state-conductor-triggers',
+      'schemas': 'state-conductor-schemas'
+    },
+    'collections': {
+      'item': 'state-conductor-item',
+      'job': 'stateConductorJob',
+      'flow': 'state-conductor-flow'
+    },
+    'URIPrefixes': {
+      'flow': '/state-conductor-flow/',
+      'job': '/stateConductorJob/'
+    }
+  };
+  
+  let configuration = {};
+  try {
+    configuration = require('/state-conductor/configuration.sjs').configuration;
+    configuration.foundCustomConfiguration = true;
+  } catch {
+    configuration.foundCustomConfiguration = false;
+  }
+  
+  return setDefaultconfiguration(defaultconfigurationDefaults, configuration);
+}
+
+/**
+ * is used to set the defults on the configuration file
+ * incase something was missed
+ * @param {*} configuration
+ * @returns configuration
+ */
+function setDefaultconfiguration(defaults, configuration){
+  return Object.assign(defaults, configuration);
+}
+
+
 /**
  * Transforms referencePath (JsonPath) expressions to XPath
  *
@@ -142,5 +188,7 @@ module.exports = {
   isLatestTemporalDocument,
   materializeParameters,
   materializeReferencePath,
-  referencePathToXpath
+  referencePathToXpath,
+  getConfiguration,
+  setDefaultconfiguration
 };

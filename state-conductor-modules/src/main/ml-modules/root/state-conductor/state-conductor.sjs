@@ -128,11 +128,7 @@ function getFlowDocument(name) {
   if (fn.docAvailable(uri)) {
     return cts.doc(uri);
   } else {
-    return fn.error(
-      null,
-      'MISSING-FLOW-FILE',
-      'Cannot find a a flow file with the name: ' + name
-    );
+    return fn.error(null, 'MISSING-FLOW-FILE', 'Cannot find a a flow file with the name: ' + name);
   }
 }
 
@@ -208,17 +204,12 @@ function getInitialState({ flowName, StartAt }) {
  * @returns
  */
 function getJobMetadatProperty(uri, flowName) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   if (fn.docAvailable(uri)) {
     return xdmp
       .documentGetProperties(uri, fn.QName('', FLOW_JOBID_PROP_NAME))
       .toArray()
-      .filter(
-        (prop) => prop.getAttributeNode('flow-name').nodeValue === flowName
-      );
+      .filter((prop) => prop.getAttributeNode('flow-name').nodeValue === flowName);
   }
 }
 
@@ -241,10 +232,7 @@ function addJobMetadata(uri, flowName, jobId) {
 }
 
 function getJobIds(uri, flowName) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const jobProps = getJobMetadatProperty(uri, flowName);
   return jobProps.map((prop) => prop.getAttributeNode('job-id').nodeValue);
 }
@@ -259,11 +247,7 @@ function getJobIds(uri, flowName) {
 function checkFlowContext(uri, flow) {
   if (fn.docAvailable(uri)) {
     const query = getFlowContextQuery(flow);
-    const uris = cts.uris(
-      '',
-      'limit=1',
-      cts.andQuery([cts.documentQuery(uri), query])
-    );
+    const uris = cts.uris('', 'limit=1', cts.andQuery([cts.documentQuery(uri), query]));
     return uri === fn.string(fn.head(uris));
   }
 
@@ -283,9 +267,7 @@ function getApplicableFlows(uri) {
     .filter((flow) => {
       let flowName = getFlowNameFromUri(fn.documentUri(flow));
       let flowOjb = flow.toObject();
-      return (
-        getJobIds(uri, flowName).length === 0 && checkFlowContext(uri, flowOjb)
-      );
+      return getJobIds(uri, flowName).length === 0 && checkFlowContext(uri, flowOjb);
     });
 
   return flows;
@@ -350,21 +332,11 @@ function getAllFlowsContextQuery() {
  * @returns (boolean) indicates if processing of the job document should continue
  */
 function processJob(uri) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
-  xdmp.trace(
-    TRACE_EVENT,
-    `state-conductor job processing for job document "${uri}"`
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
+  xdmp.trace(TRACE_EVENT, `state-conductor job processing for job document "${uri}"`);
   // sanity check
   if (!fn.docAvailable(uri)) {
-    fn.error(
-      null,
-      'INVALID-JOB-DOCUMENT',
-      `State Conductor job document "${uri}" not found!`
-    );
+    fn.error(null, 'INVALID-JOB-DOCUMENT', `State Conductor job document "${uri}" not found!`);
   }
   const jobDoc = cts.doc(uri);
   const job = jobDoc.toObject();
@@ -389,20 +361,14 @@ function processJob(uri) {
     return true;
   } else {
     // we're done processing the flow
-    xdmp.trace(
-      TRACE_EVENT,
-      `state-conductor flow completed for job document "${uri}"`
-    );
+    xdmp.trace(TRACE_EVENT, `state-conductor flow completed for job document "${uri}"`);
     // end processing
     return false;
   }
 }
 
 function startProcessingFlowByJobDoc(jobDoc, save = true) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const currFlowName = jobObj.flowName;
   const status = jobObj.flowStatus;
@@ -410,18 +376,11 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
   try {
     // sanity check
     if (FLOW_STATUS_NEW !== status) {
-      fn.error(
-        null,
-        'INVALID-FLOW-STATUS',
-        'Cannot start a flow not in the NEW status'
-      );
+      fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
     }
 
     // grab the flow definition from the correct db
-    const currFlow = getFlowDocumentFromDatabase(
-      currFlowName,
-      jobObj.database
-    ).toObject();
+    const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
     currFlow.flowName = jobObj.flowName;
     let initialState = getInitialState(currFlow);
 
@@ -462,10 +421,7 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
  * @param {*} uri - the job document's uri
  */
 function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
   // checks if document is there
   if (!fn.docAvailable(uri)) {
@@ -477,10 +433,7 @@ function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
 }
 
 function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const uri = xdmp.nodeUri(jobDoc);
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
@@ -499,9 +452,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
       return fn.error(
         null,
         'INVALID-FLOW-STATUS',
-        'Cannot resume a flow that is not in the ' +
-          FLOW_STATUS_WATING +
-          ' status'
+        'Cannot resume a flow that is not in the ' + FLOW_STATUS_WATING + ' status'
       );
     }
 
@@ -540,15 +491,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } catch (err) {
-    return handleStateFailure(
-      uri,
-      flowName,
-      flowObj,
-      stateName,
-      err,
-      save,
-      jobDoc
-    );
+    return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobDoc);
   }
 }
 
@@ -557,12 +500,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
  *
  * @param {*} uri - the job document's uri
  */
-function retryJobAtState(
-  uri,
-  stateName = FLOW_NEW_STEP,
-  retriedBy = 'unspecified',
-  save = true
-) {
+function retryJobAtState(uri, stateName = FLOW_NEW_STEP, retriedBy = 'unspecified', save = true) {
   // checks if document is there
   if (!fn.docAvailable(uri)) {
     fn.error(null, 'INVALID-JOB-DOCUMENT', `Document Job "${uri}" not found."`);
@@ -629,15 +567,7 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } catch (err) {
-    return handleStateFailure(
-      uri,
-      flowName,
-      flowObj,
-      stateName,
-      err,
-      save,
-      jobObj
-    );
+    return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
   }
 }
 
@@ -651,10 +581,7 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
  * @param {*} flowObj - the flow object
  */
 function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
   try {
     // determine the next target state and transition
@@ -674,10 +601,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
         waiting: jobObj.currentlyWaiting,
       });
     } else if (!inTerminalState(jobObj, flowObj)) {
-      xdmp.trace(
-        TRACE_EVENT,
-        `transition from non-terminal state: ${stateName}`
-      );
+      xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
 
       if (STATE_TASK === state.Type.toLowerCase()) {
         targetState = state.Next;
@@ -736,8 +660,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
         fn.error(
           null,
           'INVALID-STATE-DEFINITION',
-          `unsupported transition from state type "${stateName.Type}"` +
-            xdmp.quote(state)
+          `unsupported transition from state type "${stateName.Type}"` + xdmp.quote(state)
         );
       }
 
@@ -794,10 +717,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
  * @param {*} jobDoc - the job document
  */
 function executeStateByJobDoc(jobDoc, save = true) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
   const uri = xdmp.nodeUri(jobDoc);
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
@@ -858,24 +778,15 @@ function executeStateByJobDoc(jobDoc, save = true) {
           }
 
           // execute the resource modules
-          let resp = executeActionModule(
-            state.Resource,
-            jobObj.uri,
-            state.Parameters,
-            context,
-            {
-              database: jobObj.database,
-              modules: jobObj.modules,
-            }
-          );
+          let resp = executeActionModule(state.Resource, jobObj.uri, state.Parameters, context, {
+            database: jobObj.database,
+            modules: jobObj.modules,
+          });
 
           // add the data from the result to the job's context
           if (state.OutputPath && state.OutputPath !== '$') {
             // update the job context with the response optionally modified by the OutputPath config
-            jobObj.context = lib.materializeReferencePath(
-              state.OutputPath,
-              resp
-            );
+            jobObj.context = lib.materializeReferencePath(state.OutputPath, resp);
           } else {
             jobObj.context = resp;
           }
@@ -893,19 +804,12 @@ function executeStateByJobDoc(jobDoc, save = true) {
           // add the data from the result to the job's context
           if (state.OutputPath && state.OutputPath !== '$') {
             // update the job context with the result data optionally modified by the OutputPath config
-            jobObj.context = lib.materializeReferencePath(
-              state.OutputPath,
-              result
-            );
+            jobObj.context = lib.materializeReferencePath(state.OutputPath, result);
           } else {
             jobObj.context = result;
           }
         }
-      } else if (
-        state.Type &&
-        state.Type.toLowerCase() === STATE_WAIT &&
-        state.Event
-      ) {
+      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Event) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
@@ -921,11 +825,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
             `no "Event" defined for Task state "${stateName}"`
           );
         }
-      } else if (
-        state.Type &&
-        state.Type.toLowerCase() === STATE_WAIT &&
-        state.Seconds
-      ) {
+      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Seconds) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
         if (state.Seconds) {
@@ -934,14 +834,9 @@ function executeStateByJobDoc(jobDoc, save = true) {
           let currentTime = fn.currentDateTime();
           let WaitTimeToSeconds = waitTime - WaitTimeToMinutes * 60;
           let nextTaskTime = currentTime.add(
-            xs.dayTimeDuration(
-              'PT' + WaitTimeToMinutes + 'M' + WaitTimeToSeconds + 'S'
-            )
+            xs.dayTimeDuration('PT' + WaitTimeToMinutes + 'M' + WaitTimeToSeconds + 'S')
           );
-          xdmp.trace(
-            TRACE_EVENT,
-            `waiting for state nextTaskTime : ${nextTaskTime}`
-          );
+          xdmp.trace(TRACE_EVENT, `waiting for state nextTaskTime : ${nextTaskTime}`);
           jobObj.currentlyWaiting = {
             seconds: state.Seconds,
             nextTaskTime: nextTaskTime,
@@ -954,30 +849,20 @@ function executeStateByJobDoc(jobDoc, save = true) {
             `no "Seconds" defined for Task state "${stateName}"`
           );
         }
-      } else if (
-        state.Type &&
-        state.Type.toLowerCase() === STATE_WAIT &&
-        state.Timestamp
-      ) {
+      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Timestamp) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state Timestamp : ${stateName}`);
         if (state.Timestamp) {
           xdmp.trace(TRACE_EVENT, ` timestamp  value is : ${state.Timestamp}`);
           let timestamp = state.Timestamp;
           if (fn.matches(timestamp, DATE_TIME_REGEX)) {
-            xdmp.trace(
-              TRACE_EVENT,
-              ` pass regex check  value is : ${timestamp}`
-            );
+            xdmp.trace(TRACE_EVENT, ` pass regex check  value is : ${timestamp}`);
             let nextTaskTime = xdmp.parseDateTime(
               '[Y0001]-[M01]-[D01]T[H01]:[m01]:[f1]',
               timestamp
             );
             if (nextTaskTime < fn.currentDateTime()) {
-              xdmp.trace(
-                TRACE_EVENT,
-                `Time for Schedule task has passed : ${nextTaskTime}`
-              );
+              xdmp.trace(TRACE_EVENT, `Time for Schedule task has passed : ${nextTaskTime}`);
             }
             jobObj.currentlyWaiting = {
               timestamp: timestamp,
@@ -1001,15 +886,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
         }
       }
     } catch (err) {
-      return handleStateFailure(
-        uri,
-        flowName,
-        flowObj,
-        stateName,
-        err,
-        save,
-        jobObj
-      );
+      return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
     }
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } else {
@@ -1034,23 +911,13 @@ function executeStateByJobDoc(jobDoc, save = true) {
  * @param {*} options { database, modules } the execution context of the module
  * @returns the action module's resposne
  */
-function executeActionModule(
-  modulePath,
-  uri,
-  params,
-  context,
-  { database, modules }
-) {
+function executeActionModule(modulePath, uri, params, context, { database, modules }) {
   let resp = invokeOrApplyFunction(
     () => {
       declareUpdate();
       const actionModule = require(modulePath);
       if (typeof actionModule.performAction === 'function') {
-        return actionModule.performAction(
-          uri,
-          lib.materializeParameters(params, context),
-          context
-        );
+        return actionModule.performAction(uri, lib.materializeParameters(params, context), context);
       } else {
         fn.error(
           null,
@@ -1077,13 +944,7 @@ function executeActionModule(
  * @param {*} options { database, modules } the execution context of the module
  * @returns boolean response of the module
  */
-function executeConditionModule(
-  modulePath,
-  uri,
-  params,
-  context,
-  { database, modules }
-) {
+function executeConditionModule(modulePath, uri, params, context, { database, modules }) {
   let resp = invokeOrApplyFunction(
     () => {
       const conditionModule = require(modulePath);
@@ -1122,15 +983,7 @@ function executeConditionModule(
  * @param {*} jobDoc
  * @returns
  */
-function handleStateFailure(
-  uri,
-  flowName,
-  flow,
-  stateName,
-  err,
-  save = true,
-  jobDocIn
-) {
+function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jobDocIn) {
   const currState = flow.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
@@ -1155,8 +1008,7 @@ function handleStateFailure(
 
   if (
     currState &&
-    (STATE_TASK === currState.Type.toLowerCase() ||
-      STATE_CHOICE === currState.Type.toLowerCase())
+    (STATE_TASK === currState.Type.toLowerCase() || STATE_CHOICE === currState.Type.toLowerCase())
   ) {
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
@@ -1215,15 +1067,8 @@ function inTerminalState(job, flow) {
   const currStateName = job.flowState;
   let currState = flow.States[currStateName];
 
-  if (
-    currState &&
-    !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())
-  ) {
-    fn.error(
-      null,
-      'INVALID-STATE-DEFINITION',
-      `unsupported state type: "${currState.Type}"`
-    );
+  if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
+    fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported state type: "${currState.Type}"`);
   }
   return (
     !currState ||
@@ -1245,14 +1090,10 @@ function getFlowCounts(flowName, { startDate, endDate }) {
 
   let baseQuery = [];
   if (startDate) {
-    baseQuery.push(
-      cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(startDate))
-    );
+    baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(startDate)));
   }
   if (endDate) {
-    baseQuery.push(
-      cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate))
-    );
+    baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)));
   }
 
   const numInStatus = (status) =>
@@ -1354,10 +1195,7 @@ function scaffoldJobDoc(jobDoc) {
  * @param {*} [options={}]
  */
 function createStateConductorJob(flowName, uri, context = {}, options = {}) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
   const collections = [JOB_COLLECTION].concat(options.collections || []);
   const directory = options.directory || '/' + JOB_COLLECTION + '/';
@@ -1382,10 +1220,7 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   });
 
   // insert the job document
-  xdmp.trace(
-    TRACE_EVENT,
-    `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`
-  );
+  xdmp.trace(TRACE_EVENT, `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`);
   invokeOrApplyFunction(
     () => {
       declareUpdate();
@@ -1420,15 +1255,8 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
  * @param {*} [options={}]
  * @returns
  */
-function batchCreateStateConductorJob(
-  flowName,
-  uris = [],
-  context = {},
-  options = {}
-) {
-  const ids = uris.map((uri) =>
-    createStateConductorJob(flowName, uri, context, options)
-  );
+function batchCreateStateConductorJob(flowName, uris = [], context = {}, options = {}) {
+  const ids = uris.map((uri) => createStateConductorJob(flowName, uri, context, options));
   return ids;
 }
 
@@ -1464,9 +1292,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
       var arrayOfwaitingURIJobsForEvent = [];
 
       for (var i = 0; i < waitingURIJobsForEvent.length; i += batchSize) {
-        arrayOfwaitingURIJobsForEvent.push(
-          waitingURIJobsForEvent.slice(i, i + batchSize)
-        );
+        arrayOfwaitingURIJobsForEvent.push(waitingURIJobsForEvent.slice(i, i + batchSize));
       }
 
       //loops through all the arrays
@@ -1496,10 +1322,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
  * @returns
  */
 function getJobDocuments(options) {
-  xdmp.securityAssert(
-    'http://marklogic.com/state-conductor/privilege/execute',
-    'execute'
-  );
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const count = options.count || 100;
   const flowStatus = Array.isArray(options.flowStatus)
     ? options.flowStatus
@@ -1520,27 +1343,15 @@ function getJobDocuments(options) {
       }
       if (options.startDate) {
         queries.push(
-          cts.jsonPropertyRangeQuery(
-            'createdDate',
-            '>=',
-            xs.dateTime(options.startDate)
-          )
+          cts.jsonPropertyRangeQuery('createdDate', '>=', xs.dateTime(options.startDate))
         );
       }
       if (options.endDate) {
-        queries.push(
-          cts.jsonPropertyRangeQuery(
-            'createdDate',
-            '<=',
-            xs.dateTime(options.endDate)
-          )
-        );
+        queries.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(options.endDate)));
       }
       if (fn.exists(resumeWait) && resumeWait === false) {
         uris = uris.concat(
-          cts
-            .uris('', ['document', `limit=${count}`], cts.andQuery(queries))
-            .toArray()
+          cts.uris('', ['document', `limit=${count}`], cts.andQuery(queries)).toArray()
         );
       } else {
         uris = uris.concat(
@@ -1554,11 +1365,7 @@ function getJobDocuments(options) {
                   cts.collectionQuery('stateConductorJob'),
                   cts.jsonPropertyScopeQuery(
                     'currentlyWaiting',
-                    cts.jsonPropertyRangeQuery(
-                      'nextTaskTime',
-                      '<=',
-                      fn.currentDateTime()
-                    )
+                    cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
                   ),
                 ]),
               ])

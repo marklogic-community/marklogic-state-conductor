@@ -20,6 +20,13 @@
       "desc": "A list of flow status's to filter the returned job documents.  Defaults to 'new' and 'working'.",
       "nullable": true,
       "multiple": true
+    },
+    {
+      "name": "forestIds",
+      "datatype": "string",
+      "desc": "The returned list of job documents will be limited to jobs found in this list of forests.",
+      "nullable": true,
+      "multiple": true
     }
   ],
   "return": {

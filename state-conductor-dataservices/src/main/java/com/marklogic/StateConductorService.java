@@ -31,7 +31,7 @@ public interface StateConductorService {
             }
 
             @Override
-            public Stream<String> getJobs(Integer count, String flowNames, Stream<String> flowStatus) {
+            public Stream<String> getJobs(Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds) {
               return BaseProxy.StringType.toString(
                 baseProxy
                 .request("getJobs.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
@@ -39,7 +39,8 @@ public interface StateConductorService {
                 .withParams(
                     BaseProxy.atomicParam("count", true, BaseProxy.UnsignedIntegerType.fromInteger(count)),
                     BaseProxy.atomicParam("flowNames", true, BaseProxy.StringType.fromString(flowNames)),
-                    BaseProxy.atomicParam("flowStatus", true, BaseProxy.StringType.fromString(flowStatus)))
+                    BaseProxy.atomicParam("flowStatus", true, BaseProxy.StringType.fromString(flowStatus)),
+                    BaseProxy.atomicParam("forestIds", true, BaseProxy.StringType.fromString(forestIds)))
                 .withMethod("POST")
                 .responseMultiple(true, null)
                 );
@@ -85,9 +86,10 @@ public interface StateConductorService {
    * @param count	The number of uris to return
    * @param flowNames	A list of flow names to filter the returned job documents
    * @param flowStatus	A list of flow status's to filter the returned job documents.  Defaults to 'new' and 'working'.
+   * @param forestIds	The returned list of job documents will be limited to jobs found in this list of forests.
    * @return	as output
    */
-    Stream<String> getJobs(Integer count, String flowNames, Stream<String> flowStatus);
+    Stream<String> getJobs(Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds);
 
   /**
    * Creates a MarkLogic State Conductor Job document for the given uri and flow.

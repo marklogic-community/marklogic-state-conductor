@@ -69,7 +69,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   @Test
   public void testGetJobsMock() {
     int count = 10;
-    Object[] uris = mockService.getJobs(count, null, null).toArray();
+    Object[] uris = mockService.getJobs(count, null, null, null).toArray();
     assertEquals(count, uris.length);
     assertEquals("/test/test1.json", uris[0].toString());
     assertEquals("/test/test2.json", uris[1].toString());
@@ -83,7 +83,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     String[] uris;
     StateConductorJob jobDoc;
 
-    uris = service.getJobs(1000, null, null).toArray(String[]::new);
+    uris = service.getJobs(1000, null, null, null).toArray(String[]::new);
     assertTrue(3 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
       String flowStatus = getJobDocument(uris[i]).getFlowStatus();
@@ -91,14 +91,14 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     }
 
     status = new String[]{ "new" };
-    uris = service.getJobs(count, null, Arrays.stream(status)).toArray(String[]::new);
+    uris = service.getJobs(count, null, Arrays.stream(status), null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
       assertEquals("new", getJobDocument(uris[i]).getFlowStatus());
     }
 
     status = new String[]{ "new" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status)).toArray(String[]::new);
+    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
       assertEquals("new", getJobDocument(uris[i]).getFlowStatus());
@@ -106,28 +106,28 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     }
 
     status = new String[]{ "working" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status)).toArray(String[]::new);
+    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
     assertEquals(1, uris.length);
     assertEquals("working", getJobDocument(uris[0]).getFlowStatus());
     assertEquals("test-flow", getJobDocument(uris[0]).getFlowName());
     assertEquals("job3", getJobDocument(uris[0]).getId());
 
     status = new String[]{ "complete" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status)).toArray(String[]::new);
+    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
     assertEquals(1, uris.length);
     assertEquals("complete", getJobDocument(uris[0]).getFlowStatus());
     assertEquals("test-flow", getJobDocument(uris[0]).getFlowName());
     assertEquals("job4", getJobDocument(uris[0]).getId());
 
     status = new String[]{ "failed" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status)).toArray(String[]::new);
+    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
     assertEquals(1, uris.length);
     assertEquals("failed", getJobDocument(uris[0]).getFlowStatus());
     assertEquals("test-flow", getJobDocument(uris[0]).getFlowName());
     assertEquals("job5", getJobDocument(uris[0]).getId());
 
     status = new String[]{ "complete", "failed" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status)).toArray(String[]::new);
+    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
       String flowStatus = getJobDocument(uris[i]).getFlowStatus();
@@ -135,7 +135,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
       assertEquals("test-flow", getJobDocument(uris[i]).getFlowName());
     }
 
-    uris = service.getJobs(count, "fake-flow", null).toArray(String[]::new);
+    uris = service.getJobs(count, "fake-flow", null, null).toArray(String[]::new);
     assertEquals(0, uris.length);
   }
 

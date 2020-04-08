@@ -8,6 +8,7 @@ const sc = require('/state-conductor/state-conductor.sjs');
 var count;
 var flowNames;
 var flowStatus;
+var forestIds;
 
 xdmp.trace(
   sc.TRACE_EVENT,
@@ -36,10 +37,19 @@ if (Array.isArray(flowStatus)) {
   flowStatus = [sc.FLOW_STATUS_NEW, sc.FLOW_STATUS_WORKING];
 }
 
+if (Array.isArray(forestIds)) {
+  // continue
+} else if (forestIds instanceof Sequence) {
+  forestIds = forestIds.toArray();
+} else if (typeof forestIds === 'string') {
+  forestIds = forestIds.split(',');
+}
+
 let options = {
   count: count,
   flowStatus: flowStatus,
   flowNames: flowNames,
+  forestIds: forestIds,
   startDate: null,
   endDate: null,
 };

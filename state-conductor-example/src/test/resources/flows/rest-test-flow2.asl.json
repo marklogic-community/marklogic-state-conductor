@@ -1,0 +1,19 @@
+{
+  "Comment": "does things",
+  "mlDomain": {
+    "context": []
+  },
+  "StartAt": "test-data",
+  "States": {
+    "test-data": {
+      "Type": "Pass",
+      "Result": {
+        "data": "Lorem ipsum dolor sit amet"
+      },
+      "Next": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

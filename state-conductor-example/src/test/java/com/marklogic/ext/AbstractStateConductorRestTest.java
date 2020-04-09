@@ -73,6 +73,28 @@ public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTe
     return jobsManager;
   }
 
+  private String contentDatabaseId;
+  protected String getContentDatabaseId() {
+    if (contentDatabaseId == null) {
+      contentDatabaseId = getDatabaseClient()
+        .newServerEval()
+        .xquery("xdmp:database(\"state-conductor-example-test-content\")")
+        .evalAs(String.class);
+    }
+    return contentDatabaseId;
+  }
+
+  private String modulesDatabaseId;
+  protected String getModulesDatabaseId() {
+    if (modulesDatabaseId == null) {
+      modulesDatabaseId = getDatabaseClient()
+        .newServerEval()
+        .xquery("xdmp:database(\"state-conductor-example-modules\")")
+        .evalAs(String.class);
+    }
+    return modulesDatabaseId;
+  }
+
   protected FileHandle loadFileResource(String name) throws FileNotFoundException {
     URL resource = getClass().getClassLoader().getResource(name);
     if (resource == null) {

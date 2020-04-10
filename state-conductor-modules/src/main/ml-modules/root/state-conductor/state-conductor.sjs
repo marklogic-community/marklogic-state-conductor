@@ -84,7 +84,7 @@ function invokeOrApplyFunction(functionIn, optionsIn) {
  * Gets a flow definition by flowName
  *
  * @param {*} name
- * @returns
+ * @returns the flow document or null if not found
  */
 function getFlowDocument(name) {
   let nameWithExtension = fn.normalizeSpace(name) + FLOW_FILE_EXTENSION;
@@ -96,17 +96,25 @@ function getFlowDocument(name) {
     )
   );
 
-  if (fn.docAvailable(uri)) {
-    return cts.doc(uri);
-  } else {
-    return fn.error(null, 'MISSING-FLOW-FILE', 'Cannot find a a flow file with the name: ' + name);
-  }
+  return uri ? cts.doc(uri) : null;
 }
 
+/**
+ * Gets a flow definition by flowName from the given database.
+ * Throws an error if not found
+ *
+ * @param {*} name
+ * @param {*} databaseId
+ * @returns
+ */
 function getFlowDocumentFromDatabase(name, databaseId) {
   let resp = invokeOrApplyFunction(
     () => {
-      return getFlowDocument(name);
+      let flow = getFlowDocument(name);
+      if (!flow) {
+        fn.error(null, 'MISSING-FLOW-FILE', `Cannot find a a flow file with the name: ${name}`);
+      }
+      return flow;
     },
     {
       database: databaseId,

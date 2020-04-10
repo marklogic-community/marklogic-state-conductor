@@ -3,15 +3,11 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 function returnError(statusCode, statusMsg, body) {
-  fn.error(
-    null,
-    'RESTAPI-SRVEXERR',
-    Sequence.from([statusCode, statusMsg, body])
-  );
+  fn.error(null, 'RESTAPI-SRVEXERR', Sequence.from([statusCode, statusMsg, body]));
 }
 
 function parseArrayParam(input, delim = ',') {
-  let value = [];
+  let value;
   if (typeof input === 'string') {
     value = input.split(delim);
   }
@@ -33,8 +29,12 @@ function get(context, params) {
     endDate: params.endDate,
   };
 
+  const uris = sc.getJobDocuments(options);
+
+  xdmp.trace(sc.TRACE_EVENT, `state-conductor-driver found ${uris.length} job documents`);
+
   context.outputStatus = [200, 'OK'];
-  return sc.getJobDocuments(options);
+  return uris;
 }
 
 /**

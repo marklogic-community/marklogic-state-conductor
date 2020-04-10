@@ -43,7 +43,7 @@ public class JobsServiceTest extends AbstractStateConductorRestTest {
 
   @AfterEach
   public void teardown() {
-    clearTestDatabase();
+    clearTestJobs();
   }
 
   @Test

@@ -9,6 +9,8 @@ import com.marklogic.junit5.AbstractMarkLogicTest;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
@@ -39,6 +41,8 @@ import static io.restassured.RestAssured.given;
  * be in the Spring container so that this class can implement its parent class's getDatabaseClient method.
  */
 public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTest {
+
+  Logger logger = LoggerFactory.getLogger(AbstractStateConductorRestTest.class);
 
   @Autowired
   @Qualifier("databaseClientProvider")
@@ -95,8 +99,8 @@ public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTe
     return modulesDatabaseId;
   }
 
-  protected FileHandle loadFileResource(String name) throws FileNotFoundException {
-    URL resource = getClass().getClassLoader().getResource(name);
+  protected static FileHandle loadFileResource(String name) throws FileNotFoundException {
+    URL resource = AbstractStateConductorRestTest.class.getClassLoader().getResource(name);
     if (resource == null) {
       throw new FileNotFoundException(name);
     } else {
@@ -121,7 +125,18 @@ public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTe
     return new StringHandle(content);
   }
 
+  protected StringHandle replaceTokensInResource(FileHandle file, Map<String, String> tokens) throws IOException {
+    String content = Files.readString(file.get().toPath());
+
+    for (Map.Entry<String, String> token : tokens.entrySet()) {
+      content = content.replaceAll(token.getKey(), token.getValue());
+    }
+
+    return new StringHandle(content);
+  }
+
   protected void clearTestDatabase() {
+    logger.info("clearing test database...");
     given().
       log().uri().
       port(8002).
@@ -130,6 +145,15 @@ public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTe
       post(String.format("/manage/v2/databases/%s", "state-conductor-example-test-content")).
     then().
       statusCode(200);
+  }
+
+  protected void clearTestJobs() { clearTestJobs("/test/");}
+  protected void clearTestJobs(String root) {
+    logger.info("clearing test jobs \"{}\" ...", root);
+    getJobsDatabaseClient()
+      .newServerEval()
+      .xquery(String.format("xdmp:directory-delete(\"%s\")", root))
+      .eval();
   }
 
 }

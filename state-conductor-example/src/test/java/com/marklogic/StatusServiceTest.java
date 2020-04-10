@@ -2,6 +2,8 @@ package com.marklogic;
 
 import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.FileHandle;
+import com.marklogic.client.io.StringHandle;
 import com.marklogic.ext.AbstractStateConductorRestTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
@@ -17,7 +19,22 @@ import static org.hamcrest.Matchers.*;
 
 public class StatusServiceTest extends AbstractStateConductorRestTest {
 
+  static FileHandle job1;
+  static FileHandle job2;
+  static FileHandle job3;
+  static FileHandle restTestFlow;
+  static FileHandle restTestFlow2;
+
   LocalDateTime now;
+
+  @BeforeAll
+  public static void setupSuite() throws IOException {
+    job1 = loadFileResource("jobs/job1.json");
+    job2 = loadFileResource("jobs/job2.json");
+    job3 = loadFileResource("jobs/job3.json");
+    restTestFlow = loadFileResource("flows/rest-test-flow.asl.json");
+    restTestFlow2 = loadFileResource("flows/rest-test-flow2.asl.json");
+  }
 
   @BeforeEach
   public void setup() throws IOException {
@@ -36,23 +53,23 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
     jobMeta.getCollections().add("stateConductorJob");
     jobMeta.getPermissions().add("state-conductor-reader-role", DocumentMetadataHandle.Capability.READ);
     jobMeta.getPermissions().add("state-conductor-job-writer-role", DocumentMetadataHandle.Capability.UPDATE);
-    batch.add("/test/stateConductorJob/job1.json", jobMeta, loadTokenizedResource("jobs/job1.json", tokens));
-    batch.add("/test/stateConductorJob/job2.json", jobMeta, loadTokenizedResource("jobs/job2.json", tokens));
-    batch.add("/test/stateConductorJob/job3.json", jobMeta, loadTokenizedResource("jobs/job3.json", tokens));
+    batch.add("/test/stateConductorJob/job1.json", jobMeta, replaceTokensInResource(job1, tokens));
+    batch.add("/test/stateConductorJob/job2.json", jobMeta, replaceTokensInResource(job2, tokens));
+    batch.add("/test/stateConductorJob/job3.json", jobMeta, replaceTokensInResource(job3, tokens));
     getJobsManager().write(batch);
 
     // add flow docs
     DocumentMetadataHandle flowMeta = new DocumentMetadataHandle();
     flowMeta.getCollections().add("state-conductor-flow");
     batch = getContentManager().newWriteSet();
-    batch.add("/state-conductor-flow/rest-test-flow.asl.json", flowMeta, loadFileResource("flows/rest-test-flow.asl.json"));
-    batch.add("/state-conductor-flow/rest-test-flow2.asl.json", flowMeta, loadFileResource("flows/rest-test-flow2.asl.json"));
+    batch.add("/state-conductor-flow/rest-test-flow.asl.json", flowMeta, restTestFlow);
+    batch.add("/state-conductor-flow/rest-test-flow2.asl.json", flowMeta, restTestFlow2);
     getContentManager().write(batch);
   }
 
   @AfterEach
   public void teardown() {
-    clearTestDatabase();
+    clearTestJobs();
   }
 
   @Test
@@ -167,11 +184,51 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       body("rest-test-flow.complete.success", equalTo(0));
   }
 
+  @Test
   public void testBadFlowName() {
-    // TODO
+    given().
+      log().uri().
+    when().
+      queryParam("rs:flowName", "non-existent-flow").
+      get("/v1/resources/state-conductor-status").
+    then().
+      log().body().
+      statusCode(404);
   }
 
+  @Test
   public void testBadTemporalParam() {
-    // TODO
+    // both bad
+    given().
+      log().uri().
+    when().
+      queryParam("rs:startDate", "123456").
+      queryParam("rs:endDate", "abcdefg").
+      get("/v1/resources/state-conductor-status").
+    then().
+      log().body().
+      statusCode(400);
+
+    // bad endDate
+    given().
+      log().uri().
+    when().
+      queryParam("rs:startDate", now.format(DateTimeFormatter.ISO_DATE_TIME)).
+      queryParam("rs:endDate", "abcdefg").
+      get("/v1/resources/state-conductor-status").
+    then().
+      log().body().
+      statusCode(400);
+
+    // bad startDate
+    given().
+      log().uri().
+    when().
+      queryParam("rs:startDate", "123456").
+      queryParam("rs:endDate", now.format(DateTimeFormatter.ISO_DATE_TIME)).
+      get("/v1/resources/state-conductor-status").
+    then().
+      log().body().
+      statusCode(400);
   }
 }

@@ -3,11 +3,16 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 function returnError(statusCode, statusMsg, body) {
-  fn.error(
-    null,
-    'RESTAPI-SRVEXERR',
-    Sequence.from([statusCode, statusMsg, body])
-  );
+  fn.error(null, 'RESTAPI-SRVEXERR', Sequence.from([statusCode, statusMsg, body]));
+}
+
+function isValidTemporal(value) {
+  try {
+    xs.dateTime(value);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -16,6 +21,14 @@ function returnError(statusCode, statusMsg, body) {
 function get(context, params) {
   if (params.flowName && !sc.getFlowDocument(params.flowName)) {
     returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
+  }
+
+  if (params.startDate && !isValidTemporal(params.startDate)) {
+    returnError(400, 'BAD REQUEST', `Invalid startDate: "${params.startDate}".`);
+  }
+
+  if (params.endDate && !isValidTemporal(params.endDate)) {
+    returnError(400, 'BAD REQUEST', `Invalid endDate: "${params.endDate}".`);
   }
 
   const flowNames = params.flowName ? [params.flowName] : sc.getFlowNames();

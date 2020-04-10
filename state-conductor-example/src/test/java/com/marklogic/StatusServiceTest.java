@@ -156,7 +156,7 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       body("rest-test-flow.totalComplete", equalTo(0)).
       body("rest-test-flow.totalWorking", equalTo(1)).
       body("rest-test-flow.totalFailed", equalTo(0)).
-      body("rest-test-flow.totalNew", equalTo(1)).
+      body("rest-test-flow.totalNew", greaterThanOrEqualTo(1)).
       body("rest-test-flow.working", notNullValue()).
       body("rest-test-flow.working.add-collection-1", equalTo(1)).
       body("rest-test-flow.working.add-collection-2", equalTo(0)).

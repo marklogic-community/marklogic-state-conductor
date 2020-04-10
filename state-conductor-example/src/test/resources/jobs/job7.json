@@ -1,0 +1,13 @@
+{
+  "id": "job7",
+  "flowName": "rest-test-flow4",
+  "flowStatus": "new",
+  "flowState": null,
+  "uri": "/test/doc2.json",
+  "database": "%DATABASE%",
+  "modules": "%MODULES%",
+  "createdDate": "%DATE-NOW%",
+  "context": {},
+  "provenance": [],
+  "errors": {}
+}

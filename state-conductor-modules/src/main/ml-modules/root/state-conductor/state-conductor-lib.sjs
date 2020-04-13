@@ -105,6 +105,70 @@ function materializeParameters(params = {}, context = {}) {
 }
 
 /**
+ * Evaluates if the given choice rule is true
+ *
+ * @param {*} [rule={}]
+ * @param {*} [context={}]
+ * @returns {boolean} if the rule evaluates to true
+ */
+function evaluateChoiceRule(rule = {}, context = {}) {
+  let compareTo = materializeReferencePath(rule.Variable, context);
+  if (rule.And && Array.isArray(rule.And)) {
+    // complex array field
+    return rule.And.reduce((acc, subrule) => {
+      return acc && evaluateChoiceRule(subrule, context);
+    }, true);
+  } else if (rule.Or && Array.isArray(rule.Or)) {
+    // complex array field
+    return rule.Or.reduce((acc, subrule) => {
+      return acc || evaluateChoiceRule(subrule, context);
+    }, false);
+  } else if (rule.Not) {
+    // complex field
+    return !evaluateChoiceRule(rule.Not, context);
+  } else if (rule.hasOwnProperty('BooleanEquals')) {
+    return !!rule.BooleanEquals === !!compareTo;
+  } else if (rule.NumericEquals) {
+    return fn.number(rule.NumericEquals) === fn.number(compareTo);
+  } else if (rule.NumericGreaterThan) {
+    return fn.number(rule.NumericGreaterThan) < fn.number(compareTo);
+  } else if (rule.NumericGreaterThanEquals) {
+    return fn.number(rule.NumericGreaterThanEquals) <= fn.number(compareTo);
+  } else if (rule.NumericLessThan) {
+    return fn.number(rule.NumericLessThan) > fn.number(compareTo);
+  } else if (rule.NumericLessThanEquals) {
+    return fn.number(rule.NumericLessThanEquals) >= fn.number(compareTo);
+  } else if (rule.StringEquals) {
+    return fn.string(rule.StringEquals) === fn.string(compareTo);
+  } else if (rule.StringGreaterThan) {
+    return fn.string(rule.StringGreaterThan) < fn.string(compareTo);
+  } else if (rule.StringGreaterThanEquals) {
+    return fn.string(rule.StringGreaterThanEquals) <= fn.string(compareTo);
+  } else if (rule.StringLessThan) {
+    return fn.string(rule.StringLessThan) > fn.string(compareTo);
+  } else if (rule.StringLessThanEquals) {
+    return fn.string(rule.StringLessThanEquals) >= fn.string(compareTo);
+  } else if (rule.TimestampEquals) {
+    return xs.dateTime(rule.TimestampEquals).eq(xs.dateTime(compareTo));
+  } else if (rule.TimestampGreaterThan) {
+    return xs.dateTime(compareTo).gt(xs.dateTime(rule.TimestampGreaterThan));
+  } else if (rule.TimestampGreaterThanEquals) {
+    return xs.dateTime(compareTo).ge(xs.dateTime(rule.TimestampGreaterThanEquals));
+  } else if (rule.TimestampLessThan) {
+    return xs.dateTime(compareTo).lt(xs.dateTime(rule.TimestampLessThan));
+  } else if (rule.TimestampLessThanEquals) {
+    return xs.dateTime(compareTo).le(xs.dateTime(rule.TimestampLessThanEquals));
+  } else {
+    fn.error(
+      null,
+      'INVALID-STATE-DEFINITION',
+      `Unknown choice rule format: "${JSON.stringify(rule)}"`
+    );
+  }
+  return false;
+}
+
+/**
  * Given a flow context with the "scheduled" scope, determines
  * if the scheduled period has elapsed.
  *
@@ -202,11 +266,12 @@ function isLatestTemporalDocument(uri) {
 }
 
 module.exports = {
+  evaluateChoiceRule,
+  getConfiguration,
   hasScheduleElapsed,
   isLatestTemporalDocument,
   materializeParameters,
   materializeReferencePath,
   referencePathToXpath,
-  getConfiguration,
   setDefaultconfiguration,
 };

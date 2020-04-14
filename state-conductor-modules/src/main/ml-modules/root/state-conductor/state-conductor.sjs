@@ -608,11 +608,8 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
                   );
                   targetState = resp ? choice.Next : null;
                 } else {
-                  fn.error(
-                    null,
-                    'INVALID-STATE-DEFINITION',
-                    `Choices defined without "Resource" in state "${stateName}"`
-                  );
+                  let resp = lib.evaluateChoiceRule(choice, jobObj.context);
+                  targetState = resp ? choice.Next : null;
                 }
               }
             });

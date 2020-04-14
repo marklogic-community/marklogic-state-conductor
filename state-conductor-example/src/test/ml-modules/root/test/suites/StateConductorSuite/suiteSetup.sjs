@@ -86,6 +86,14 @@ test.loadTestFile(
   sc.FLOW_COLLECTION
 );
 
+test.loadTestFile(
+  'flows/choice-flow.asl.json',
+  xdmp.database(),
+  sc.FLOW_DIRECTORY + 'choice-flow.asl.json',
+  xdmp.defaultPermissions(),
+  sc.FLOW_COLLECTION
+);
+
 // insert the test jobs
 test.loadTestFile(
   'test-wait-job.json',

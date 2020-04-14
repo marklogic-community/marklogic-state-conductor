@@ -6,21 +6,22 @@ const test = require('/test/test-helper.xqy');
 const assertions = [];
 
 const flowDocuments = sc.getFlowDocuments().toArray();
-assertions.push(test.assertEqual(10, flowDocuments.length, 'Flow files are present'));
+assertions.push(test.assertEqual(11, flowDocuments.length, 'Flow files are present'));
 
 const flowNames = sc.getFlowNames().sort();
 assertions.push(
-  test.assertEqual(10, flowNames.length, 'flowNames count'),
+  test.assertEqual(11, flowNames.length, 'flowNames count'),
   test.assertEqual('bad-flow', flowNames[0]),
   test.assertEqual('branching-flow', flowNames[1]),
-  test.assertEqual('contextual-flow', flowNames[2]),
-  test.assertEqual('no-context-flow', flowNames[3]),
-  test.assertEqual('noStates-flow', flowNames[4]),
-  test.assertEqual('ref-path-flow', flowNames[5]),
-  test.assertEqual('task-flow', flowNames[6]),
-  test.assertEqual('test-flow', flowNames[7]),
-  test.assertEqual('test-time-wait', flowNames[8]),
-  test.assertEqual('wait-flow', flowNames[9])
+  test.assertEqual('choice-flow', flowNames[2]),
+  test.assertEqual('contextual-flow', flowNames[3]),
+  test.assertEqual('no-context-flow', flowNames[4]),
+  test.assertEqual('noStates-flow', flowNames[5]),
+  test.assertEqual('ref-path-flow', flowNames[6]),
+  test.assertEqual('task-flow', flowNames[7]),
+  test.assertEqual('test-flow', flowNames[8]),
+  test.assertEqual('test-time-wait', flowNames[9]),
+  test.assertEqual('wait-flow', flowNames[10])
 );
 
 const branchingFlow = sc.getFlowDocument('branching-flow');

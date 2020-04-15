@@ -1308,6 +1308,7 @@ function getJobDocuments(options) {
     : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
   const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
   const resumeWait = options.resumeWait;
+  const forestIds = options.forestIds;
   let uris = [];
 
   invokeOrApplyFunction(
@@ -1328,30 +1329,26 @@ function getJobDocuments(options) {
       if (options.endDate) {
         queries.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(options.endDate)));
       }
-      if (fn.exists(resumeWait) && resumeWait === false) {
-        uris = uris.concat(
-          cts.uris('', ['document', `limit=${count}`], cts.andQuery(queries)).toArray()
-        );
-      } else {
-        uris = uris.concat(
-          cts
-            .uris(
-              '',
-              ['document', `limit=${count}`],
-              cts.orQuery([
-                cts.andQuery(queries),
-                cts.andQuery([
-                  cts.collectionQuery('stateConductorJob'),
-                  cts.jsonPropertyScopeQuery(
-                    'currentlyWaiting',
-                    cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
-                  ),
-                ]),
-              ])
-            )
-            .toArray()
-        );
+
+      let ctsQuery = cts.andQuery(queries);
+
+      // add any "waiting" jobs that should be resumed - unless explicitly told not to
+      if (!fn.exists(resumeWait) || resumeWait) {
+        ctsQuery = cts.orQuery([
+          ctsQuery,
+          cts.andQuery([
+            cts.collectionQuery('stateConductorJob'),
+            cts.jsonPropertyScopeQuery(
+              'currentlyWaiting',
+              cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
+            ),
+          ]),
+        ]);
       }
+
+      uris = uris.concat(
+        cts.uris('', ['document', `limit=${count}`], ctsQuery, null, forestIds).toArray()
+      );
     },
     {
       database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),

@@ -3,12 +3,18 @@ package com.marklogic;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.FailedRequestException;
+import com.marklogic.client.eval.EvalResultIterator;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -19,10 +25,12 @@ public class StateConductorDriver implements Runnable, Destroyable {
   private DatabaseClient client;
   private StateConductorService service;
   private Integer batchSize;
+  private String forestId;
 
-  public StateConductorDriver(DatabaseClient client, Integer batchSize) {
+  public StateConductorDriver(DatabaseClient client, Integer batchSize, String forestId) {
     this.client = client;
     this.batchSize = batchSize;
+    this.forestId = forestId;
     service = StateConductorService.on(this.client);
   }
 
@@ -39,14 +47,25 @@ public class StateConductorDriver implements Runnable, Destroyable {
     pass.setRequired(true);
     Option num = new Option("n", "number", true, "Batch size");
     num.setOptionalArg(true);
+    Option jobsDb = new Option("db", "jobs-database", true, "Jobs Database Name");
 
     opts.addOption(host);
     opts.addOption(port);
     opts.addOption(user);
     opts.addOption(pass);
     opts.addOption(num);
+    opts.addOption(jobsDb);
 
     return opts;
+  }
+
+  public static String[] getForestIds(DatabaseClient client, String databaseName) {
+   EvalResultIterator result = client.newServerEval().javascript("xdmp.databaseForests(xdmp.database(\"" + databaseName + "\"), false)").eval();
+   List<String> ids = new ArrayList<>();
+   while (result.hasNext()) {
+     ids.add(result.next().getString());
+   }
+   return ids.stream().toArray(String[]::new);
   }
 
   public static void main(String[] args) throws DestroyFailedException {
@@ -68,35 +87,55 @@ public class StateConductorDriver implements Runnable, Destroyable {
       Integer.parseInt(cmd.getOptionValue("p")),
       new DatabaseClientFactory.DigestAuthContext(cmd.getOptionValue("u"), cmd.getOptionValue("x")));
 
+    DatabaseClient appServicesClient = DatabaseClientFactory.newClient(
+      cmd.getOptionValue("h"), 8000,
+      new DatabaseClientFactory.DigestAuthContext(cmd.getOptionValue("u"), cmd.getOptionValue("x")));
+
     int batchSize = 100;
     if (cmd.hasOption("n")) {
       batchSize = Integer.parseInt(cmd.getOptionValue("n"));
     }
 
-    StateConductorDriver driver = new StateConductorDriver(client, batchSize);
+    String jobsDbName = "state-conductor-jobs";
+    if (cmd.hasOption("db")) {
+      jobsDbName = cmd.getOptionValue("db");
+    }
 
-    Thread thread = new Thread(driver);
+    String[] forestIds = getForestIds(appServicesClient, jobsDbName);
+    logger.info("Making splits for {} State Conductor Jobs forests", forestIds.length);
+    logger.trace("Jobs forests: {}", String.join(",", forestIds));
 
-    try {
-      thread.start();
-      thread.join();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } finally {
-      driver.destroy();
+    ExecutorService pool = Executors.newFixedThreadPool(forestIds.length);
+    for (String id : forestIds) {
+      pool.execute(new StateConductorDriver(client, batchSize, id));
+    }
+
+    while (true) {
+      try {
+        if (pool.awaitTermination(Integer.MAX_VALUE, TimeUnit.MINUTES)) {
+          break;
+        }
+      } catch (InterruptedException e) {
+        logger.info("Stopping StateConductorDriver pool executor...");
+        pool.shutdownNow();
+        Thread.currentThread().interrupt();
+        break;
+      }
     }
   }
 
   @Override
   public void run() {
-    logger.info("Starting StateConductorDriver...");
+    logger.info("[Forest {}] Starting StateConductorDriver...", forestId);
+    List<String> forestIds = new ArrayList<>();
+    forestIds.add(forestId);
 
     while (true) {
       AtomicLong count = new AtomicLong();
       AtomicLong failed = new AtomicLong();
 
       // grab any "new" and "working" jobs
-      Stream<String> jobUris = service.getJobs(batchSize, null, null);
+      Stream<String> jobUris = service.getJobs(batchSize, null, null, forestIds.stream());
 
       // process each of the jobs
       jobUris.forEach(uri -> {
@@ -110,7 +149,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
         }
       });
 
-      logger.info("Processed {} Jobs, with {} Failures.", count.get(), failed.get());
+      logger.info("[Forest {}] Processed {} Jobs, with {} Failures.", forestId, count.get(), failed.get());
 
       try {
         if (0 == count.get())
@@ -118,7 +157,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
         else
           Thread.sleep(10L);
       } catch (InterruptedException e) {
-        logger.info("Stopping StateConductorDriver...");
+        logger.info("[Forest {}] Stopping StateConductorDriver...", forestId);
         return;
       }
     }

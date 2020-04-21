@@ -9,7 +9,7 @@ function performAction(uri, options, context) {
   const envelope = {
     headers: {},
     triples: [],
-    instance: obj
+    instance: obj,
   };
 
   xdmp.nodeReplace(doc.root, envelope);

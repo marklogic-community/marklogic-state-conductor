@@ -1,0 +1,13 @@
+{
+  "id": "job3",
+  "flowName": "rest-test-flow",
+  "flowStatus": "working",
+  "flowState": "add-collection-1",
+  "uri": "/test/doc1.json",
+  "database": "%DATABASE%",
+  "modules": "%MODULES%",
+  "createdDate": "%DATE-NOW%",
+  "context": {},
+  "provenance": [],
+  "errors": {}
+}

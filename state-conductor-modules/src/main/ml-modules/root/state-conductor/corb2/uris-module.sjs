@@ -7,6 +7,7 @@ const sc = require('/state-conductor/state-conductor.sjs');
 // external variables
 var jobCount;
 var flowNames;
+var resumeWait;
 
 if (!jobCount) {
   jobCount = 1000;
@@ -21,7 +22,8 @@ let options = {
   flowStatus: [sc.FLOW_STATUS_NEW, sc.FLOW_STATUS_WORKING],
   flowNames: flowNames,
   startDate: null,
-  endDate: null
+  endDate: null,
+  resumeWait: resumeWait,
 };
 
 const uris = sc.getJobDocuments(options);

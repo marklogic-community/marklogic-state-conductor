@@ -19,7 +19,7 @@ function performAction(uri, options, context) {
       sem.iri(uuid),
       sem.iri('http://www.w3.org/2000/01/rdf-schema#label'),
       obj.headers.name
-    )
+    ),
   ]);
 
   xdmp.nodeReplace(doc.root, obj);

@@ -5,16 +5,15 @@ const sc = require('/state-conductor/state-conductor.sjs');
 var uri;
 var trigger;
 
-const FIELD_CTX_QUERY_ID        = 'STATE-CONDUCTOR-CTX-QUERY';
+const FIELD_CTX_QUERY_ID = 'STATE-CONDUCTOR-CTX-QUERY';
 const FIELD_CTX_QUERY_TIMESTAMP = 'STATE-CONDUCTOR-CTX-QUERY-TIMESTAMP';
-const FIELD_CTX_QUERY_TIMEOUT   = 300000; // milliseconds (5 mins)
+const FIELD_CTX_QUERY_TIMEOUT = 300000; // milliseconds (5 mins)
 
 function executeContextRegQuery(uri, regQueryId) {
-  return cts.uris('', 'limit=1', 
-    cts.andQuery([
-      cts.documentQuery(uri),
-      cts.registeredQuery(regQueryId, 'unfiltered')
-    ])
+  return cts.uris(
+    '',
+    'limit=1',
+    cts.andQuery([cts.documentQuery(uri), cts.registeredQuery(regQueryId, 'unfiltered')])
   );
 }
 
@@ -22,17 +21,20 @@ function registerCtxQuery() {
   let query = sc.getAllFlowsContextQuery();
   let regCtxQueryId = cts.register(query);
   xdmp.setServerField(FIELD_CTX_QUERY_ID, regCtxQueryId);
-  xdmp.setServerField(FIELD_CTX_QUERY_TIMESTAMP, (new Date()).getTime());
+  xdmp.setServerField(FIELD_CTX_QUERY_TIMESTAMP, new Date().getTime());
   return regCtxQueryId;
 }
 
 function getCtxRegQueryId() {
   let regCtxQueryId = fn.head(xdmp.getServerField(FIELD_CTX_QUERY_ID));
   let timestamp = fn.head(xdmp.getServerField(FIELD_CTX_QUERY_TIMESTAMP));
-  let curr = (new Date()).getTime();
-  
-  if (!regCtxQueryId || curr > (timestamp + FIELD_CTX_QUERY_TIMEOUT)) {
-    xdmp.trace(sc.TRACE_EVENT, 'registered context query not found or timestamp expired - registering new context query');
+  let curr = new Date().getTime();
+
+  if (!regCtxQueryId || curr > timestamp + FIELD_CTX_QUERY_TIMEOUT) {
+    xdmp.trace(
+      sc.TRACE_EVENT,
+      'registered context query not found or timestamp expired - registering new context query'
+    );
     regCtxQueryId = registerCtxQuery();
   }
 
@@ -70,7 +72,7 @@ if (checkUriAgainstContext(uri)) {
   const flows = sc.getApplicableFlows(uri);
   xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger found "${flows.length}" matching flows`);
   // create a state conductor job for each flow that applies
-  flows.forEach(flow => {
+  flows.forEach((flow) => {
     const flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
     sc.createStateConductorJob(flowName, uri);
   });

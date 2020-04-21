@@ -1,4 +1,8 @@
 allprojects {
+  project.ext {
+    mlgradleVersion = "3.17.0"
+  }
+
   repositories {
     jcenter()
     mavenLocal()
@@ -6,5 +10,5 @@ allprojects {
   }
 
   group = "com.marklogic"
-  version = "0.4.1"
+  version = "0.5.0"
 }

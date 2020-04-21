@@ -1,0 +1,30 @@
+{
+  "Comment": "does things",
+  "mlDomain": {
+    "context": []
+  },
+  "StartAt": "add-collection-1",
+  "States": {
+    "add-collection-1": {
+      "Type": "Task",
+      "Comment": "adds a collection",
+      "Resource": "/state-conductor/actions/common/add-collections.sjs",
+      "Parameters": {
+        "collections": ["testcol1"]
+      },
+      "Next": "add-collection-2"
+    },
+    "add-collection-2": {
+      "Type": "Task",
+      "Comment": "adds a collection",
+      "Resource": "/state-conductor/actions/common/add-collections.sjs",
+      "Parameters": {
+        "collections": ["testcol2"]
+      },
+      "Next": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

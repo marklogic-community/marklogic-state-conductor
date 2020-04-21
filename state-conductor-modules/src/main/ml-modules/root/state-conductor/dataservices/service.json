@@ -1,0 +1,5 @@
+{
+  "endpointDirectory": "/state-conductor/dataservices/",
+  "$javaClass": "com.marklogic.StateConductorService",
+  "comment": "Encapsulates the services required to operate the MarkLogic State Conductor."
+}

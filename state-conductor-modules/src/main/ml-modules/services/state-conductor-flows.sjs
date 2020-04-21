@@ -4,7 +4,11 @@ const sc = require('/state-conductor/state-conductor.sjs');
 const validator = require('/state-conductor/flow-file-validator.sjs');
 
 function returnError(statusCode, statusMsg, body) {
-  fn.error(null, 'RESTAPI-SRVEXERR', Sequence.from([statusCode, statusMsg, body]));
+  fn.error(
+    null,
+    'RESTAPI-SRVEXERR',
+    Sequence.from([statusCode, statusMsg, body])
+  );
 }
 
 /**
@@ -17,7 +21,11 @@ function get(context, params) {
       context.outputStatus = [200, 'Success'];
       return flow;
     } else {
-      returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
+      returnError(
+        404,
+        'NOT FOUND',
+        `Flow File "${params.flowName}" not found.`
+      );
     }
   } else {
     const flows = sc.getFlowDocuments();
@@ -38,7 +46,11 @@ function put(context, params, input) {
   const flowName = params.flowName ? params.flowName.trim() : '';
   if (flowName === '') {
     returnError(400, 'Bad Request', 'Missing parameter "flowName"');
-  } else if (!input || !context.inputTypes || context.inputTypes[0] !== 'application/json') {
+  } else if (
+    !input ||
+    !context.inputTypes ||
+    context.inputTypes[0] !== 'application/json'
+  ) {
     returnError(400, 'Bad Request', 'Invalid request body');
   } else if (!validator.validateFlowFile(input.toObject())) {
     returnError(400, 'Bad Request', 'Invalid state-conductor flow file');
@@ -46,7 +58,7 @@ function put(context, params, input) {
     const uri = `${sc.FLOW_DIRECTORY}${flowName}.asl.json`;
     xdmp.documentInsert(uri, input, {
       permissions: xdmp.defaultPermissions(),
-      collections: [sc.FLOW_COLLECTION]
+      collections: [sc.FLOW_COLLECTION],
     });
     context.outputStatus = [201, 'Created'];
     return '';
@@ -63,7 +75,11 @@ function deleteFunction(context, params) {
   } else {
     const flow = sc.getFlowDocument(flowName);
     if (!flow) {
-      returnError(404, 'NOT FOUND', `Flow File "${params.flowName}" not found.`);
+      returnError(
+        404,
+        'NOT FOUND',
+        `Flow File "${params.flowName}" not found.`
+      );
     } else {
       const uri = fn.documentUri(flow);
       xdmp.documentDelete(uri);

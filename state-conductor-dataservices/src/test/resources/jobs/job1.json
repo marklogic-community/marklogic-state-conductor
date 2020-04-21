@@ -1,0 +1,13 @@
+{
+  "id": "job1",
+  "flowName": "test-flow",
+  "flowStatus": "new",
+  "flowState": null,
+  "uri": "/test/doc1.json",
+  "database": "%DATABASE%",
+  "modules": "%MODULES%",
+  "createdDate": "2020-03-30T17:20:00.362Z",
+  "context": {},
+  "provenance": [],
+  "errors": {}
+}

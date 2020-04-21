@@ -1,0 +1,69 @@
+{
+  "Comment": "example of a branching flow using a 'Choice' type state",
+  "mlDomain": {
+    "context": []
+  },
+  "StartAt": "add-test-data",
+  "States": {
+    "add-test-data": {
+      "Type": "Pass",
+      "Comment": "loads the context with sample data",
+      "Result": {
+        "name": "John Doe",
+        "gender": "male",
+        "phone": "555-5555"
+      }
+    },
+    "find-gender": {
+      "Type": "Choice",
+      "Comment": "determine's enrollee's gender",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "StringEquals": "male",
+              "Variable": "$.gender"
+            },
+            {
+              "StringEquals": "m",
+              "Variable": "$.gender"
+            }
+          ],
+          "Next": "enroll-in-mens-health"
+        },
+        {
+          "Or": [
+            {
+              "StringEquals": "female",
+              "Variable": "$.gender"
+            },
+            {
+              "StringEquals": "f",
+              "Variable": "$.gender"
+            }
+          ],
+          "Next": "enroll-in-womens-health"
+        }
+      ],
+      "Default": "has-undetermined-gender"
+    },
+    "enroll-in-mens-health": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "adds enrollee to the men's health program",
+      "Resource": "/state-conductor/actions/branching-test-flow/enroll-in-mens-health.sjs"
+    },
+    "enroll-in-womens-health": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "adds enrollee to the womens's health program",
+      "Resource": "/state-conductor/actions/branching-test-flow/enroll-in-womens-health.sjs"
+    },
+    "has-undetermined-gender": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "flags enrollee for follow-up",
+      "Resource": "/state-conductor/actions/branching-test-flow/flag-for-follow-up.sjs"
+    }
+  }
+}

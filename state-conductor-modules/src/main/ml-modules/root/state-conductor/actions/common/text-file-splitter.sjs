@@ -18,11 +18,11 @@
 function performAction(uri, options = {}, context = {}) {
   declareUpdate();
 
-  let delimiterPattern  = options.delimiterPattern || '\n';
-  let skipHeader        = !(options.skipHeader === 'false' || options.skipHeader === false);
-  let skipTrailingEOF   = options.skipTrailingEOF === 'true' || options.skipTrailingEOF === true;
-  let targetPrefix      = options.targetPrefix || uri;
-  let targetExtension   = options.targetExtension || 'txt';
+  let delimiterPattern = options.delimiterPattern || '\n';
+  let skipHeader = !(options.skipHeader === 'false' || options.skipHeader === false);
+  let skipTrailingEOF = options.skipTrailingEOF === 'true' || options.skipTrailingEOF === true;
+  let targetPrefix = options.targetPrefix || uri;
+  let targetExtension = options.targetExtension || 'txt';
   let targetCollections = Array.isArray(options.targetCollections) ? options.targetCollections : [];
 
   // grab the source document's permissions
@@ -56,19 +56,19 @@ function performAction(uri, options = {}, context = {}) {
   const newDocs = lines.map((line, idx) => {
     let newUri = `${targetPrefix}/${idx}.${targetExtension}`;
     let builder = new NodeBuilder();
-    builder.startDocument()
+    builder.startDocument();
     builder.addText(line);
-    builder.endDocument()
+    builder.endDocument();
     xdmp.documentInsert(newUri, builder.toNode(), {
       collections: targetCollections,
-      permissions: targetPermissions
+      permissions: targetPermissions,
     });
     return newUri;
   });
 
   context.splits = {
     total: newDocs.length,
-    uris: newDocs
+    uris: newDocs,
   };
 
   return context;
@@ -79,7 +79,7 @@ function isTextNode(payload) {
     payload = payload.root;
   }
 
-  return (('string' === typeof payload) || (Node.TEXT_NODE === payload.nodeType));
+  return 'string' === typeof payload || Node.TEXT_NODE === payload.nodeType;
 }
 
 exports.performAction = performAction;

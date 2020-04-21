@@ -1,4 +1,7 @@
 .gradle
+.idea
 .tmp
 build
 gradle-local.properties
+*.settings*
+*.classpath

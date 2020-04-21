@@ -6,14 +6,17 @@ function performAction(uri, options = {}, context = {}) {
   // setup the dhf content
   const content = {
     uri: uri,
-    value: doc
+    value: doc,
   };
 
-  xdmp.log(Sequence.from([
-    'Execute DHF make envelope step:',
-    '  uri:     ' + uri,
-    '  options: ' + options,
-  ]), 'debug');
+  xdmp.log(
+    Sequence.from([
+      'Execute DHF make envelope step:',
+      '  uri:     ' + uri,
+      '  options: ' + options,
+    ]),
+    'debug'
+  );
 
   // execute the dhf flow step
   const flowResponse = dhf5Ingestion.main(content, options);

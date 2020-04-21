@@ -1,7 +1,7 @@
 'use strict';
 
 function performAction(uri) {
-  return "Hello Word"
+  return 'Hello Word';
 }
 
 exports.performAction = performAction;

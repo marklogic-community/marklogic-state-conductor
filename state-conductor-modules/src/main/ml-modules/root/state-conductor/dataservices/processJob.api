@@ -6,10 +6,12 @@
       "name": "uri",
       "datatype": "string",
       "desc": "The uri of a State Conductor Job document to be processed",
-      "nullable": false
+      "nullable": false,
+      "multiple": true
     }
   ],
   "return": {
-    "datatype": "boolean"
+    "datatype": "array",
+    "$javaClass": "com.fasterxml.jackson.databind.node.ArrayNode"
   }
 }

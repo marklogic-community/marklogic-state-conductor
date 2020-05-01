@@ -1,5 +1,6 @@
 package com.marklogic;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Maps;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
@@ -16,6 +17,9 @@ import javax.security.auth.Destroyable;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -142,11 +146,37 @@ public class StateConductorDriver implements Runnable, Destroyable {
       // grab any "new" and "working" jobs
       logger.info("Fetching Job Batch...");
       Stream<String> jobUris = service.getJobs(config.getPollSize(), null, null, null);
+      Iterator<String> jobs = jobUris.iterator();
 
+      // set up the thread pool
       ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
-      jobUris.forEach(uri -> {
+
+      // create tasks based on batch size
+      List<String> batch = new ArrayList<>();
+      List<ProcessJobTask> jobBuckets = new ArrayList<>();
+
+      // create buckets for each batch
+      while(jobs.hasNext()) {
+        String uri = jobs.next();
         total.getAndIncrement();
-        Future<Boolean> future = pool.submit(new ProcessJobTask(service, uri));
+        batch.add(uri);
+        if (batch.size() >= config.getBatchSize()) {
+          jobBuckets.add(new ProcessJobTask(service, batch));
+          logger.info("created batch: {}", batch);
+          batch = new ArrayList<>();
+        }
+      }
+
+      // cleanup batch
+      if (batch.size() > 0) {
+        jobBuckets.add(new ProcessJobTask(service, batch));
+      }
+
+      logger.info("created {} batches", jobBuckets.size());
+
+      // submit the jobs to the executor pool
+      jobBuckets.forEach(bucket -> {
+        Future<JsonNode> future = pool.submit(bucket);
       });
 
       logger.info("Populated thread pool[{}] with {} Jobs", config.getThreadCount(), total);

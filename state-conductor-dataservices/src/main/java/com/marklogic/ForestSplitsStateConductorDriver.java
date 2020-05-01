@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -142,7 +143,7 @@ public class ForestSplitsStateConductorDriver implements Runnable, Destroyable {
         logger.info("processing job: {}", uri);
         count.getAndIncrement();
         try {
-          service.processJob(uri);
+          service.processJob(Arrays.stream(new String[]{uri}));
         } catch (FailedRequestException ex) {
           failed.getAndIncrement();
           logger.error("error processing job:", ex);

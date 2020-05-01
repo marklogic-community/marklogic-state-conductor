@@ -1,8 +1,9 @@
 package com.marklogic;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.UUID;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.*;
+
+import java.util.*;
 import java.util.stream.Stream;
 
 public class StateConductorServiceMock implements StateConductorService {
@@ -22,8 +23,17 @@ public class StateConductorServiceMock implements StateConductorService {
   }
 
   @Override
-  public Boolean processJob(String uri) {
-    return true;
+  public ArrayNode processJob(Stream<String> uri) {
+    ArrayNode arr = new ArrayNode(JsonNodeFactory.instance);
+
+    uri.forEach(value -> {
+      Map<String, JsonNode> vals = new HashMap<>();
+      vals.put("job", new TextNode(value));
+      vals.put("result", BooleanNode.getTrue());
+      arr.add(new ObjectNode(JsonNodeFactory.instance, vals));
+    });
+
+    return arr;
   }
 
 }

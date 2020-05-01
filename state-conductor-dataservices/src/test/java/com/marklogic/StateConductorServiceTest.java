@@ -1,5 +1,7 @@
 package com.marklogic;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.io.DocumentMetadataHandle;
@@ -24,6 +26,9 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   final String data2Uri = "/test/doc2.json";
   final String job1Uri = "/test/stateConductorJob/job1.json";
   final String job2Uri = "/test/stateConductorJob/job2.json";
+  final String job3Uri = "/test/stateConductorJob/job3.json";
+  final String job4Uri = "/test/stateConductorJob/job4.json";
+  final String job5Uri = "/test/stateConductorJob/job5.json";
 
   StateConductorService mockService;
   StateConductorService service;
@@ -167,60 +172,87 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
   @Test
   public void testProcessJobMock() {
-    boolean resp = mockService.processJob("/test.json");
-    assertEquals(true, resp);
+    ArrayNode resp = mockService.processJob(Arrays.stream(new String[]{"/test.json"}));
+    assertEquals("/test.json", resp.get(0).get("job").asText());
+    assertEquals(true, resp.get(0).get("result").asBoolean());
   }
 
   @Test
   public void testProcessJob() throws IOException {
-    boolean resp;
+    ArrayNode resp;
     DocumentMetadataHandle meta = new DocumentMetadataHandle();
     StateConductorJob job1Doc;
 
     // start job 1
-    resp = service.processJob(job1Uri);
+    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
     job1Doc = getJobDocument(job1Uri);
     getContentManager().readMetadata(data1Uri, meta);
-    assertEquals(true, resp);
+    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(false, meta.getCollections().contains("testcol1"));
     assertEquals(false, meta.getCollections().contains("testcol2"));
     assertEquals("test-flow", job1Doc.getFlowName());
     assertEquals("working", job1Doc.getFlowStatus());
     assertEquals("add-collection-1", job1Doc.getFlowState());
     // continue job 1
-    resp = service.processJob(job1Uri);
+    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
     job1Doc = getJobDocument(job1Uri);
     getContentManager().readMetadata(data1Uri, meta);
-    assertEquals(true, resp);
+    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(true, meta.getCollections().contains("testcol1"));
     assertEquals(false, meta.getCollections().contains("testcol2"));
     assertEquals("test-flow", job1Doc.getFlowName());
     assertEquals("working", job1Doc.getFlowStatus());
     assertEquals("add-collection-2", job1Doc.getFlowState());
     // continue job 1
-    resp = service.processJob(job1Uri);
+    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
     job1Doc = getJobDocument(job1Uri);
     getContentManager().readMetadata(data1Uri, meta);
-    assertEquals(true, resp);
+    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(true, meta.getCollections().contains("testcol1"));
     assertEquals(true, meta.getCollections().contains("testcol2"));
     assertEquals("test-flow", job1Doc.getFlowName());
     assertEquals("working", job1Doc.getFlowStatus());
     assertEquals("success", job1Doc.getFlowState());
     // continue job 1
-    resp = service.processJob(job1Uri);
+    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
     job1Doc = getJobDocument(job1Uri);
-    assertEquals(true, resp);
+    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals("test-flow", job1Doc.getFlowName());
     assertEquals("complete", job1Doc.getFlowStatus());
     assertEquals("success", job1Doc.getFlowState());
     // end job 1
-    resp = service.processJob(job1Uri);
+    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
     job1Doc = getJobDocument(job1Uri);
-    assertEquals(false, resp);
+    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(false, resp.get(0).get("result").asBoolean());
     assertEquals("test-flow", job1Doc.getFlowName());
     assertEquals("complete", job1Doc.getFlowStatus());
     assertEquals("success", job1Doc.getFlowState());
+  }
+
+  @Test
+  public void testBatchProcessJob() throws IOException {
+    ArrayNode resp;
+    DocumentMetadataHandle meta = new DocumentMetadataHandle();
+
+    String[] jobs = new String[] {job1Uri, job2Uri, job3Uri, job4Uri, job5Uri};
+
+    // start job 1
+    resp = service.processJob(Arrays.stream(jobs));
+    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(true, resp.get(0).get("result").asBoolean());
+    assertEquals(job2Uri, resp.get(1).get("job").asText());
+    assertEquals(true, resp.get(1).get("result").asBoolean());
+    assertEquals(job3Uri, resp.get(2).get("job").asText());
+    assertEquals(true, resp.get(2).get("result").asBoolean());
+    assertEquals(job4Uri, resp.get(3).get("job").asText());
+    assertEquals(false, resp.get(3).get("result").asBoolean());
+    assertEquals(job5Uri, resp.get(4).get("job").asText());
+    assertEquals(false, resp.get(4).get("result").asBoolean());
   }
 
 }

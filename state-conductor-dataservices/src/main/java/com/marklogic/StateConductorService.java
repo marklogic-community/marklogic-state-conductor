@@ -3,6 +3,8 @@ package com.marklogic;
 // IMPORTANT: Do not edit. This file is generated.
 
 import java.util.stream.Stream;
+import com.marklogic.client.io.Format;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 
 
 import com.marklogic.client.DatabaseClient;
@@ -63,15 +65,15 @@ public interface StateConductorService {
 
 
             @Override
-            public Boolean processJob(String uri) {
-              return BaseProxy.BooleanType.toBoolean(
+            public com.fasterxml.jackson.databind.node.ArrayNode processJob(Stream<String> uri) {
+              return BaseProxy.ArrayType.toArrayNode(
                 baseProxy
-                .request("processJob.sjs", BaseProxy.ParameterValuesKind.SINGLE_ATOMIC)
+                .request("processJob.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
                 .withSession()
                 .withParams(
                     BaseProxy.atomicParam("uri", false, BaseProxy.StringType.fromString(uri)))
                 .withMethod("POST")
-                .responseSingle(false, null)
+                .responseSingle(false, Format.JSON)
                 );
             }
 
@@ -106,6 +108,6 @@ public interface StateConductorService {
    * @param uri	The uri of a State Conductor Job document to be processed
    * @return	as output
    */
-    Boolean processJob(String uri);
+    com.fasterxml.jackson.databind.node.ArrayNode processJob(Stream<String> uri);
 
 }

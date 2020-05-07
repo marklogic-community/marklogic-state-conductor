@@ -1,6 +1,7 @@
 package com.marklogic;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Maps;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
@@ -21,10 +22,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -136,16 +135,33 @@ public class StateConductorDriver implements Runnable, Destroyable {
     return prop;
   }
 
+  private Stream<String> FetchJobDocuments() {
+    Stream<String> jobUris = null;
+
+    try {
+      jobUris = service.getJobs(config.getPollSize(), null, null, null);
+    } catch (Exception ex) {
+      logger.error("An error occurred fetching job documents: {}", ex.getMessage());
+      ex.printStackTrace();
+      jobUris = Stream.empty();
+    }
+
+    return jobUris;
+  }
+
   @Override
   public void run() {
     logger.info("Starting StateConductorDriver...");
+    List<Future<JsonNode>> results = new ArrayList<>();
 
     while (true) {
       AtomicLong total = new AtomicLong();
+      AtomicInteger batchCount = new AtomicInteger(1);
 
       // grab any "new" and "working" jobs
       logger.info("Fetching Job Batch...");
-      Stream<String> jobUris = service.getJobs(config.getPollSize(), null, null, null);
+      // TODO allow configuration of flowNames, flowStatus
+      Stream<String> jobUris = FetchJobDocuments();
       Iterator<String> jobs = jobUris.iterator();
 
       // set up the thread pool
@@ -161,15 +177,14 @@ public class StateConductorDriver implements Runnable, Destroyable {
         total.getAndIncrement();
         batch.add(uri);
         if (batch.size() >= config.getBatchSize()) {
-          jobBuckets.add(new ProcessJobTask(service, batch));
-          logger.info("created batch: {}", batch);
+          jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
           batch = new ArrayList<>();
         }
       }
 
       // cleanup batch
       if (batch.size() > 0) {
-        jobBuckets.add(new ProcessJobTask(service, batch));
+        jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
       }
 
       logger.info("created {} batches", jobBuckets.size());
@@ -177,6 +192,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
       // submit the jobs to the executor pool
       jobBuckets.forEach(bucket -> {
         Future<JsonNode> future = pool.submit(bucket);
+        results.add(future);
       });
 
       logger.info("Populated thread pool[{}] with {} Jobs", config.getThreadCount(), total);
@@ -185,6 +201,26 @@ public class StateConductorDriver implements Runnable, Destroyable {
       try {
         logger.info("Awaiting Batch Completion...");
         if (pool.awaitTermination(Integer.MAX_VALUE, TimeUnit.MINUTES)) {
+          // calculate results
+          for (Future<JsonNode> batchResult : results) {
+            AtomicInteger errorCount = new AtomicInteger(0);
+            try {
+              ArrayNode arr = (ArrayNode)batchResult.get();
+              arr.forEach(jsonNode -> {
+                boolean hasError = jsonNode.get("error") != null;
+                if (hasError) {
+                  errorCount.getAndIncrement();
+                }
+              });
+              logger.info("batch result: {} jobs complete - with {} errors", arr.size(), errorCount.get());
+            } catch (ExecutionException e) {
+              logger.error("error retrieving batch results");
+            }
+
+          }
+          results.clear();
+          // cooldown period
+          // TODO make configurable
           if (0 == total.get())
             Thread.sleep(5000L);
           else

@@ -12,17 +12,19 @@ public class ProcessJobTask implements Callable<JsonNode> {
 
   Logger logger = LoggerFactory.getLogger(ProcessJobTask.class);
 
+  private Integer id;
   private StateConductorService service;
   private List<String> jobUris;
 
-  public ProcessJobTask(StateConductorService service, List<String> jobUris) {
+  public ProcessJobTask(Integer id, StateConductorService service, List<String> jobUris) {
+    this.id = id;
     this.service = service;
     this.jobUris = jobUris;
   }
 
   @Override
   public JsonNode call() throws Exception {
-    logger.info("processing batch job: {}", jobUris);
+    logger.info("processing batch job: {} [size: {}]", id, jobUris.size());
     return service.processJob(jobUris.stream());
   }
 }

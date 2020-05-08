@@ -206,17 +206,8 @@ New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
 
 ## Roadmap <a name="roadmap"></a>
 
-- 0.5.0
-  - [Ability to change the state conductor jobs database](https://github.com/aclavio/marklogic-state-conductor/issues/32)
-  - [Role based access controls](https://github.com/aclavio/marklogic-state-conductor/issues/16)
-  - [Reference path](https://github.com/aclavio/marklogic-state-conductor/issues/17)
-  - [Test coverage of rest endpoints](https://github.com/aclavio/marklogic-state-conductor/issues/29)
-  - [Data Services Driver](https://github.com/aclavio/marklogic-state-conductor/issues/22)
-  - [Rest Services for Error Retries](https://github.com/aclavio/marklogic-state-conductor/issues/27)
-  - [External Driver support for resuming jobs](https://github.com/aclavio/marklogic-state-conductor/issues/28)
+- 0.6.0
   - DHS support
-- Beyond
-  - Additional driver support
   - Full support for Choice Rules
   - Event based flow context
   - Batch support

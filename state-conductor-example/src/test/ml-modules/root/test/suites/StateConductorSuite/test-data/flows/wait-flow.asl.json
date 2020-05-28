@@ -19,6 +19,11 @@
       "Event": "series-of-clicks-and-beeps-connected",
       "Next": "parameters-check"
     },
+    "dialUpPath": {
+      "Type": "Wait",
+      "EventPath": "$.eventName",
+      "Next": "parameters-check"
+    },
     "parameters-check": {
       "Type": "Task",
       "Comment": "initial state of the flow",

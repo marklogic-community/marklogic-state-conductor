@@ -785,22 +785,35 @@ function executeStateByJobDoc(jobDoc, save = true) {
             jobObj.context = result;
           }
         }
-      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Event) {
+      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && (state.Event || state.EventPath )) {
         //updated the job Doc to have info about why its waiting
+
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
-        if (state.Event) {
-          jobObj.currentlyWaiting = {
-            event: state.Event,
-          };
-          jobObj.flowStatus = FLOW_STATUS_WATING;
+        let eventToWaitFor;
+
+        ///checks if there is EventPath use that over using Event
+        if (state.hasOwnProperty("EventPath")){
+          eventToWaitFor = lib.materializeReferencePath(state.EventPath, jobObj.context);
         } else {
+          eventToWaitFor = state.Event;
+        }
+
+        //makes sure there is an event set
+        if (eventToWaitFor == null || eventToWaitFor === "") {
           fn.error(
             null,
             'INVALID-STATE-DEFINITION',
             `no "Event" defined for Task state "${stateName}"`
           );
         }
+
+        /* eventToWaitFor = state.Event;  */
+        jobObj.currentlyWaiting = {
+          event: eventToWaitFor,
+        };
+        jobObj.flowStatus = FLOW_STATUS_WATING;
+
       } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Seconds) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);

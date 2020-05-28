@@ -790,8 +790,17 @@ function executeStateByJobDoc(jobDoc, save = true) {
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
         if (state.Event) {
+          let eventToWaitFor;
+
+          ///checks if there is EventPath use that over using Event
+          if (state.hasOwnProperty(eventPath)){
+            eventToWaitFor = lib.materializeReferencePath(state.EventPath, context = {});
+          } else {
+            eventToWaitFor = state.Event;
+          }
+
           jobObj.currentlyWaiting = {
-            event: state.Event,
+            event: eventToWaitFor,
           };
           jobObj.flowStatus = FLOW_STATUS_WATING;
         } else {

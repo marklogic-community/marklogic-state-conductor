@@ -1257,7 +1257,7 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
  * @returns
  */
 function emmitEvent(event, batchSize = 100, save = true) {
-  let response = invokeOrApplyFunction(
+  let uris = invokeOrApplyFunction(
     () => {
       declareUpdate();
 
@@ -1297,7 +1297,14 @@ function emmitEvent(event, batchSize = 100, save = true) {
         });
       }
 
-      // handle flows
+      return waitingURIJobsForEvent;
+    },
+    {
+      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
+    });
+
+
+    // handle flows
       // grab all state conductor flows with a event context and matching event
       const flows = cts
       .search(
@@ -1317,24 +1324,20 @@ function emmitEvent(event, batchSize = 100, save = true) {
         return fn.exists(eventContext);
       })
 
-      flowsToTrigger.forEach((flow) => {
+      let flowsToTriggerResp = flowsToTrigger.map((flow) => {
         // create a state conductor job for the event flows
         let flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
         let resp = sc.createStateConductorJob(flowName, null);
+        return {flowName: flowName, JobId: resp}
         xdmp.trace(sc.TRACE_EVENT, `created state conductor job for event flow: ${resp}`);
       });
 
-      const output = {
-        jobDocumentsTriggered: waitingURIJobsForEvent,
-        flowsTriggered: flowsToTrigger
+    const output = {
+        jobDocumentsTriggered: uris,
+        flowsTriggered: flowsToTriggerResp
       };
 
-      return output;
-    },
-    {
-      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
-    }
-  );
+    return output
 
   return fn.head(response);
 }

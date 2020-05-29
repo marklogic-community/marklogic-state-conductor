@@ -1333,7 +1333,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
       });
 
     const output = {
-        jobDocumentsTriggered: uris,
+        jobDocumentsTriggered: fn.head(uris),
         flowsTriggered: flowsToTriggerResp
       };
 

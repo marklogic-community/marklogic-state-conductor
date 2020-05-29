@@ -11,10 +11,10 @@ function performAction(uri, options = {}, context = {}) {
     fn.error(null, 'EVENT-NOT-FOUND', Sequence.from([`No event found in the parameters `]));
   }
 
-  const uris = sc.emmitEvent(options.event);
+  const output = sc.emmitEvent(options.event);
 
   context.emmitEvent = context.emmitEvent || {};
-  context.emmitEvent[event] = uris;
+  context.emmitEvent[event] = output;
 
   return context;
 }

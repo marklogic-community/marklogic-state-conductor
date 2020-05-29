@@ -20,11 +20,7 @@ function put(context, params, input) {
     returnError(400, 'Bad Request', 'Missing required parameter "event"');
   }
 
-  const uris = sc.emmitEvent(event);
-
-  const resp = {
-    jobDocumentsResumed: uris,
-  };
+  const resp = sc.emmitEvent(event);
 
   context.outputStatus = [200, 'OK'];
   return resp;

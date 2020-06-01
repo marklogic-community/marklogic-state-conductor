@@ -785,22 +785,35 @@ function executeStateByJobDoc(jobDoc, save = true) {
             jobObj.context = result;
           }
         }
-      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Event) {
+      } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && (state.Event || state.EventPath )) {
         //updated the job Doc to have info about why its waiting
+
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
-        if (state.Event) {
-          jobObj.currentlyWaiting = {
-            event: state.Event,
-          };
-          jobObj.flowStatus = FLOW_STATUS_WATING;
+        let eventToWaitFor;
+
+        ///checks if there is EventPath use that over using Event
+        if (state.hasOwnProperty("EventPath")){
+          eventToWaitFor = lib.materializeReferencePath(state.EventPath, jobObj.context);
         } else {
+          eventToWaitFor = state.Event;
+        }
+
+        //makes sure there is an event set
+        if (eventToWaitFor == null || eventToWaitFor === "") {
           fn.error(
             null,
             'INVALID-STATE-DEFINITION',
             `no "Event" defined for Task state "${stateName}"`
           );
         }
+
+        /* eventToWaitFor = state.Event;  */
+        jobObj.currentlyWaiting = {
+          event: eventToWaitFor,
+        };
+        jobObj.flowStatus = FLOW_STATUS_WATING;
+
       } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Seconds) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
@@ -1247,6 +1260,8 @@ function emmitEvent(event, batchSize = 100, save = true) {
   let uris = invokeOrApplyFunction(
     () => {
       declareUpdate();
+
+      //handle job documents
       let waitingURIJobsForEvent = cts
         .uris(
           null,
@@ -1281,14 +1296,48 @@ function emmitEvent(event, batchSize = 100, save = true) {
           });
         });
       }
+
       return waitingURIJobsForEvent;
     },
     {
       database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
-    }
-  );
+    });
 
-  return fn.head(uris);
+
+    // handle flows
+      // grab all state conductor flows with a event context and matching event
+      const flows = cts
+      .search(
+        cts.andQuery([
+          cts.collectionQuery(sc.FLOW_COLLECTION),
+          cts.jsonPropertyScopeQuery('mlDomain', cts.jsonPropertyValueQuery('scope', 'event')),
+          cts.jsonPropertyScopeQuery('mlDomain', cts.jsonPropertyValueQuery('value', event))
+        ])
+      )
+      .toArray();
+
+      // determine which flows should run and create state conductor jobs
+      let flowsToTrigger = flows.filter((flow) => {
+        // find the flows where the event and scope are in the same object
+        let eventContext = flow.xpath("mlDomain/context[scope = 'event' and value = '"+ event + "' ]");
+
+        return fn.exists(eventContext);
+      })
+
+      let flowsToTriggerResp = flowsToTrigger.map((flow) => {
+        // create a state conductor job for the event flows
+        let flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
+        let resp = sc.createStateConductorJob(flowName, null);
+        return {flowName: flowName, JobId: resp}
+        xdmp.trace(sc.TRACE_EVENT, `created state conductor job for event flow: ${resp}`);
+      });
+
+    const output = {
+        jobDocumentsTriggered: fn.head(uris),
+        flowsTriggered: flowsToTriggerResp
+      };
+
+    return output
 }
 
 /**

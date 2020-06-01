@@ -151,6 +151,84 @@ assertions.push(
   )
 );
 
+//eventPath tests start
+jobDoc = xdmp.toJSON({
+  id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
+  flowName: 'wait-flow',
+  flowStatus: 'working',
+  flowState: 'dialUpPath',
+  uri: '/data/test-doc1.json',
+  database: xdmp.database(),
+  modules: xdmp.modulesDatabase(),
+  provenance: [],
+  context: {
+    eventName: "series-of-clicks-and-beeps:1234"
+  }
+});
+
+assertion = sc.executeStateByJobDoc(jobDoc, false);
+
+
+assertions.push(test.assertEqual('waiting', assertion.flowStatus, 'waiting flowStatus'));
+assertions.push(
+  test.assertEqual(
+    'series-of-clicks-and-beeps:1234',
+    assertion.currentlyWaiting.event,
+    'waiting currentlyWaiting'
+  )
+);
+
+
+jobDoc = xdmp.toJSON({
+  id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
+  flowName: 'wait-flow',
+  flowStatus: 'working',
+  flowState: 'dialUpPath',
+  uri: '/data/test-doc1.json',
+  database: xdmp.database(),
+  modules: xdmp.modulesDatabase(),
+  provenance: [],
+  context: {
+    eventName: ""
+  }
+});
+
+
+error = null;
+try {
+  error = sc.executeStateByJobDoc(jobDoc, false);
+} catch (e) {
+  error = e;
+}
+
+assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'eventPath empty string'));
+
+//checks a waiting state
+jobDoc = xdmp.toJSON({
+  id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
+  flowName: 'wait-flow',
+  flowStatus: 'working',
+  flowState: 'dialUpPath',
+  uri: '/data/test-doc1.json',
+  database: xdmp.database(),
+  modules: xdmp.modulesDatabase(),
+  provenance: [],
+  context: {
+
+  }
+});
+
+error = null;
+try {
+  error = sc.executeStateByJobDoc(jobDoc, false);
+} catch (e) {
+  error = e;
+}
+
+assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'eventPath missing property '));
+//eventPath tests end
+
+
 //unKnown database (content)
 jobDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',

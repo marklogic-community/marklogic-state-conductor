@@ -1338,8 +1338,6 @@ function emmitEvent(event, batchSize = 100, save = true) {
       };
 
     return output
-
-  return fn.head(response);
 }
 
 /**

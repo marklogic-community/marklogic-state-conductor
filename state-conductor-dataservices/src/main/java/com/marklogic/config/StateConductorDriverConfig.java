@@ -4,6 +4,7 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.ext.DatabaseClientConfig;
 import com.marklogic.client.ext.SecurityContextType;
+import com.marklogic.client.ext.modulesloader.ssl.SimpleX509TrustManager;
 
 import javax.net.ssl.SSLContext;
 import java.security.NoSuchAlgorithmException;
@@ -47,6 +48,7 @@ public class StateConductorDriverConfig {
         throw new RuntimeException("Unable to get default SSLContext: " + e.getMessage(), e);
       }
       clientConfig.setSslHostnameVerifier(DatabaseClientFactory.SSLHostnameVerifier.ANY);
+      clientConfig.setTrustManager(new SimpleX509TrustManager());
     }
     return clientConfig;
   }

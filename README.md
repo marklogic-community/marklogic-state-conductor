@@ -36,8 +36,8 @@ repositories {
   }
 }
 dependencies {
-  mlBundle "com.marklogic:marklogic-state-conductor:0.5.1"
-  mlBundle "com.marklogic:marklogic-state-conductor-cpf:0.5.1" // if using the cpf driver
+  mlBundle "com.marklogic:marklogic-state-conductor:0.6.0"
+  mlBundle "com.marklogic:marklogic-state-conductor-cpf:0.6.0" // if using the cpf driver
 }
 ```
 
@@ -206,10 +206,9 @@ New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
 
 ## Roadmap <a name="roadmap"></a>
 
-- 0.6.0
+- 0.6.0+
   - DHS support
   - Full support for Choice Rules
-  - Event based flow context
   - Batch support
   - Retention Policy for job documents
   - Flush out the validator and validate flow files on deployment

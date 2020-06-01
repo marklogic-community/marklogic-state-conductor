@@ -5,6 +5,10 @@
       {
         "scope": "collection",
         "value": "context-test"
+      },
+      {
+        "scope": "event",
+        "value": "test"
       }
     ]
   },

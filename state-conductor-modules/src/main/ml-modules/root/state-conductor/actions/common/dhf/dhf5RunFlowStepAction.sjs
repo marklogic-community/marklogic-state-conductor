@@ -8,6 +8,8 @@ function performAction(uri, options = {}, context = {}) {
   const flowOptions = options.flowOptions || {};
   const flowContext = options.flowContext || {};
 
+  flowOptions.context = context;
+
   // setup the dhf runFlow content
   const contentObjs = {
     uri: uri,

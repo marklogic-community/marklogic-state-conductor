@@ -1,6 +1,8 @@
 const DataHub = require('/data-hub/5/datahub.sjs');
 const datahub = new DataHub();
 
+const sc = require('/state-conductor/state-conductor.sjs');
+
 function performAction(uri, options = {}, context = {}) {
   // find the dhf flow to execute
   const flowName = options.flowName || null;
@@ -8,6 +10,7 @@ function performAction(uri, options = {}, context = {}) {
   const flowContext = options.flowContext || {};
   const flow = datahub.flow.getFlow(flowName);
 
+  flowOptions.stateConductorContext = context;
   if (!flow) {
     fn.error(null, 'DHF-FLOW-NOT-FOUND', Sequence.from([`DHF flow "${flowName}" not found.`]));
   }
@@ -15,16 +18,15 @@ function performAction(uri, options = {}, context = {}) {
   // get the steps for the given flow
   const numSteps = Object.keys(flow.steps).length;
 
-  xdmp.log(
-    Sequence.from([
-      'Execute DHF flow:',
-      '  uri:         ' + uri,
-      '  flowName:    ' + flowName,
-      '  numSteps:    ' + numSteps,
-      '  flowOptions: ' + flowOptions,
-      '  flowContext: ' + flowContext,
-    ])
-  );
+  xdmp.trace(sc.TRACE_EVENT, Sequence.from([
+    'Execute DHF flow:',
+    '  uri:         ' + uri,
+    '  flowName:    ' + flowName,
+    '  numSteps:    ' + numSteps,
+    '  flowOptions: ' + flowOptions,
+    '  flowContext: ' + flowContext,
+  ]));
+
 
   const resp = {};
 

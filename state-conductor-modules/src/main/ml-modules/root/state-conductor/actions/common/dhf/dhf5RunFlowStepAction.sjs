@@ -20,7 +20,8 @@ function performAction(uri, options = {}, context = {}) {
   };
 
 
-  xdmp.trace(sc.TRACE_EVENT, Sequence.from([
+  xdmp.trace(sc.TRACE_EVENT,
+    Sequence.from([
       'Execute DHF flow:',
       '  uri:         ' + uri,
       '  flowName:    ' + flowName,

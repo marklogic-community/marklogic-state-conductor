@@ -18,14 +18,16 @@ function performAction(uri, options = {}, context = {}) {
   // get the steps for the given flow
   const numSteps = Object.keys(flow.steps).length;
 
-  xdmp.trace(sc.TRACE_EVENT, Sequence.from([
-    'Execute DHF flow:',
-    '  uri:         ' + uri,
-    '  flowName:    ' + flowName,
-    '  numSteps:    ' + numSteps,
-    '  flowOptions: ' + flowOptions,
-    '  flowContext: ' + flowContext,
-  ]));
+  xdmp.trace(sc.TRACE_EVENT,
+    Sequence.from([
+      'Execute DHF flow:',
+      '  uri:         ' + uri,
+      '  flowName:    ' + flowName,
+      '  numSteps:    ' + numSteps,
+      '  flowOptions: ' + flowOptions,
+      '  flowContext: ' + flowContext,
+    ])
+  );
 
 
   const resp = {};

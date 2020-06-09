@@ -1127,6 +1127,7 @@ function getFlowCounts(flowName, { startDate, endDate, detailed = false }) {
     );
 
   const resp = {
+    flowName: flowName,
     totalPerStatus: {},
     totalPerState: {},
   };

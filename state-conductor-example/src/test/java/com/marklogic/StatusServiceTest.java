@@ -93,22 +93,27 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       contentType(ContentType.JSON).
       body("rest-test-flow", notNullValue()).
       body("rest-test-flow.flowName", equalTo("rest-test-flow")).
-      body("rest-test-flow.working", notNullValue()).
-      body("rest-test-flow.working.add-collection-1", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.working.add-collection-2", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.working.success", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.complete", notNullValue()).
-      body("rest-test-flow.complete.add-collection-1", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.complete.add-collection-2", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.complete.success", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerStatus", notNullValue()).
+      body("rest-test-flow.totalPerStatus.new", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerStatus.working", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerStatus.waiting", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerStatus.complete", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerStatus.failed", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerState", notNullValue()).
+      body("rest-test-flow.totalPerState.add-collection-1", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerState.add-collection-2", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerState.success", greaterThanOrEqualTo(0)).
       body("rest-test-flow2", notNullValue()).
       body("rest-test-flow2.flowName", equalTo("rest-test-flow2")).
-      body("rest-test-flow2.working", notNullValue()).
-      body("rest-test-flow2.working.test-data", greaterThanOrEqualTo(0)).
-      body("rest-test-flow2.working.success", greaterThanOrEqualTo(0)).
-      body("rest-test-flow2.complete", notNullValue()).
-      body("rest-test-flow2.complete.test-data", greaterThanOrEqualTo(0)).
-      body("rest-test-flow2.complete.success", greaterThanOrEqualTo(0));
+      body("rest-test-flow2.totalPerStatus", notNullValue()).
+      body("rest-test-flow2.totalPerStatus.new", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.working", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.waiting", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.complete", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.failed", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerState", notNullValue()).
+      body("rest-test-flow2.totalPerState.test-data", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerState.success", greaterThanOrEqualTo(0));
   }
 
   @Test
@@ -124,14 +129,16 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       contentType(ContentType.JSON).
       body("rest-test-flow", notNullValue()).
       body("rest-test-flow.flowName", equalTo("rest-test-flow")).
-      body("rest-test-flow.working", notNullValue()).
-      body("rest-test-flow.working.add-collection-1", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.working.add-collection-2", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.working.success", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.complete", notNullValue()).
-      body("rest-test-flow.complete.add-collection-1", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.complete.add-collection-2", greaterThanOrEqualTo(0)).
-      body("rest-test-flow.complete.success", greaterThanOrEqualTo(0));
+      body("rest-test-flow.totalPerStatus", notNullValue()).
+      body("rest-test-flow.totalPerStatus.new", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerStatus.working", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerStatus.waiting", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerStatus.complete", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerStatus.failed", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerState", notNullValue()).
+      body("rest-test-flow.totalPerState.add-collection-1", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerState.add-collection-2", greaterThanOrEqualTo(0)).
+      body("rest-test-flow.totalPerState.success", greaterThanOrEqualTo(0));
   }
 
   @Test
@@ -147,12 +154,15 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       contentType(ContentType.JSON).
       body("rest-test-flow2", notNullValue()).
       body("rest-test-flow2.flowName", equalTo("rest-test-flow2")).
-      body("rest-test-flow2.working", notNullValue()).
-      body("rest-test-flow2.working.test-data", greaterThanOrEqualTo(0)).
-      body("rest-test-flow2.working.success", greaterThanOrEqualTo(0)).
-      body("rest-test-flow2.complete", notNullValue()).
-      body("rest-test-flow2.complete.test-data", greaterThanOrEqualTo(0)).
-      body("rest-test-flow2.complete.success", greaterThanOrEqualTo(0));
+      body("rest-test-flow2.totalPerStatus", notNullValue()).
+      body("rest-test-flow2.totalPerStatus.new", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.working", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.waiting", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.complete", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.failed", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerState", notNullValue()).
+      body("rest-test-flow2.totalPerState.test-data", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerState.success", greaterThanOrEqualTo(0));
   }
 
   @Test
@@ -170,18 +180,55 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       contentType(ContentType.JSON).
       body("rest-test-flow", notNullValue()).
       body("rest-test-flow.flowName", equalTo("rest-test-flow")).
-      body("rest-test-flow.totalComplete", equalTo(0)).
-      body("rest-test-flow.totalWorking", equalTo(1)).
-      body("rest-test-flow.totalFailed", equalTo(0)).
-      body("rest-test-flow.totalNew", greaterThanOrEqualTo(1)).
-      body("rest-test-flow.working", notNullValue()).
-      body("rest-test-flow.working.add-collection-1", equalTo(1)).
-      body("rest-test-flow.working.add-collection-2", equalTo(0)).
-      body("rest-test-flow.working.success", equalTo(0)).
-      body("rest-test-flow.complete", notNullValue()).
-      body("rest-test-flow.complete.add-collection-1", equalTo(0)).
-      body("rest-test-flow.complete.add-collection-2", equalTo(0)).
-      body("rest-test-flow.complete.success", equalTo(0));
+      body("rest-test-flow.totalPerStatus", notNullValue()).
+      body("rest-test-flow.totalPerStatus.complete", equalTo(0)).
+      body("rest-test-flow.totalPerStatus.working", equalTo(1)).
+      body("rest-test-flow.totalPerStatus.failed", equalTo(0)).
+      body("rest-test-flow.totalPerStatus.new", greaterThanOrEqualTo(1)).
+      body("rest-test-flow.totalPerState", notNullValue()).
+      body("rest-test-flow.totalPerState.add-collection-1", equalTo(1)).
+      body("rest-test-flow.totalPerState.add-collection-2", equalTo(0)).
+      body("rest-test-flow.totalPerState.success", equalTo(0));
+  }
+
+  @Test
+  public void testDetailedParam() {
+    given().
+      log().uri().
+    when().
+      queryParam("rs:flowName", "rest-test-flow2").
+      queryParam("rs:detailed", true).
+      get("/v1/resources/state-conductor-status").
+    then().
+      log().body().
+      statusCode(200).
+      contentType(ContentType.JSON).
+      body("rest-test-flow2", notNullValue()).
+      body("rest-test-flow2.flowName", equalTo("rest-test-flow2")).
+      body("rest-test-flow2.totalPerStatus", notNullValue()).
+      body("rest-test-flow2.totalPerStatus.complete", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.working", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.failed", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerStatus.new", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerState", notNullValue()).
+      body("rest-test-flow2.totalPerState.test-data", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.totalPerState.success", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus", notNullValue()).
+      body("rest-test-flow2.detailedTotalPerStatus.new", notNullValue()).
+      body("rest-test-flow2.detailedTotalPerStatus.new.test-data", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus.new.success", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus.working", notNullValue()).
+      body("rest-test-flow2.detailedTotalPerStatus.working.test-data", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus.working.success", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus.waiting", notNullValue()).
+      body("rest-test-flow2.detailedTotalPerStatus.waiting.test-data", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus.waiting.success", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus.complete", notNullValue()).
+      body("rest-test-flow2.detailedTotalPerStatus.complete.test-data", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus.complete.success", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus.failed", notNullValue()).
+      body("rest-test-flow2.detailedTotalPerStatus.failed.test-data", greaterThanOrEqualTo(0)).
+      body("rest-test-flow2.detailedTotalPerStatus.failed.success", greaterThanOrEqualTo(0));
   }
 
   @Test

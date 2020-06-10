@@ -354,6 +354,10 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
 
   // sanity check
   if (FLOW_STATUS_NEW !== status) {
+    xdmp.trace(
+      TRACE_EVENT,
+      `INVALID-FLOW-STATUS: Cannot start a flow that is not in the ${FLOW_STATUS_NEW} status`
+    );
     fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
   }
 
@@ -427,6 +431,10 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
 
   // sanity check
   if (FLOW_STATUS_WAITING !== flowStatus) {
+    xdmp.trace(
+      TRACE_EVENT,
+      `INVALID-FLOW-STATUS: Cannot resume a flow that is not in the ${FLOW_STATUS_WAITING} status`
+    );
     return fn.error(
       null,
       'INVALID-FLOW-STATUS',
@@ -503,6 +511,10 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
 
   // sanity check
   if (FLOW_STATUS_FAILED !== flowStatus) {
+    xdmp.trace(
+      TRACE_EVENT,
+      `INVALID-FLOW-STATUS: Cannot retry a flow that is not in the ${FLOW_STATUS_FAILED} status`
+    );
     return fn.error(
       null,
       'INVALID-FLOW-STATUS',
@@ -704,6 +716,10 @@ function executeStateByJobDoc(jobDoc, save = true) {
 
   // sanity check
   if (FLOW_STATUS_WORKING !== jobObj.flowStatus) {
+    xdmp.trace(
+      TRACE_EVENT,
+      'INVALID-FLOW-STATUS: Cannot execute a flow that is not in the WORKING status'
+    );
     return fn.error(
       null,
       'INVALID-FLOW-STATUS',

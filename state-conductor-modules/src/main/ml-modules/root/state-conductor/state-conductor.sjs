@@ -22,7 +22,7 @@ const FLOW_FILE_EXTENSION = '.asl.json';
 const FLOW_JOBID_PROP_NAME = 'state-conductor-job';
 const FLOW_STATUS_NEW = 'new';
 const FLOW_STATUS_WORKING = 'working';
-const FLOW_STATUS_WATING = 'waiting';
+const FLOW_STATUS_WAITING = 'waiting';
 const FLOW_STATUS_COMPLETE = 'complete';
 const FLOW_STATUS_FAILED = 'failed';
 const FLOW_NEW_STEP = 'NEW';
@@ -327,7 +327,7 @@ function processJob(uri) {
     executeStateByJobDoc(jobDoc);
     // continue processing
     return true;
-  } else if (FLOW_STATUS_WATING === status) {
+  } else if (FLOW_STATUS_WAITING === status) {
     // execute resume
     resumeWaitingJobByJobDoc(jobDoc, 'processJob');
     // continue processing
@@ -426,11 +426,11 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   xdmp.trace(TRACE_EVENT, `resumeWaitingJob flow state "${stateName}"`);
 
   // sanity check
-  if (FLOW_STATUS_WATING !== flowStatus) {
+  if (FLOW_STATUS_WAITING !== flowStatus) {
     return fn.error(
       null,
       'INVALID-FLOW-STATUS',
-      'Cannot resume a flow that is not in the ' + FLOW_STATUS_WATING + ' status'
+      'Cannot resume a flow that is not in the ' + FLOW_STATUS_WAITING + ' status'
     );
   }
 
@@ -569,7 +569,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       `executing transitions for state: ${stateName} with status of ${jobObj.flowStatus}`
     );
 
-    if (jobObj.flowStatus === FLOW_STATUS_WATING) {
+    if (jobObj.flowStatus === FLOW_STATUS_WAITING) {
       xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
 
       jobObj.provenance.push({
@@ -814,7 +814,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
         jobObj.currentlyWaiting = {
           event: eventToWaitFor,
         };
-        jobObj.flowStatus = FLOW_STATUS_WATING;
+        jobObj.flowStatus = FLOW_STATUS_WAITING;
       } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Seconds) {
         //updated the job Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
@@ -831,7 +831,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
             seconds: state.Seconds,
             nextTaskTime: nextTaskTime,
           };
-          jobObj.flowStatus = FLOW_STATUS_WATING;
+          jobObj.flowStatus = FLOW_STATUS_WAITING;
         } else {
           fn.error(
             null,
@@ -866,7 +866,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
             );
           }
 
-          jobObj.flowStatus = FLOW_STATUS_WATING;
+          jobObj.flowStatus = FLOW_STATUS_WAITING;
         } else {
           fn.error(
             null,
@@ -1074,9 +1074,16 @@ function inTerminalState(job, flow) {
  * @param {*} flowName
  * @returns
  */
-function getFlowCounts(flowName, { startDate, endDate }) {
+function getFlowCounts(flowName, { startDate, endDate, detailed = false }) {
   const flow = getFlowDocument(flowName).toObject();
   const states = Object.keys(flow.States);
+  const statuses = [
+    FLOW_STATUS_NEW,
+    FLOW_STATUS_WORKING,
+    FLOW_STATUS_WAITING,
+    FLOW_STATUS_COMPLETE,
+    FLOW_STATUS_FAILED,
+  ];
 
   let baseQuery = [];
   if (startDate) {
@@ -1117,32 +1124,30 @@ function getFlowCounts(flowName, { startDate, endDate }) {
       )
     );
 
-  let numComplete = 0;
-  let numWorking = 0;
-  let numNew = 0;
-  let numFailed = 0;
-
   const resp = {
     flowName: flowName,
-    totalComplete: numComplete,
-    totalWorking: numWorking,
-    totalFailed: numFailed,
-    totalNew: numNew,
+    totalPerStatus: {},
+    totalPerState: {},
   };
 
   invokeOrApplyFunction(
     () => {
-      resp.totalComplete = numInStatus(FLOW_STATUS_COMPLETE);
-      resp.totalWorking = numInStatus(FLOW_STATUS_WORKING);
-      resp.totalNew = numInStatus(FLOW_STATUS_NEW);
-      resp.totalFailed = numInStatus(FLOW_STATUS_FAILED);
+      statuses.forEach((status) => (resp.totalPerStatus[status] = numInStatus(status)));
 
-      [FLOW_STATUS_WORKING, FLOW_STATUS_COMPLETE].forEach((status) => {
-        resp[status] = {};
-        states.forEach((state) => {
-          resp[status][state] = numInState(status, state);
-        });
+      states.forEach((state) => {
+        resp.totalPerState[state] = numInState(statuses, state);
       });
+
+      if (detailed) {
+        let details = {};
+        statuses.forEach((status) => {
+          details[status] = {};
+          states.forEach((state) => {
+            details[status][state] = numInState(status, state);
+          });
+        });
+        resp.detailedTotalPerStatus = details;
+      }
     },
     {
       database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
@@ -1269,7 +1274,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
           null,
           cts.andQuery([
             cts.collectionQuery(JOB_COLLECTION),
-            cts.jsonPropertyValueQuery('flowStatus', FLOW_STATUS_WATING),
+            cts.jsonPropertyValueQuery('flowStatus', FLOW_STATUS_WAITING),
             cts.jsonPropertyScopeQuery(
               'currentlyWaiting',
               cts.jsonPropertyValueQuery('event', event)
@@ -1310,7 +1315,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
   const flows = cts
     .search(
       cts.andQuery([
-        cts.collectionQuery(sc.FLOW_COLLECTION),
+        cts.collectionQuery(FLOW_COLLECTION),
         cts.jsonPropertyScopeQuery('mlDomain', cts.jsonPropertyValueQuery('scope', 'event')),
         cts.jsonPropertyScopeQuery('mlDomain', cts.jsonPropertyValueQuery('value', event)),
       ])
@@ -1327,10 +1332,10 @@ function emmitEvent(event, batchSize = 100, save = true) {
 
   let flowsToTriggerResp = flowsToTrigger.map((flow) => {
     // create a state conductor job for the event flows
-    let flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
-    let resp = sc.createStateConductorJob(flowName, null);
+    let flowName = getFlowNameFromUri(fn.documentUri(flow));
+    let resp = createStateConductorJob(flowName, null);
+    xdmp.trace(TRACE_EVENT, `created state conductor job for event flow: ${resp}`);
     return { flowName: flowName, JobId: resp };
-    xdmp.trace(sc.TRACE_EVENT, `created state conductor job for event flow: ${resp}`);
   });
 
   const output = {
@@ -1444,7 +1449,7 @@ module.exports = {
   FLOW_ITEM_COLLECTION,
   FLOW_STATUS_NEW,
   FLOW_STATUS_WORKING,
-  FLOW_STATUS_WATING,
+  FLOW_STATUS_WAITING,
   FLOW_STATUS_COMPLETE,
   FLOW_STATUS_FAILED,
   JOB_COLLECTION,

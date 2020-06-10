@@ -509,10 +509,10 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
       'Cannot try a flow that is not in the ' + FLOW_STATUS_FAILED + ' status'
     );
   }
-  
+
   try {
     flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
-    state = flowObj.States[stateName];          
+    state = flowObj.States[stateName];
     if (!state) {
       fn.error(
         null,
@@ -1428,7 +1428,7 @@ function handleError(name, message, err, jobDoc, jobObj, save = true) {
     xdmp.nodeReplace(jobDoc.root, jobObj);
   }
 
-  // trigger CPF error state
+  // trigger CPF error state (intentionally commented out)
   //fn.error(null, name, Sequence.from([message, err]));
 
   return jobObj;

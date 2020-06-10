@@ -352,12 +352,16 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
   const currFlowName = jobObj.flowName;
   const status = jobObj.flowStatus;
 
-  try {
-    // sanity check
-    if (FLOW_STATUS_NEW !== status) {
-      fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
-    }
+  // sanity check
+  if (FLOW_STATUS_NEW !== status) {
+    xdmp.trace(
+      TRACE_EVENT,
+      `INVALID-FLOW-STATUS: Cannot start a flow that is not in the ${FLOW_STATUS_NEW} status`
+    );
+    fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
+  }
 
+  try {
     // grab the flow definition from the correct db
     const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
     currFlow.flowName = jobObj.flowName;
@@ -382,7 +386,7 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
       xdmp.nodeReplace(jobDoc.root, jobObj);
     }
   } catch (err) {
-    handleError(
+    return handleError(
       err.name,
       `startProcessingFlowByJobDoc error for flow "${currFlowName}"`,
       err,
@@ -425,16 +429,20 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
   xdmp.trace(TRACE_EVENT, `resumeWaitingJob flow "${flowName}"`);
   xdmp.trace(TRACE_EVENT, `resumeWaitingJob flow state "${stateName}"`);
 
-  try {
-    // sanity check
-    if (FLOW_STATUS_WAITING !== flowStatus) {
-      return fn.error(
-        null,
-        'INVALID-FLOW-STATUS',
-        'Cannot resume a flow that is not in the ' + FLOW_STATUS_WAITING + ' status'
-      );
-    }
+  // sanity check
+  if (FLOW_STATUS_WAITING !== flowStatus) {
+    xdmp.trace(
+      TRACE_EVENT,
+      `INVALID-FLOW-STATUS: Cannot resume a flow that is not in the ${FLOW_STATUS_WAITING} status`
+    );
+    return fn.error(
+      null,
+      'INVALID-FLOW-STATUS',
+      'Cannot resume a flow that is not in the ' + FLOW_STATUS_WAITING + ' status'
+    );
+  }
 
+  try {
     flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
 
     try {
@@ -447,7 +455,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
       );
     }
   } catch (err) {
-    handleError(
+    return handleError(
       err.name,
       `resumeWaitingJobByJobDoc error for flow "${flowName}"`,
       err,
@@ -501,29 +509,31 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
   xdmp.trace(TRACE_EVENT, `retryJobAtStateByJobDoc flow "${flowName}"`);
   xdmp.trace(TRACE_EVENT, `retryJobAtStateByJobDoc flow state "${stateName}"`);
 
+  // sanity check
+  if (FLOW_STATUS_FAILED !== flowStatus) {
+    xdmp.trace(
+      TRACE_EVENT,
+      `INVALID-FLOW-STATUS: Cannot retry a flow that is not in the ${FLOW_STATUS_FAILED} status`
+    );
+    return fn.error(
+      null,
+      'INVALID-FLOW-STATUS',
+      'Cannot try a flow that is not in the ' + FLOW_STATUS_FAILED + ' status'
+    );
+  }
+
   try {
-    // sanity check
-    if (FLOW_STATUS_FAILED !== flowStatus) {
-      return fn.error(
-        null,
-        'INVALID-FLOW-STATUS',
-        'Cannot try a flow that is not in the ' + FLOW_STATUS_FAILED + ' status'
-      );
-    }
-
     flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
-
-    try {
-      state = flowObj.States[stateName];
-    } catch (e) {
-      return fn.error(
+    state = flowObj.States[stateName];
+    if (!state) {
+      fn.error(
         null,
         'INVALID-STATE-DEFINITION',
         `Can't Find the state "${stateName}" in flow "${flowName}"`
       );
     }
   } catch (err) {
-    handleError(
+    return handleError(
       err.name,
       `retryJobAtStateByJobDoc error for flow "${flowName}"`,
       err,
@@ -674,7 +684,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       xdmp.nodeReplace(jobDoc.root, jobObj);
     }
   } catch (err) {
-    handleError(
+    return handleError(
       'TRANSITIONERROR',
       `transition error for state "${stateName}"`,
       err,
@@ -704,29 +714,33 @@ function executeStateByJobDoc(jobDoc, save = true) {
   xdmp.trace(TRACE_EVENT, `executing flow "${flowName}"`);
   xdmp.trace(TRACE_EVENT, `flow state "${stateName}"`);
 
-  try {
-    // sanity check
-    if (FLOW_STATUS_WORKING !== jobObj.flowStatus) {
-      return fn.error(
-        null,
-        'INVALID-FLOW-STATUS',
-        'Cannot execute a flow that is not in the WORKING status'
-      );
-    }
+  // sanity check
+  if (FLOW_STATUS_WORKING !== jobObj.flowStatus) {
+    xdmp.trace(
+      TRACE_EVENT,
+      'INVALID-FLOW-STATUS: Cannot execute a flow that is not in the WORKING status'
+    );
+    return fn.error(
+      null,
+      'INVALID-FLOW-STATUS',
+      'Cannot execute a flow that is not in the WORKING status'
+    );
+  }
 
+  try {
     flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
 
     try {
       state = flowObj.States[stateName];
     } catch (e) {
-      return fn.error(
+      fn.error(
         null,
         'INVALID-STATE-DEFINITION',
         `Can't Find the state "${stateName}" in flow "${flowName}"`
       );
     }
   } catch (err) {
-    handleError(
+    return handleError(
       err.name,
       `executeStateByJobDoc error for flow "${flowName}"`,
       err,
@@ -882,7 +896,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
     }
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
   } else {
-    handleError(
+    return handleError(
       'INVALID-STATE-DEFINITION',
       Sequence.from([`state "${stateName}" not found in flow`]),
       null,
@@ -1435,9 +1449,8 @@ function handleError(name, message, err, jobDoc, jobObj, save = true) {
     xdmp.nodeReplace(jobDoc.root, jobObj);
   }
 
-  // trigger CPF error state
-
-  fn.error(null, name, Sequence.from([message, err]));
+  // trigger CPF error state (intentionally commented out)
+  //fn.error(null, name, Sequence.from([message, err]));
 
   return jobObj;
 }

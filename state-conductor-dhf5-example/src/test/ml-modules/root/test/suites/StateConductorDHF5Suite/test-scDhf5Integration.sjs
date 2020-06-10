@@ -37,14 +37,17 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-try {
-  respDoc = sc.executeStateByJobDoc(jobDoc, false);
-} catch (err) {
-  error = err;
-}
-
+respDoc = sc.executeStateByJobDoc(jobDoc, false);
+xdmp.log(respDoc);
 assertions.push(
-  test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'handled missing dhf flow')
+  test.assertEqual('failed', respDoc.flowStatus, 'status check'),
+  test.assertEqual('JS-JAVASCRIPT', respDoc.errors['runStep1'].name, 'handled missing dhf flow'),
+  test.assertTrue(
+    respDoc.errors['runStep1'].data.includes(
+      'Error: The flow with the name MissingFlow could not be found.'
+    ),
+    'handled missing dhf flow'
+  )
 );
 
 // test executing flow step

@@ -275,7 +275,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertEquals(null, errorResp);
     assertNotNull(resp);
     assertEquals("missing-flow", badJob1Doc.getFlowName());
-    assertEquals("new", badJob1Doc.getFlowStatus());  // TODO seems like this should be "failed"
+    assertEquals("failed", badJob1Doc.getFlowStatus());
   }
 
   @Test
@@ -317,15 +317,82 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertEquals("add-collection-2", jobDoc.getFlowState());
     assertEquals(true, meta.getCollections().contains("testcol1"));
 
+    jobDoc = getJobDocument(badJob1Uri);
+    logger.info(jobDoc.toString());
+    assertEquals("missing-flow", jobDoc.getFlowName());
+    assertEquals("failed", jobDoc.getFlowStatus());
+
     assertEquals(job1Uri, resp.get(0).get("job").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(job2Uri, resp.get(1).get("job").asText());
     assertEquals(true, resp.get(1).get("result").asBoolean());
     assertEquals(badJob1Uri, resp.get(2).get("job").asText());
-    assertEquals(false, resp.get(2).get("result").asBoolean());
-    assertNotNull(resp.get(2).get("error"));
+    assertEquals(true, resp.get(2).get("result").asBoolean());
     assertEquals(job3Uri, resp.get(3).get("job").asText());
     assertEquals(true, resp.get(3).get("result").asBoolean());
+  }
+
+  @Test
+  public void testProcessFailedJob() throws IOException {
+    // this bad job will go into 'failed' the first time through
+    // the second attempt should return 'false' for the failed job
+
+    ArrayNode resp = null;
+    Exception errorResp = null;
+    StateConductorJob badJob1Doc;
+
+    try {
+      resp = service.processJob(Arrays.stream(new String[]{badJob1Uri}));
+    } catch (Exception err) {
+      errorResp = err;
+    }
+
+    badJob1Doc = getJobDocument(badJob1Uri);
+    logger.info(badJob1Doc.toString());
+
+    assertEquals(null, errorResp);
+    assertNotNull(resp);
+    assertEquals(badJob1Uri, resp.get(0).get("job").asText());
+    assertEquals(true, resp.get(0).get("result").asBoolean());
+    assertEquals("missing-flow", badJob1Doc.getFlowName());
+    assertEquals("failed", badJob1Doc.getFlowStatus());
+
+    try {
+      resp = service.processJob(Arrays.stream(new String[]{badJob1Uri}));
+    } catch (Exception err) {
+      errorResp = err;
+    }
+
+    assertEquals(null, errorResp);
+    assertNotNull(resp);
+    assertEquals(badJob1Uri, resp.get(0).get("job").asText());
+    assertEquals(false, resp.get(0).get("result").asBoolean());
+  }
+
+  @Test
+  public void testExpectedExceptions() throws IOException {
+    ArrayNode resp = null;
+    Exception errorResp = null;
+    StateConductorJob badJob1Doc;
+
+    String[] jobs = new String[] {"/not/a/real/job1.json", "/not/a/real/job2.json"};
+
+    try {
+      resp = service.processJob(Arrays.stream(jobs));
+    } catch (Exception err) {
+      errorResp = err;
+    }
+
+    logger.info(resp.toString());
+
+    assertEquals(null, errorResp);
+    assertNotNull(resp);
+    assertEquals("/not/a/real/job1.json", resp.get(0).get("job").asText());
+    assertEquals(false, resp.get(0).get("result").asBoolean());
+    assertNotNull(resp.get(0).get("error").asText());
+    assertEquals("/not/a/real/job2.json", resp.get(1).get("job").asText());
+    assertEquals(false, resp.get(1).get("result").asBoolean());
+    assertNotNull(resp.get(1).get("error").asText());
   }
 
 }

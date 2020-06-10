@@ -80,15 +80,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
+assertion = sc.executeStateByJobDoc(jobDoc, false);
 
-try {
-  error = sc.executeStateByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
-
-assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'status check working'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('INVALID-STATE-DEFINITION', assertion.errors['find-gender'].name)
+);
 
 //checks see if the context was updated with a task
 jobDoc = xdmp.toJSON({
@@ -162,12 +159,11 @@ jobDoc = xdmp.toJSON({
   modules: xdmp.modulesDatabase(),
   provenance: [],
   context: {
-    eventName: "series-of-clicks-and-beeps:1234"
-  }
+    eventName: 'series-of-clicks-and-beeps:1234',
+  },
 });
 
 assertion = sc.executeStateByJobDoc(jobDoc, false);
-
 
 assertions.push(test.assertEqual('waiting', assertion.flowStatus, 'waiting flowStatus'));
 assertions.push(
@@ -177,7 +173,6 @@ assertions.push(
     'waiting currentlyWaiting'
   )
 );
-
 
 jobDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
@@ -189,19 +184,20 @@ jobDoc = xdmp.toJSON({
   modules: xdmp.modulesDatabase(),
   provenance: [],
   context: {
-    eventName: ""
-  }
+    eventName: '',
+  },
 });
 
+assertion = sc.executeStateByJobDoc(jobDoc, false);
 
-error = null;
-try {
-  error = sc.executeStateByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
-
-assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'eventPath empty string'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual(
+    'INVALID-STATE-DEFINITION',
+    assertion.errors['dialUpPath'].name,
+    'eventPath empty string'
+  )
+);
 
 //checks a waiting state
 jobDoc = xdmp.toJSON({
@@ -213,21 +209,20 @@ jobDoc = xdmp.toJSON({
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
   provenance: [],
-  context: {
-
-  }
+  context: {},
 });
 
-error = null;
-try {
-  error = sc.executeStateByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.executeStateByJobDoc(jobDoc, false);
 
-assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'eventPath missing property '));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual(
+    'INVALID-STATE-DEFINITION',
+    assertion.errors['dialUpPath'].name,
+    'eventPath missing property'
+  )
+);
 //eventPath tests end
-
 
 //unKnown database (content)
 jobDoc = xdmp.toJSON({
@@ -241,14 +236,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.executeStateByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.executeStateByJobDoc(jobDoc, false);
 
-assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('XDMP-NODB', assertion.errors['find-gender'].name, 'unknown database content')
+);
 
 //unKnown module database
 jobDoc = xdmp.toJSON({
@@ -262,14 +255,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.executeStateByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.executeStateByJobDoc(jobDoc, false);
 
-assertions.push(test.assertEqual('TRANSITIONERROR', error.name, 'unKnown database module'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('XDMP-NODB', assertion.errors['find-gender'].name, 'unknown database modules')
+);
 
 //unKnown database both
 jobDoc = xdmp.toJSON({
@@ -283,14 +274,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.executeStateByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.executeStateByJobDoc(jobDoc, false);
 
-assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database both'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('XDMP-NODB', assertion.errors['find-gender'].name, 'unknown database both')
+);
 
 // missing action modules test
 jobDoc = xdmp.toJSON({
@@ -304,14 +293,15 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.executeStateByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.executeStateByJobDoc(jobDoc, false);
+
 assertions.push(
-  test.assertTrue(error.data[1].includes('XDMP-MODNOTFOUND'), 'detected missing action module')
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual(
+    'XDMP-MODNOTFOUND',
+    assertion.errors['set-prop1'].name,
+    'detected missing action module'
+  )
 );
 
 // missing condition modules test
@@ -326,14 +316,15 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.executeStateByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.executeStateByJobDoc(jobDoc, false);
+
 assertions.push(
-  test.assertTrue(error.data[1].includes('XDMP-MODNOTFOUND'), 'detected missing action module')
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual(
+    'XDMP-MODNOTFOUND',
+    assertion.errors['branch'].name,
+    'detected missing condition module'
+  )
 );
 
 assertions;

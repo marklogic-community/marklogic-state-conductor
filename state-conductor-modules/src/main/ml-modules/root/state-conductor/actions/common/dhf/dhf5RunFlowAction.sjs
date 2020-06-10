@@ -1,3 +1,4 @@
+const sc = require('/state-conductor/state-conductor.sjs');
 const DataHub = require('/data-hub/5/datahub.sjs');
 const datahub = new DataHub();
 
@@ -15,14 +16,15 @@ function performAction(uri, options = {}, context = {}) {
   // get the steps for the given flow
   const numSteps = Object.keys(flow.steps).length;
 
-  xdmp.log(
+  xdmp.trace(
+    sc.TRACE_EVENT,
     Sequence.from([
       'Execute DHF flow:',
-      '  uri:         ' + uri,
-      '  flowName:    ' + flowName,
-      '  numSteps:    ' + numSteps,
-      '  flowOptions: ' + flowOptions,
-      '  flowContext: ' + flowContext,
+      '- uri:         ' + uri,
+      '- flowName:    ' + flowName,
+      '- numSteps:    ' + numSteps,
+      '- flowOptions: ' + flowOptions,
+      '- flowContext: ' + flowContext,
     ])
   );
 

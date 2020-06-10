@@ -7,8 +7,7 @@ var uri;
 var trigger;
 
 
-
-let flowfile = fn.doc(uri);
+let flowfile = cts.doc(uri);
  if (!validator.validateFlowFile(flowfile.toObject())) {
    fn.error(xs.QName("ERROR"), `Invalid state-conductor flow file "${uri}"`);
  }

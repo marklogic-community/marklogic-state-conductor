@@ -669,9 +669,14 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     } else {
       xdmp.trace(TRACE_EVENT, `transition complete: ${stateName}`);
 
-      // terminal states have no "Next" target state
-      jobObj.flowStatus = FLOW_STATUS_COMPLETE; // TODO if is a "Fail" state shouldn't we change to the "failed" status?
+      // determine the final status
+      if (STATE_FAIL === state.Type.toLowerCase()) {
+        jobObj.flowStatus = FLOW_STATUS_FAILED;
+      } else {
+        jobObj.flowStatus = FLOW_STATUS_COMPLETE;
+      }
 
+      // terminal states have no "Next" target state
       jobObj.provenance.push({
         date: new Date().toISOString(),
         from: stateName,
@@ -1470,12 +1475,12 @@ module.exports = {
   FLOW_STATUS_FAILED,
   JOB_COLLECTION,
   JOB_DIRECTORY,
-  retryJobAtState,
-  retryJobAtStateByJobDoc,
   addJobMetadata,
   batchCreateStateConductorJob,
   checkFlowContext,
   createStateConductorJob,
+  emmitEvent,
+  executeStateByJobDoc,
   getAllFlowsContextQuery,
   getApplicableFlows,
   getFlowContextQuery,
@@ -1486,13 +1491,13 @@ module.exports = {
   getFlowNameFromUri,
   getFlowNames,
   getInitialState,
+  getJobDocuments,
   getJobIds,
+  invokeOrApplyFunction,
   processJob,
   resumeWaitingJob,
   resumeWaitingJobByJobDoc,
-  executeStateByJobDoc,
+  retryJobAtState,
+  retryJobAtStateByJobDoc,
   startProcessingFlowByJobDoc,
-  emmitEvent,
-  getJobDocuments,
-  invokeOrApplyFunction,
 };

@@ -25,6 +25,10 @@
       "End": true,
       "Comment": "updates a property",
       "Resource": "/state-conductor/actions/custom/set-prop2.sjs"
+    },
+    "failed": {
+      "Type": "Fail",
+      "Comment": "used to test application of failure status"
     }
   }
 }

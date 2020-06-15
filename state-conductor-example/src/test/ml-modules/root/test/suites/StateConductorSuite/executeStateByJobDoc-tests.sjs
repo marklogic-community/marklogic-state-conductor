@@ -327,4 +327,20 @@ assertions.push(
   )
 );
 
+// checks that a flow that terminates in a "Fail" state has the "failed" status applied
+jobDoc = xdmp.toJSON({
+  id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
+  flowName: 'test-flow',
+  flowStatus: 'working',
+  flowState: 'failed',
+  uri: '/data/test-doc1.json',
+  database: xdmp.database(),
+  modules: xdmp.modulesDatabase(),
+  provenance: [],
+});
+
+assertion = sc.executeStateByJobDoc(jobDoc, false);
+
+assertions.push(test.assertEqual('failed', assertion.flowStatus, 'status check'));
+
 assertions;

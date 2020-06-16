@@ -30,7 +30,7 @@ sc.invokeOrApplyFunction(
     }
   },
   {
-    database: sc.STATE_CONDUCTOR_JOBS_DB,
+    database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
   }
 );
 

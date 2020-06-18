@@ -1400,9 +1400,10 @@ function getJobDocuments(options) {
         ]);
       }
 
-      uris = uris.concat(
-        cts.uris('', ['document', `limit=${count}`], ctsQuery, null, forestIds).toArray()
-      );
+      let docs = fn.subsequence(cts.search(ctsQuery, forestIds), 0, count);
+      for (let doc of docs) {
+        uris = uris.concat(fn.documentUri(doc));
+      }
     },
     {
       database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),

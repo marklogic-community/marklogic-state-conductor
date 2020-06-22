@@ -6,28 +6,27 @@ const sc = require('/state-conductor/state-conductor.sjs');
 
 sc.invokeOrApplyFunction(
   () => {
-    const docs = fn.subsequence(
-      cts.search(
+    const uris = cts
+      .uris(
+        null,
+        'limit=1000',
+
         cts.andQuery([
           cts.collectionQuery('stateConductorJob'),
-          cts.jsonPropertyScopeQuery('currentlyWaiting',
+          cts.jsonPropertyScopeQuery(
+            'currentlyWaiting',
             cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
           ),
         ])
-      ), 1,1000
-    );
+      )
+      .toArray();
 
-    xdmp.trace(
-      sc.TRACE_EVENT,
-      `Reporting from waitTask. Docs to be process are: ${fn.count(docs)}`
-    );
+    xdmp.trace(sc.TRACE_EVENT, `Reporting from waitTask. Docs to be process are: ${uris.length}`);
 
-    if (fn.count(docs) > 0) {
-
-      for (const jobDoc of docs) {
-        sc.resumeWaitingJobByJobDoc(jobDoc, 'waitTask');
-      }
-
+    if (uris.length > 0) {
+      uris.forEach((uri) => {
+        sc.resumeWaitingJob(uri, 'waitTask');
+      });
     }
   },
   {

@@ -574,10 +574,14 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     if (jobObj.flowStatus === FLOW_STATUS_WAITING) {
       xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
 
+       let pro = jobObj.currentlyWaiting;
+       pro['doneNextTaskTime'] = pro['nextTaskTime'];
+       delete pro['nextTaskTime'];
+
       jobObj.provenance.push({
         date: new Date().toISOString(),
         state: stateName,
-        waiting: jobObj.currentlyWaiting,
+        waiting: pro,
       });
     } else if (!inTerminalState(jobObj, flowObj)) {
       xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
@@ -1400,10 +1404,9 @@ function getJobDocuments(options) {
         ]);
       }
 
-      let docs = fn.subsequence(cts.search(ctsQuery, forestIds), 0, count);
-      for (let doc of docs) {
-        uris = uris.concat(fn.documentUri(doc));
-      }
+      uris = uris.concat(
+        cts.uris('', ['document', `limit=${count}`], ctsQuery, null, forestIds).toArray()
+      );
     },
     {
       database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),

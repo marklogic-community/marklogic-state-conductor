@@ -584,10 +584,14 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     if (jobObj.flowStatus === FLOW_STATUS_WAITING) {
       xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
 
+       let pro = JSON.parse(JSON.stringify(jobObj.currentlyWaiting));
+       pro['doneNextTaskTime'] = pro['nextTaskTime'];
+       delete pro['nextTaskTime'];
+
       jobObj.provenance.push({
         date: new Date().toISOString(),
         state: stateName,
-        waiting: jobObj.currentlyWaiting,
+        waiting: pro,
       });
     } else if (!inTerminalState(jobObj, flowObj)) {
       xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);

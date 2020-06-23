@@ -574,7 +574,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     if (jobObj.flowStatus === FLOW_STATUS_WAITING) {
       xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
 
-       let pro = jobObj.currentlyWaiting;
+       let pro = JSON.parse(JSON.stringify(jobObj.currentlyWaiting));
        pro['doneNextTaskTime'] = pro['nextTaskTime'];
        delete pro['nextTaskTime'];
 

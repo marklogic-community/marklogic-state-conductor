@@ -21,10 +21,18 @@ jobDoc = xdmp.toJSON({
 });
 
 //"test excute job")
+//"test excute job")
 assertion = sc.executeStateByJobDoc(jobDoc, false);
-assertions.push(test.assertEqual('waiting', assertion.flowStatus, 'waiting flowStatus'));
 assertions.push(
-  test.assertTrue(assertion.hasOwnProperty('currentlyWaiting'), 'waiting currentlyWaiting')
+  test.assertEqual('waiting', assertion.flowStatus, 'waiting flowStatus'));
+assertions.push(
+  test.assertTrue(assertion.hasOwnProperty('currentlyWaiting'))
+);
+assertions.push(
+  test.assertTrue(assertion.currentlyWaiting.hasOwnProperty("nextTaskTime"))
+);
+assertions.push(
+  test.assertTrue(assertion.provenance[0].waiting.hasOwnProperty("doneNextTaskTime"))
 );
 
 jobDoc = xdmp.toJSON({

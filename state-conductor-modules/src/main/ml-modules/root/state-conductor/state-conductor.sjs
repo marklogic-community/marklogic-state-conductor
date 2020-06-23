@@ -584,9 +584,9 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     if (jobObj.flowStatus === FLOW_STATUS_WAITING) {
       xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
 
-       let pro = JSON.parse(JSON.stringify(jobObj.currentlyWaiting));
-       pro['doneNextTaskTime'] = pro['nextTaskTime'];
-       delete pro['nextTaskTime'];
+      let pro = JSON.parse(JSON.stringify(jobObj.currentlyWaiting));
+      pro['doneNextTaskTime'] = pro['nextTaskTime'];
+      delete pro['nextTaskTime'];
 
       jobObj.provenance.push({
         date: new Date().toISOString(),
@@ -927,6 +927,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
  * @returns the action module's resposne
  */
 function executeActionModule(modulePath, uri, params, context, { database, modules }) {
+  const startTime = xdmp.elapsedTime();
   let resp = invokeOrApplyFunction(
     () => {
       declareUpdate();
@@ -946,6 +947,10 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
       modules: modules ? modules : xdmp.modulesDatabase(),
     }
   );
+  xdmp.trace(
+    TRACE_EVENT,
+    `Action module "${modulePath}" completed in ${xdmp.elapsedTime().subtract(startTime)}`
+  );
   return fn.head(resp);
 }
 
@@ -960,6 +965,7 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
  * @returns boolean response of the module
  */
 function executeConditionModule(modulePath, uri, params, context, { database, modules }) {
+  const startTime = xdmp.elapsedTime();
   let resp = invokeOrApplyFunction(
     () => {
       const conditionModule = require(modulePath);
@@ -981,6 +987,10 @@ function executeConditionModule(modulePath, uri, params, context, { database, mo
       database: database ? database : xdmp.database(),
       modules: modules ? modules : xdmp.modulesDatabase(),
     }
+  );
+  xdmp.trace(
+    TRACE_EVENT,
+    `Condition module "${modulePath}" completed in ${xdmp.elapsedTime().subtract(startTime)}`
   );
   return fn.head(resp);
 }

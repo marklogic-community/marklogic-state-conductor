@@ -5,7 +5,7 @@ State Conductor flows are defined using a subset of [Amazon States Language (ASL
 
 The _State Conductor_ can be used to perform an arbitrary number of context-based processing actions on a subset of documents. Actions could include: invoking a [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) flow, transforming a document, applying metadata, or calling an external process.
 
-The _State Conductor_ requires a "Driver" to process documents and move them through the installed Flows' states. The _State Conductor_ currently (release 0.6.0) supports a [CoRB2](https://github.com/marklogic-community/corb2) driver, [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver and [CPF](https://docs.marklogic.com/guide/cpf) driver.
+The _State Conductor_ requires a "Driver" to process documents and move them through the installed Flows' states. The _State Conductor_ supports a [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver, a [CoRB2](https://github.com/marklogic-community/corb2) driver, and a [CPF](https://docs.marklogic.com/guide/cpf) driver.
 
 1. [Installation](#installation)
 2. [Usage](#usage)
@@ -36,8 +36,8 @@ repositories {
   }
 }
 dependencies {
-  mlBundle "com.marklogic:marklogic-state-conductor:0.6.0"
-  mlBundle "com.marklogic:marklogic-state-conductor-cpf:0.6.0" // if using the cpf driver
+  mlBundle "com.marklogic:marklogic-state-conductor:0.6.1"
+  mlBundle "com.marklogic:marklogic-state-conductor-cpf:0.6.1" // if using the cpf driver
 }
 ```
 
@@ -206,10 +206,10 @@ New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
 
 ## Roadmap <a name="roadmap"></a>
 
-- 0.6.0+
+- 0.7.0+
   - DHS support
-  - Full support for Choice Rules
   - Batch support
   - Retention Policy for job documents
   - Flush out the validator and validate flow files on deployment
   - Support for Parallel and Map states
+  - Support for Retries

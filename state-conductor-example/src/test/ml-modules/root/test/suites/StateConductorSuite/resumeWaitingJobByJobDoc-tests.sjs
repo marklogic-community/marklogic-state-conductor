@@ -81,14 +81,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.resumeWaitingJobByJobDoc(jobDoc, 'testing', false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.resumeWaitingJobByJobDoc(jobDoc, 'testing', false);
 
-assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'flowStatus check'),
+  test.assertEqual('XDMP-NODB', assertion.errors['dialUp'].name, 'unknown database content')
+);
 
 //unKnown module database
 jobDoc = xdmp.toJSON({

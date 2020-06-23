@@ -1,3 +1,4 @@
+const sc = require('/state-conductor/state-conductor.sjs');
 const DataHub = require('/data-hub/5/datahub.sjs');
 const datahub = new DataHub();
 
@@ -8,6 +9,8 @@ function performAction(uri, options = {}, context = {}) {
   const flowOptions = options.flowOptions || {};
   const flowContext = options.flowContext || {};
 
+  flowOptions.stateConductorContext = context;
+
   // setup the dhf runFlow content
   const contentObjs = {
     uri: uri,
@@ -15,14 +18,15 @@ function performAction(uri, options = {}, context = {}) {
     value: fn.head(xdmp.invokeFunction(() => cts.doc(uri))),
   };
 
-  xdmp.log(
+  xdmp.trace(
+    sc.TRACE_EVENT,
     Sequence.from([
       'Execute DHF flow:',
-      '  uri:         ' + uri,
-      '  flowName:    ' + flowName,
-      '  step:        ' + step,
-      '  flowOptions: ' + flowOptions,
-      '  flowContext: ' + flowContext,
+      '- uri:         ' + uri,
+      '- flowName:    ' + flowName,
+      '- step:        ' + step,
+      '- flowOptions: ' + flowOptions,
+      '- flowContext: ' + flowContext,
     ])
   );
 

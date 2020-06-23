@@ -1,3 +1,4 @@
+const sc = require('/state-conductor/state-conductor.sjs');
 const dhf5Ingestion = require('/data-hub/5/builtins/steps/ingestion/default/main.sjs');
 
 function performAction(uri, options = {}, context = {}) {
@@ -9,13 +10,13 @@ function performAction(uri, options = {}, context = {}) {
     value: doc,
   };
 
-  xdmp.log(
+  xdmp.trace(
+    sc.TRACE_EVENT,
     Sequence.from([
       'Execute DHF make envelope step:',
-      '  uri:     ' + uri,
-      '  options: ' + options,
-    ]),
-    'debug'
+      '- uri:     ' + uri,
+      '- options: ' + options,
+    ])
   );
 
   // execute the dhf flow step

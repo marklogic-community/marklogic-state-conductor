@@ -61,14 +61,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.startProcessingFlowByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.startProcessingFlowByJobDoc(jobDoc, false);
 
-assertions.push(test.assertEqual('MISSING-FLOW-FILE', error.name, 'missing flow file'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('MISSING-FLOW-FILE', assertion.errors['find-gender'].name, 'missing flow file')
+);
 
 //check for missing flow file
 jobDoc = xdmp.toJSON({
@@ -82,14 +80,16 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.startProcessingFlowByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.startProcessingFlowByJobDoc(jobDoc, false);
 
-assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'no StartAt step'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual(
+    'INVALID-STATE-DEFINITION',
+    assertion.errors['find-gender'].name,
+    'no StartAt step'
+  )
+);
 
 //check for missing flow file
 jobDoc = xdmp.toJSON({
@@ -119,14 +119,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.startProcessingFlowByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.startProcessingFlowByJobDoc(jobDoc, false);
 
-assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('XDMP-NODB', assertion.errors['find-gender'].name, 'unknown database content')
+);
 
 //unKnown database (module)
 jobDoc = xdmp.toJSON({
@@ -156,13 +154,11 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.startProcessingFlowByJobDoc(jobDoc, false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.startProcessingFlowByJobDoc(jobDoc, false);
 
-assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database both'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('XDMP-NODB', assertion.errors['find-gender'].name, 'unknown database both')
+);
 
 assertions;

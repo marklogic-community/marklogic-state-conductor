@@ -116,7 +116,7 @@ public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTe
     }
 
     File file = new File(resource.getFile());
-    String content = Files.readString(file.toPath());
+    String content = new String(Files.readAllBytes(file.toPath()));
 
     for (Map.Entry<String, String> token : tokens.entrySet()) {
       content = content.replaceAll(token.getKey(), token.getValue());
@@ -126,7 +126,7 @@ public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTe
   }
 
   protected StringHandle replaceTokensInResource(FileHandle file, Map<String, String> tokens) throws IOException {
-    String content = Files.readString(file.get().toPath());
+    String content = new String(Files.readAllBytes(file.get().toPath()));
 
     for (Map.Entry<String, String> token : tokens.entrySet()) {
       content = content.replaceAll(token.getKey(), token.getValue());

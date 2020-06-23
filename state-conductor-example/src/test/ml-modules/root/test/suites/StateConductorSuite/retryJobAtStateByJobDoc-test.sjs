@@ -123,15 +123,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
+assertion = sc.retryJobAtStateByJobDoc(jobDoc, 'unknownStep', 'testing', false);
 
-try {
-  error = sc.retryJobAtStateByJobDoc(jobDoc, 'unknownStep', 'testing', false);
-} catch (e) {
-  error = e;
-}
-
-assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'unknownStep'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('INVALID-STATE-DEFINITION', assertion.errors['dialUp'].name, 'unknownStep')
+);
 
 //retry an NEW state
 jobDoc = xdmp.toJSON({
@@ -145,15 +142,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
+assertion = sc.retryJobAtStateByJobDoc(jobDoc, 'NEW', 'testing', false);
 
-try {
-  error = sc.retryJobAtStateByJobDoc(jobDoc, 'NEW', 'testing', false);
-} catch (e) {
-  error = e;
-}
-
-assertions.push(test.assertEqual('INVALID-STATE-DEFINITION', error.name, 'NEW'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('INVALID-STATE-DEFINITION', assertion.errors['dialUp'].name, 'NEW')
+);
 
 //unKnown database (content)
 jobDoc = xdmp.toJSON({
@@ -167,14 +161,12 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.retryJobAtStateByJobDoc(jobDoc, 'dialUp', 'testing', false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.retryJobAtStateByJobDoc(jobDoc, 'dialUp', 'testing', false);
 
-assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('XDMP-NODB', assertion.errors['dialUp'].name, 'unknown database content')
+);
 
 //unKnown module database
 jobDoc = xdmp.toJSON({
@@ -205,12 +197,11 @@ jobDoc = xdmp.toJSON({
   provenance: [],
 });
 
-error = null;
-try {
-  error = sc.retryJobAtStateByJobDoc(jobDoc, 'dialUp', 'testing', false);
-} catch (e) {
-  error = e;
-}
+assertion = sc.retryJobAtStateByJobDoc(jobDoc, 'dialUp', 'testing', false);
 
-assertions.push(test.assertEqual('XDMP-NODB', error.name, 'unKnown database content'));
+assertions.push(
+  test.assertEqual('failed', assertion.flowStatus, 'status check'),
+  test.assertEqual('XDMP-NODB', assertion.errors['dialUp'].name, 'unknown database both')
+);
+
 assertions;

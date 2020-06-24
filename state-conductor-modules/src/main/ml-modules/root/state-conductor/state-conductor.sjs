@@ -1065,10 +1065,10 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
       }, null)
 
       if (target) {
-        let errorEquals = target.ErrorEquals.join(",")
-        let retryNumber;
 
-        retryNumber =  1 + (jobObj.retries[errorEquals] || 0);
+        let errorEquals = target.ErrorEquals.join(",")
+
+        let retryNumber = 1 + (jobObj.retries[errorEquals] || 0);
 
         jobObj.retries[errorEquals] = retryNumber;
 
@@ -1542,6 +1542,7 @@ function handleError(name, message, err, jobDoc, jobObj, save = true) {
 
   return jobObj;
 }
+
 
 module.exports = {
   TRACE_EVENT,

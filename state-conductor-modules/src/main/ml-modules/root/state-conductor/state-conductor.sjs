@@ -688,6 +688,9 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
       });
     }
 
+    //resets the retries since the step has completed succesfully
+    jobDoc.retries = {}
+
     // update the state status and provenence in the job doc
     if (save) {
       xdmp.nodeReplace(jobDoc.root, jobObj);
@@ -1035,6 +1038,63 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
     currState &&
     (STATE_TASK === currState.Type.toLowerCase() || STATE_CHOICE === currState.Type.toLowerCase())
   ) {
+
+    //Step defined retry
+    if (currState.retry && currState.Catch.retry > 0 ) {
+      // find a matching retry state
+      let target = currState.retry.reduce((acc, retry) => {
+        if (!acc) {
+          let errorEquals = JSON.stringify(retry.ErrorEquals)
+          if (
+            (
+            retry.ErrorEquals.includes(err.name) ||
+            retry.ErrorEquals.includes('States.ALL') ||
+            retry.ErrorEquals.includes('*')
+            ) && (
+              !jobObj.retries.hasOwnProperty(errorEquals) ||
+              jobObj.retries[errorEquals] < retry["MaxAttempts"]
+            )
+          )
+          {
+            acc = retry;
+          }
+        }
+        return acc;
+      }, null)
+
+      if (target) {
+        let errorEquals = JSON.stringify(target.ErrorEquals)
+        let retryNumber;
+
+        retryNumber =  1 + (jobObj.retries[errorEquals] || 0);
+
+        jobObj.retries[errorEquals] = retryNumber;
+
+        xdmp.trace(TRACE_EVENT, `retrying job "${uri}"`);
+
+        // move to the target state
+        jobObj.flowStatus = FLOW_STATUS_WORKING;
+        jobObj.flowState = stateName;
+        jobObj.provenance.push({
+          date: new Date().toISOString(),
+          from: stateName,
+          to: stateName,
+          retryNumber:retryNumber
+        });
+
+        // capture error message in context
+        jobObj.errors[stateName] = err;
+
+        if (save) {
+          xdmp.nodeReplace(jobDoc.root, jobObj);
+        }
+
+        return jobObj;
+      }
+
+    }
+
+    //Step defined Catch
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
       let target = currState.Catch.reduce((acc, fallback) => {
@@ -1070,6 +1130,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
         return jobObj;
       }
     }
+
   }
   return handleError(
     'INVALID-STATE-DEFINITION',
@@ -1210,6 +1271,7 @@ function scaffoldJobDoc(jobDoc) {
     context: {},
     provenance: [],
     errors: {},
+    retries: {},
   };
 
   return Object.assign(needProps, jobDoc);

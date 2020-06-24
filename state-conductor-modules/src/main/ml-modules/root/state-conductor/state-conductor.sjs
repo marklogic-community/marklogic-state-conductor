@@ -1052,7 +1052,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
             retry.ErrorEquals.includes('*')
             ) && (
               !jobObj.retries.hasOwnProperty(errorEquals) ||
-              jobObj.retries[errorEquals] < retry["MaxAttempts"]
+              jobObj.retries[errorEquals] < (retry["MaxAttempts"] || 3)
             )
           )
           {

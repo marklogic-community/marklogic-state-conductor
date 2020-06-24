@@ -1,0 +1,36 @@
+{
+    "Comment": "is used in the executeStateByJobDoc",
+    "mlDomain": {
+      "context": [
+        {
+          "scope": "directory",
+          "value": "/test/"
+        },
+        {
+          "scope": "collection",
+          "value": "test"
+        }
+      ]
+    },
+    "StartAt": "errorOut",
+    "States": {
+      "errorOut": {
+        "Type": "Task",
+        "Comment": "initial state of the flow",
+        "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+        "Next": "fourMaxAttempts",
+        "Retry": [{
+          "ErrorEquals": [ "States.ALL" ]
+          }]
+      },
+      "fourMaxAttempts": {
+        "Type": "Task",
+        "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+        "End": true,
+        "Retry": [{
+          "ErrorEquals": [ "States.ALL" ],
+          "FourMaxAttempts": 4
+          }]
+      }
+    }
+  }

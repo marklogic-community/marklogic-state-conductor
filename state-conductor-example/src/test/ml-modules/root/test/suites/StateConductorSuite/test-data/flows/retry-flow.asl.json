@@ -29,7 +29,7 @@
         "End": true,
         "Retry": [{
           "ErrorEquals": [ "States.ALL" ],
-          "FourMaxAttempts": 4
+          "MaxAttempts": 4
           }]
       }
     }

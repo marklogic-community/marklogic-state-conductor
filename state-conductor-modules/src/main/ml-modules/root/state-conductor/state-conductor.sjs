@@ -29,6 +29,7 @@ const FLOW_NEW_STEP = 'NEW';
 const DATE_TIME_REGEX =
   '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
+const MAX_RETRY_ATTEMPTS = 3;
 const STATE_CHOICE = 'choice';
 const STATE_FAIL = 'fail';
 const STATE_PASS = 'pass';
@@ -1039,12 +1040,13 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
     (STATE_TASK === currState.Type.toLowerCase() || STATE_CHOICE === currState.Type.toLowerCase())
   ) {
 
-    //Step defined retry
-    if (currState.retry && currState.Catch.retry > 0 ) {
+    //State defined retry
+    if (currState.Retry && currState.Retry.length > 0 ) {
+
       // find a matching retry state
-      let target = currState.retry.reduce((acc, retry) => {
+      let target = currState.Retry.reduce((acc, retry) => {
         if (!acc) {
-          let errorEquals = JSON.stringify(retry.ErrorEquals)
+          let errorEquals = retry.ErrorEquals.join(",")
           if (
             (
             retry.ErrorEquals.includes(err.name) ||
@@ -1052,7 +1054,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
             retry.ErrorEquals.includes('*')
             ) && (
               !jobObj.retries.hasOwnProperty(errorEquals) ||
-              jobObj.retries[errorEquals] < (retry["MaxAttempts"] || 3)
+              jobObj.retries[errorEquals] < (retry["MaxAttempts"] || MAX_RETRY_ATTEMPTS)
             )
           )
           {
@@ -1063,7 +1065,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
       }, null)
 
       if (target) {
-        let errorEquals = JSON.stringify(target.ErrorEquals)
+        let errorEquals = target.ErrorEquals.join(",")
         let retryNumber;
 
         retryNumber =  1 + (jobObj.retries[errorEquals] || 0);
@@ -1075,11 +1077,12 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
         // move to the target state
         jobObj.flowStatus = FLOW_STATUS_WORKING;
         jobObj.flowState = stateName;
+
         jobObj.provenance.push({
           date: new Date().toISOString(),
           from: stateName,
           to: stateName,
-          retryNumber:retryNumber
+          retryNumber: retryNumber
         });
 
         // capture error message in context
@@ -1090,11 +1093,13 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
         }
 
         return jobObj;
+
       }
+
 
     }
 
-    //Step defined Catch
+    //State defined Catch
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
       let target = currState.Catch.reduce((acc, fallback) => {
@@ -1132,6 +1137,8 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
     }
 
   }
+
+
   return handleError(
     'INVALID-STATE-DEFINITION',
     `no Catch defined for error "${err.name}" in state "${stateName}"`,
@@ -1541,6 +1548,7 @@ module.exports = {
   STATE_CONDUCTOR_JOBS_DB,
   STATE_CONDUCTOR_TRIGGERS_DB,
   STATE_CONDUCTOR_SCHEMAS_DB,
+  MAX_RETRY_ATTEMPTS,
   FLOW_COLLECTION,
   FLOW_DIRECTORY,
   FLOW_ITEM_COLLECTION,

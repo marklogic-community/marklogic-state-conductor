@@ -27,6 +27,10 @@ const datahub = new DataHub();
 
 function main(content, options) {
 
+  //changes the stateConductorContext
+  //is used for a unit test
+  options.stateConductorContext.hasChanged = true;
+
   //grab the doc id/uri
   let id = content.uri;
 

@@ -690,7 +690,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     }
 
     //resets the retries since the step has completed succesfully
-    jobObj.retries = {}
+    jobObj.retries = {};
 
     // update the state status and provenence in the job doc
     if (save) {
@@ -1039,34 +1039,27 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
     currState &&
     (STATE_TASK === currState.Type.toLowerCase() || STATE_CHOICE === currState.Type.toLowerCase())
   ) {
-
     //State defined retry
-    if (currState.Retry && currState.Retry.length > 0 ) {
-
+    if (currState.Retry && currState.Retry.length > 0) {
       // find a matching retry state
       let target = currState.Retry.reduce((acc, retry) => {
         if (!acc) {
-          let errorEquals = retry.ErrorEquals.join(",")
+          let errorEquals = retry.ErrorEquals.join(',');
           if (
-            (
-            retry.ErrorEquals.includes(err.name) ||
-            retry.ErrorEquals.includes('States.ALL') ||
-            retry.ErrorEquals.includes('*')
-            ) && (
-              !jobObj.retries.hasOwnProperty(errorEquals) ||
-              jobObj.retries[errorEquals] < (retry["MaxAttempts"] || MAX_RETRY_ATTEMPTS)
-            )
-          )
-          {
+            (retry.ErrorEquals.includes(err.name) ||
+              retry.ErrorEquals.includes('States.ALL') ||
+              retry.ErrorEquals.includes('*')) &&
+            (!jobObj.retries.hasOwnProperty(errorEquals) ||
+              jobObj.retries[errorEquals] < (retry['MaxAttempts'] || MAX_RETRY_ATTEMPTS))
+          ) {
             acc = retry;
           }
         }
         return acc;
-      }, null)
+      }, null);
 
       if (target) {
-
-        let errorEquals = target.ErrorEquals.join(",")
+        let errorEquals = target.ErrorEquals.join(',');
 
         let retryNumber = 1 + (jobObj.retries[errorEquals] || 0);
 
@@ -1082,7 +1075,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
           date: new Date().toISOString(),
           from: stateName,
           to: stateName,
-          retryNumber: retryNumber
+          retryNumber: retryNumber,
         });
 
         // capture error message in context
@@ -1093,10 +1086,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
         }
 
         return jobObj;
-
       }
-
-
     }
 
     //State defined Catch
@@ -1135,9 +1125,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
         return jobObj;
       }
     }
-
   }
-
 
   return handleError(
     'INVALID-STATE-DEFINITION',
@@ -1542,7 +1530,6 @@ function handleError(name, message, err, jobDoc, jobObj, save = true) {
 
   return jobObj;
 }
-
 
 module.exports = {
   TRACE_EVENT,

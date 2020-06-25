@@ -1,0 +1,148 @@
+{
+  "Comment": "is used in the executeStateByJobDoc",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "directory",
+        "value": "/test/"
+      },
+      {
+        "scope": "collection",
+        "value": "test"
+      }
+    ]
+  },
+  "StartAt": "errorOut",
+  "States": {
+    "errorOut": {
+      "Type": "Task",
+      "Comment": "initial state of the flow",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "Next": "fourMaxAttempts",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"]
+        }
+      ]
+    },
+    "fourMaxAttempts": {
+      "Type": "Task",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 4
+        }
+      ]
+    },
+    "star": {
+      "Type": "Task",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["*"],
+          "MaxAttempts": 4
+        }
+      ]
+    },
+    "named": {
+      "Type": "Task",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["error"],
+          "MaxAttempts": 4
+        }
+      ]
+    },
+    "multipleMatch": {
+      "Type": "Task",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["error"],
+          "MaxAttempts": 4
+        },
+        {
+          "ErrorEquals": ["*"],
+          "MaxAttempts": 4
+        },
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 4
+        }
+      ]
+    },
+    "multiple": {
+      "Type": "Task",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["error"],
+          "MaxAttempts": 4
+        },
+        {
+          "ErrorEquals": ["someName"],
+          "MaxAttempts": 4
+        }
+      ]
+    },
+    "multipleOnRetry": {
+      "Type": "Task",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["error", "someName"],
+          "MaxAttempts": 4
+        }
+      ]
+    },
+    "multipleOnRetryMatch": {
+      "Type": "Task",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["error", "*", "States.ALL"],
+          "MaxAttempts": 4
+        }
+      ]
+    },
+    "multipleMultiple": {
+      "Type": "Task",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["error", "*", "States.ALL"],
+          "MaxAttempts": 4
+        },
+        {
+          "ErrorEquals": ["someName"],
+          "MaxAttempts": 4
+        }
+      ]
+    },
+    "multipleMultipleMatch": {
+      "Type": "Task",
+      "Resource": "/state-conductor/actions/custom/errorOut.sjs",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": ["error", "*", "States.ALL"],
+          "MaxAttempts": 4
+        },
+        {
+          "ErrorEquals": ["States.ALL"],
+          "MaxAttempts": 4
+        }
+      ]
+    }
+  }
+}

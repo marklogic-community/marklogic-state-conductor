@@ -34,16 +34,14 @@ jobDoc = xdmp.toJSON({
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
   provenance: [],
-  context: {}
+  context: {},
 });
 
+assertion = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
 
-assertion = isolate(() =>
-  sc.executeStateByJobDoc(jobDoc, false)
+assertions.push(
+  test.assertTrue(assertion.context.hasOwnProperty('hasChanged'), 'hasOwnProperty hasChanged')
 );
-
-
-assertions.push(test.assertTrue(assertion.context.hasOwnProperty("hasChanged"), 'hasOwnProperty hasChanged'));
 assertions.push(test.assertTrue(assertion.context.hasChanged, 'hasChanged'));
 
-assertions
+assertions;

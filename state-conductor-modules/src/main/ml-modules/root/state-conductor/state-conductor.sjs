@@ -29,7 +29,7 @@ const FLOW_NEW_STEP = 'NEW';
 const DATE_TIME_REGEX =
   '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
-const MAX_RETRY_ATTEMPTS = 3;
+const DEFAULT_MAX_RETRY_ATTEMPTS = 3;
 const STATE_CHOICE = 'choice';
 const STATE_FAIL = 'fail';
 const STATE_PASS = 'pass';
@@ -1050,7 +1050,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
               retry.ErrorEquals.includes('States.ALL') ||
               retry.ErrorEquals.includes('*')) &&
             (!jobObj.retries.hasOwnProperty(errorEquals) ||
-              jobObj.retries[errorEquals] < (retry['MaxAttempts'] || MAX_RETRY_ATTEMPTS))
+              jobObj.retries[errorEquals] < (retry['MaxAttempts'] || DEFAULT_MAX_RETRY_ATTEMPTS))
           ) {
             acc = retry;
           }
@@ -1536,7 +1536,7 @@ module.exports = {
   STATE_CONDUCTOR_JOBS_DB,
   STATE_CONDUCTOR_TRIGGERS_DB,
   STATE_CONDUCTOR_SCHEMAS_DB,
-  MAX_RETRY_ATTEMPTS,
+  DEFAULT_MAX_RETRY_ATTEMPTS,
   FLOW_COLLECTION,
   FLOW_DIRECTORY,
   FLOW_ITEM_COLLECTION,

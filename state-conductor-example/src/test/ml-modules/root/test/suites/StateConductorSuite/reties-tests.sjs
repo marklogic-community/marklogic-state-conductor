@@ -55,17 +55,21 @@ jobDoc = xdmp.toJSON({
   provenance: [],
   context: {},
   retries: {
-    'States.ALL': sc.MAX_RETRY_ATTEMPTS - 1,
+    'States.ALL': sc.DEFAULT_MAX_RETRY_ATTEMPTS - 1,
   },
 });
 
 assertion = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
 
 assertions.push(
-  test.assertEqual(sc.MAX_RETRY_ATTEMPTS, assertion.retries['States.ALL'], 'below-all')
+  test.assertEqual(sc.DEFAULT_MAX_RETRY_ATTEMPTS, assertion.retries['States.ALL'], 'below-all')
 );
 assertions.push(
-  test.assertEqual(sc.MAX_RETRY_ATTEMPTS, assertion.provenance[0]['retryNumber'], 'below-number')
+  test.assertEqual(
+    sc.DEFAULT_MAX_RETRY_ATTEMPTS,
+    assertion.provenance[0]['retryNumber'],
+    'below-number'
+  )
 );
 assertions.push(test.assertEqual('working', assertion.flowStatus, 'below-stauts'));
 assertions.push(test.assertEqual('error', assertion.errors.errorOut.name, 'below-error'));
@@ -82,14 +86,14 @@ jobDoc = xdmp.toJSON({
   provenance: [],
   context: {},
   retries: {
-    'States.ALL': sc.MAX_RETRY_ATTEMPTS,
+    'States.ALL': sc.DEFAULT_MAX_RETRY_ATTEMPTS,
   },
 });
 
 assertion = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
 
 assertions.push(
-  test.assertEqual(sc.MAX_RETRY_ATTEMPTS, assertion.retries['States.ALL'], 'limit-all')
+  test.assertEqual(sc.DEFAULT_MAX_RETRY_ATTEMPTS, assertion.retries['States.ALL'], 'limit-all')
 );
 
 assertions.push(test.assertEqual('failed', assertion.flowStatus, 'limit-status'));
@@ -107,14 +111,18 @@ jobDoc = xdmp.toJSON({
   provenance: [],
   context: {},
   retries: {
-    'States.ALL': sc.MAX_RETRY_ATTEMPTS + 10,
+    'States.ALL': sc.DEFAULT_MAX_RETRY_ATTEMPTS + 10,
   },
 });
 
 assertion = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
 
 assertions.push(
-  test.assertEqual(sc.MAX_RETRY_ATTEMPTS + 10, assertion.retries['States.ALL'], 'limitMore-all')
+  test.assertEqual(
+    sc.DEFAULT_MAX_RETRY_ATTEMPTS + 10,
+    assertion.retries['States.ALL'],
+    'limitMore-all'
+  )
 );
 
 assertions.push(test.assertEqual('failed', assertion.flowStatus, 'limitMore-status'));

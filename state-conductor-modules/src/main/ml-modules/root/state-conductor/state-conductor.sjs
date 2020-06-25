@@ -1067,7 +1067,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
 
         xdmp.trace(TRACE_EVENT, `retrying job "${uri}"`);
 
-        // move to the target state
+        // changes job doc to retry state
         jobObj.flowStatus = FLOW_STATUS_WORKING;
         jobObj.flowState = stateName;
 

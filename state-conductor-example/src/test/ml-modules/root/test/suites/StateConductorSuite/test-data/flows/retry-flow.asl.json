@@ -125,7 +125,7 @@
           "MaxAttempts": 4
           },
           {
-            "ErrorEquals": [ "someName" ],
+            "ErrorEquals": [ "States.ALL" ],
             "MaxAttempts": 4
           }
         ]

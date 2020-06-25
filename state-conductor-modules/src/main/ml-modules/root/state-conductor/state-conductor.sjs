@@ -690,7 +690,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     }
 
     //resets the retries since the step has completed succesfully
-    jobDoc.retries = {}
+    jobObj.retries = {}
 
     // update the state status and provenence in the job doc
     if (save) {

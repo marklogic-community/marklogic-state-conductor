@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Maps;
 import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.config.StateConductorDriverConfig;
@@ -17,11 +16,7 @@ import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -137,9 +132,15 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
   private Stream<String> FetchJobDocuments() {
     Stream<String> jobUris = null;
+    Stream<String> flowStatus = null;
+
+    if (config.getFlowStatus() != null) {
+      String[] status = config.getFlowStatus().split(",");
+      flowStatus = Arrays.stream(status);
+    }
 
     try {
-      jobUris = service.getJobs(config.getPollSize(), null, null, null);
+      jobUris = service.getJobs(config.getPollSize(), config.getFlowNames(), flowStatus, null);
     } catch (Exception ex) {
       logger.error("An error occurred fetching job documents: {}", ex.getMessage());
       ex.printStackTrace();
@@ -160,7 +161,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
       // grab any "new" and "working" jobs
       logger.info("Fetching Job Batch...");
-      // TODO allow configuration of flowNames, flowStatus
+
       Stream<String> jobUris = FetchJobDocuments();
       Iterator<String> jobs = jobUris.iterator();
 
@@ -220,9 +221,8 @@ public class StateConductorDriver implements Runnable, Destroyable {
           }
           results.clear();
           // cooldown period
-          // TODO make configurable
           if (0 == total.get())
-            Thread.sleep(5000L);
+            Thread.sleep(config.getCooldownMillis());
           else
             Thread.sleep(10L);
         }

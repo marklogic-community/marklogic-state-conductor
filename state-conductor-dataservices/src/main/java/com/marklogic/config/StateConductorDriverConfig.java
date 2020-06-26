@@ -28,6 +28,10 @@ public class StateConductorDriverConfig {
   private Integer threadCount = 10;
   private Integer pollSize = 1000;
   private Integer batchSize = 5;
+  private Long cooldownMillis = 5000L;
+
+  private String flowNames;
+  private String flowStatus;
 
   public DatabaseClientConfig getDatabaseClientConfig() {
     DatabaseClientConfig clientConfig = new DatabaseClientConfig();
@@ -69,6 +73,9 @@ public class StateConductorDriverConfig {
     config.threadCount = Integer.parseInt(getPropertyValue(props, "threadCount", "10"));
     config.pollSize = Integer.parseInt(getPropertyValue(props, "pollSize", "1000"));
     config.batchSize = Integer.parseInt(getPropertyValue(props, "batchSize", "5"));
+    config.cooldownMillis = Long.parseLong(getPropertyValue(props, "cooldownMillis", "5000"));
+    config.flowNames = getPropertyValue(props, "flowNames", null);
+    config.flowStatus = getPropertyValue(props, "flowStatus", null);
     return config;
   }
 
@@ -143,4 +150,16 @@ public class StateConductorDriverConfig {
   public void setJobsDatabase(String jobsDatabase) {
     this.jobsDatabase = jobsDatabase;
   }
+
+  public Long getCooldownMillis() { return cooldownMillis; }
+
+  public void setCooldownMillis(Long cooldownMillis) { this.cooldownMillis = cooldownMillis; }
+
+  public String getFlowNames() { return flowNames; }
+
+  public void setFlowNames(String flowNames) { this.flowNames = flowNames; }
+
+  public String getFlowStatus() { return flowStatus; }
+
+  public void setFlowStatus(String flowStatus) { this.flowStatus = flowStatus; }
 }

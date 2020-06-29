@@ -7,6 +7,7 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.config.StateConductorDriverConfig;
+import com.marklogic.tasks.GetJobsTask;
 import com.marklogic.tasks.ProcessJobTask;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
@@ -153,85 +154,116 @@ public class StateConductorDriver implements Runnable, Destroyable {
   @Override
   public void run() {
     logger.info("Starting StateConductorDriver...");
+
+    // initializations
+    boolean keepRunning = true;
     List<Future<JsonNode>> results = new ArrayList<>();
+    List<Future<JsonNode>> completed = new ArrayList<>();
+    List<Future<JsonNode>> errored = new ArrayList<>();
+    List<String> urisBuffer = Collections.synchronizedList(new ArrayList<String>());
+    AtomicLong enqueued = new AtomicLong(0);
+    AtomicLong total = new AtomicLong(0);
+    AtomicLong batchCount = new AtomicLong(1);
+    List<String> batch = new ArrayList<>();
+    List<ProcessJobTask> jobBuckets = new ArrayList<>();
 
-    while (true) {
-      AtomicLong total = new AtomicLong();
-      AtomicInteger batchCount = new AtomicInteger(1);
+    // set up the thread pool
+    ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
 
-      // grab any "new" and "working" jobs
-      logger.info("Fetching Job Batch...");
+    // start the thread for getting jobs
+    Thread getJobsTask = new Thread(new GetJobsTask(service, config, urisBuffer, enqueued));
+    getJobsTask.start();
 
-      Stream<String> jobUris = FetchJobDocuments();
-      Iterator<String> jobs = jobUris.iterator();
+    while (keepRunning) {
+      jobBuckets.clear();
 
-      // set up the thread pool
-      ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
+      // create batches from any new buffered tasks
+      synchronized (urisBuffer) {
+        Iterator<String> uris = urisBuffer.iterator();
 
-      // create tasks based on batch size
-      List<String> batch = new ArrayList<>();
-      List<ProcessJobTask> jobBuckets = new ArrayList<>();
+        while(uris.hasNext()) {
+          String uri = uris.next();
+          total.getAndIncrement();
+          enqueued.getAndIncrement();
+          batch.add(uri);
+          if (batch.size() >= config.getBatchSize()) {
+            jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
+            batch = new ArrayList<>();
+          }
+        }
 
-      // create buckets for each batch
-      while(jobs.hasNext()) {
-        String uri = jobs.next();
-        total.getAndIncrement();
-        batch.add(uri);
-        if (batch.size() >= config.getBatchSize()) {
+        // cleanup batch
+        if (batch.size() > 0) {
           jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
           batch = new ArrayList<>();
         }
-      }
 
-      // cleanup batch
-      if (batch.size() > 0) {
-        jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
+        // clear the buffer
+        urisBuffer.clear();
       }
-
-      logger.info("created {} batches", jobBuckets.size());
 
       // submit the jobs to the executor pool
-      jobBuckets.forEach(bucket -> {
+      for (ProcessJobTask bucket : jobBuckets) {
         Future<JsonNode> future = pool.submit(bucket);
         results.add(future);
-      });
+      }
 
-      logger.info("Populated thread pool[{}] with {} Jobs", config.getThreadCount(), total);
-      pool.shutdown();
+      if (jobBuckets.size() > 0) {
+        logger.info("Populated thread pool[{}] with {} batches", config.getThreadCount(), jobBuckets.size());
+      }
+
+      // process any results that have come in
+      for (Future<JsonNode> jsonNodeFuture : results) {
+        if (jsonNodeFuture.isDone()) {
+          try {
+            AtomicInteger errorCount = new AtomicInteger(0);
+            ArrayNode arr = (ArrayNode) jsonNodeFuture.get();
+            arr.forEach(jsonNode -> {
+              enqueued.decrementAndGet();
+              boolean hasError = jsonNode.get("error") != null;
+              if (hasError)
+                errorCount.incrementAndGet();
+            });
+            logger.info("batch result: {} jobs complete - with {} errors", arr.size(), errorCount.get());
+            completed.add(jsonNodeFuture);
+          } catch (Exception e) {
+            logger.error("error retrieving batch results", e);
+            errored.add(jsonNodeFuture);
+          }
+        }
+      }
+
+      // remove any completed or errored futures
+      completed.forEach(jsonNodeFuture -> results.remove(jsonNodeFuture));
+      completed.clear();
+      errored.forEach(jsonNodeFuture -> results.remove(jsonNodeFuture));
+
+      logger.debug("enqueued: {}, errored: {}", enqueued.get(), errored.size());
 
       try {
-        logger.info("Awaiting Batch Completion...");
-        if (pool.awaitTermination(Integer.MAX_VALUE, TimeUnit.MINUTES)) {
-          // calculate results
-          for (Future<JsonNode> batchResult : results) {
-            AtomicInteger errorCount = new AtomicInteger(0);
-            try {
-              ArrayNode arr = (ArrayNode)batchResult.get();
-              arr.forEach(jsonNode -> {
-                boolean hasError = jsonNode.get("error") != null;
-                if (hasError) {
-                  errorCount.getAndIncrement();
-                }
-              });
-              logger.info("batch result: {} jobs complete - with {} errors", arr.size(), errorCount.get());
-            } catch (ExecutionException e) {
-              logger.error("error retrieving batch results");
-            }
-
-          }
-          results.clear();
-          // cooldown period
-          if (0 == total.get())
-            Thread.sleep(config.getCooldownMillis());
-          else
-            Thread.sleep(10L);
-        }
+        Thread.sleep(10L);
       } catch (InterruptedException e) {
-        logger.info("Stopping StateConductorDriver pool executor...");
-        pool.shutdownNow();
-        Thread.currentThread().interrupt();
-        break;
+        // initiate a thread shutdown
+        pool.shutdown();
+        // stop fetching tasks
+        logger.info("Stopping GetJobsTask thread...");
+        getJobsTask.interrupt();
+        // stop main loop
+        keepRunning = false;
       }
+    }
+
+    // terminate the processing pool
+    try {
+      logger.info("Awaiting Batch Completion...");
+      if (pool.awaitTermination(Integer.MAX_VALUE, TimeUnit.MINUTES)) {
+        logger.info("pool executor terminated.");
+        results.clear();
+      }
+    } catch (InterruptedException e) {
+      logger.info("Stopping StateConductorDriver pool executor...");
+      pool.shutdownNow();
+      Thread.currentThread().interrupt();
     }
   }
 

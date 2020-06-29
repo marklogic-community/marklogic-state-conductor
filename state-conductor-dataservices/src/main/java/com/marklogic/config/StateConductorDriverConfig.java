@@ -28,6 +28,7 @@ public class StateConductorDriverConfig {
   private Integer threadCount = 10;
   private Integer pollSize = 1000;
   private Integer batchSize = 5;
+  private Integer queueThreshold = 20000;
   private Long cooldownMillis = 5000L;
 
   private String flowNames;
@@ -73,6 +74,7 @@ public class StateConductorDriverConfig {
     config.threadCount = Integer.parseInt(getPropertyValue(props, "threadCount", "10"));
     config.pollSize = Integer.parseInt(getPropertyValue(props, "pollSize", "1000"));
     config.batchSize = Integer.parseInt(getPropertyValue(props, "batchSize", "5"));
+    config.queueThreshold = Integer.parseInt(getPropertyValue(props, "queueThreshold", "20000"));
     config.cooldownMillis = Long.parseLong(getPropertyValue(props, "cooldownMillis", "5000"));
     config.flowNames = getPropertyValue(props, "flowNames", null);
     config.flowStatus = getPropertyValue(props, "flowStatus", null);
@@ -149,6 +151,14 @@ public class StateConductorDriverConfig {
 
   public void setJobsDatabase(String jobsDatabase) {
     this.jobsDatabase = jobsDatabase;
+  }
+
+  public Integer getQueueThreshold() {
+    return queueThreshold;
+  }
+
+  public void setQueueThreshold(Integer queueThreshold) {
+    this.queueThreshold = queueThreshold;
   }
 
   public Long getCooldownMillis() { return cooldownMillis; }

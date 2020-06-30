@@ -131,39 +131,20 @@ public class StateConductorDriver implements Runnable, Destroyable {
     return prop;
   }
 
-  private Stream<String> FetchJobDocuments() {
-    Stream<String> jobUris = null;
-    Stream<String> flowStatus = null;
-
-    if (config.getFlowStatus() != null) {
-      String[] status = config.getFlowStatus().split(",");
-      flowStatus = Arrays.stream(status);
-    }
-
-    try {
-      jobUris = service.getJobs(config.getPollSize(), config.getFlowNames(), flowStatus, null);
-    } catch (Exception ex) {
-      logger.error("An error occurred fetching job documents: {}", ex.getMessage());
-      ex.printStackTrace();
-      jobUris = Stream.empty();
-    }
-
-    return jobUris;
-  }
-
   @Override
   public void run() {
     logger.info("Starting StateConductorDriver...");
 
     // initializations
     boolean keepRunning = true;
-    List<Future<JsonNode>> results = new ArrayList<>();
-    List<Future<JsonNode>> completed = new ArrayList<>();
-    List<Future<JsonNode>> errored = new ArrayList<>();
-    List<String> urisBuffer = Collections.synchronizedList(new ArrayList<String>());
     AtomicLong enqueued = new AtomicLong(0);
     AtomicLong total = new AtomicLong(0);
     AtomicLong batchCount = new AtomicLong(1);
+    List<String> urisBuffer = Collections.synchronizedList(new ArrayList<String>());
+    List<Future<JsonNode>> results = new ArrayList<>();
+    List<Future<JsonNode>> completed = new ArrayList<>();
+    List<Future<JsonNode>> errored = new ArrayList<>();
+
     List<String> batch = new ArrayList<>();
     List<ProcessJobTask> jobBuckets = new ArrayList<>();
 

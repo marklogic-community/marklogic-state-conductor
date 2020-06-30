@@ -75,11 +75,11 @@ public class GetJobsTask implements Runnable {
 
       try {
         // cooldown period
-        if (0 == total.get()) {
+        if (total.get() < config.getPollSize()) {
           logger.debug("GetJobsTask cooldown...");
           Thread.sleep(config.getCooldownMillis());
         } else {
-          Thread.sleep(10L);
+          Thread.sleep(config.getPollInterval());
         }
       } catch (InterruptedException e) {
         logger.info("Stopping GetJobsTask Thread...");

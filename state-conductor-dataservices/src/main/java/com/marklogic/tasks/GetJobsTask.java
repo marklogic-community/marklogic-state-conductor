@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -18,13 +19,13 @@ public class GetJobsTask implements Runnable {
   private StateConductorDriverConfig config;
   private StateConductorService service;
   private List<String> urisBuffer;
-  private AtomicLong enqueued;
+  private Set<String> inProgressSet;
 
-  public GetJobsTask(StateConductorService service, StateConductorDriverConfig config, List<String> urisBuffer, AtomicLong enqueued) {
+  public GetJobsTask(StateConductorService service, StateConductorDriverConfig config, List<String> urisBuffer, Set<String> inProgressSet) {
     this.service = service;
     this.config = config;
     this.urisBuffer = urisBuffer;
-    this.enqueued = enqueued;
+    this.inProgressSet = inProgressSet;
   }
 
   private Stream<String> FetchJobDocuments() {
@@ -55,15 +56,21 @@ public class GetJobsTask implements Runnable {
     while(true) {
       total.set(0);
 
-      if (enqueued.get() < config.getQueueThreshold()) {
-        // grab job documents
+      if (inProgressSet.size() < config.getQueueThreshold()) {
+        // grab job documents if we're below the queue threshold
         Stream<String> jobUris = FetchJobDocuments();
         Iterator<String> jobs = jobUris.iterator();
 
         synchronized (urisBuffer) {
           while(jobs.hasNext()) {
-            total.getAndIncrement();
-            urisBuffer.add(jobs.next());
+            String jobUri = jobs.next();
+            if (!inProgressSet.contains(jobUri)) {
+              total.getAndIncrement();
+              urisBuffer.add(jobUri);
+              inProgressSet.add(jobUri);
+            } else {
+              logger.debug("got already in-progress job {}", jobUri);
+            }
           }
         }
 

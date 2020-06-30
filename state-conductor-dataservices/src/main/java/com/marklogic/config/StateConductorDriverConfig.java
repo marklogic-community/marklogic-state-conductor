@@ -31,6 +31,7 @@ public class StateConductorDriverConfig {
   private Integer queueThreshold = 20000;
   private Long cooldownMillis = 5000L;
   private Long pollInterval = 1000L;
+  private Long metricsInterval = 5000L;
 
   private String flowNames;
   private String flowStatus;
@@ -78,6 +79,7 @@ public class StateConductorDriverConfig {
     config.queueThreshold = Integer.parseInt(getPropertyValue(props, "queueThreshold", "20000"));
     config.cooldownMillis = Long.parseLong(getPropertyValue(props, "cooldownMillis", "5000"));
     config.pollInterval = Long.parseLong(getPropertyValue(props, "pollInterval", "1000"));
+    config.metricsInterval = Long.parseLong(getPropertyValue(props, "metricsInterval", "5000"));
     config.flowNames = getPropertyValue(props, "flowNames", null);
     config.flowStatus = getPropertyValue(props, "flowStatus", null);
     return config;
@@ -173,6 +175,14 @@ public class StateConductorDriverConfig {
 
   public void setPollInterval(Long pollInterval) {
     this.pollInterval = pollInterval;
+  }
+
+  public Long getMetricsInterval() {
+    return metricsInterval;
+  }
+
+  public void setMetricsInterval(Long metricsInterval) {
+    this.metricsInterval = metricsInterval;
   }
 
   public String getFlowNames() { return flowNames; }

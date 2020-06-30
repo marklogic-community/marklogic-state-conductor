@@ -8,6 +8,7 @@ import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.config.StateConductorDriverConfig;
 import com.marklogic.tasks.GetJobsTask;
+import com.marklogic.tasks.MetricsTask;
 import com.marklogic.tasks.ProcessJobTask;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
@@ -137,10 +138,10 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
     // initializations
     boolean keepRunning = true;
-    AtomicLong enqueued = new AtomicLong(0);
     AtomicLong total = new AtomicLong(0);
     AtomicLong batchCount = new AtomicLong(1);
-    List<String> urisBuffer = Collections.synchronizedList(new ArrayList<String>());
+    List<String> urisBuffer = Collections.synchronizedList(new ArrayList<>());
+    Set<String> inProgressSet = Collections.synchronizedSet(new HashSet<>(config.getQueueThreshold()));
     List<Future<JsonNode>> results = new ArrayList<>();
     List<Future<JsonNode>> completed = new ArrayList<>();
     List<Future<JsonNode>> errored = new ArrayList<>();
@@ -151,8 +152,13 @@ public class StateConductorDriver implements Runnable, Destroyable {
     // set up the thread pool
     ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
 
+    // start the metrics thread
+    MetricsTask metricsTask = new MetricsTask(config, total);
+    Thread metricsThread = new Thread(metricsTask);
+    metricsThread.start();
+
     // start the thread for getting jobs
-    Thread getJobsTask = new Thread(new GetJobsTask(service, config, urisBuffer, enqueued));
+    Thread getJobsTask = new Thread(new GetJobsTask(service, config, urisBuffer, inProgressSet));
     getJobsTask.start();
 
     while (keepRunning) {
@@ -164,8 +170,6 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
         while(uris.hasNext()) {
           String uri = uris.next();
-          total.getAndIncrement();
-          enqueued.getAndIncrement();
           batch.add(uri);
           if (batch.size() >= config.getBatchSize()) {
             jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
@@ -200,7 +204,9 @@ public class StateConductorDriver implements Runnable, Destroyable {
             AtomicInteger errorCount = new AtomicInteger(0);
             ArrayNode arr = (ArrayNode) jsonNodeFuture.get();
             arr.forEach(jsonNode -> {
-              enqueued.decrementAndGet();
+              total.getAndIncrement();
+              String jobUri = jsonNode.get("job").asText();
+              inProgressSet.remove(jobUri);
               boolean hasError = jsonNode.get("error") != null;
               if (hasError)
                 errorCount.incrementAndGet();
@@ -219,7 +225,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
       completed.clear();
       errored.forEach(jsonNodeFuture -> results.remove(jsonNodeFuture));
 
-      logger.debug("enqueued: {}, errored: {}", enqueued.get(), errored.size());
+      logger.debug("errored: {}, in-progress: {}", errored.size(), inProgressSet.size());
 
       try {
         Thread.sleep(10L);
@@ -229,6 +235,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
         // stop fetching tasks
         logger.info("Stopping GetJobsTask thread...");
         getJobsTask.interrupt();
+        metricsThread.interrupt();
         // stop main loop
         keepRunning = false;
       }
@@ -241,6 +248,8 @@ public class StateConductorDriver implements Runnable, Destroyable {
         logger.info("pool executor terminated.");
         results.clear();
       }
+      // final metrics report
+      metricsTask.generateReport();
     } catch (InterruptedException e) {
       logger.info("Stopping StateConductorDriver pool executor...");
       pool.shutdownNow();

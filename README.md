@@ -206,10 +206,4 @@ New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
 
 ## Roadmap <a name="roadmap"></a>
 
-- 0.7.0+
-  - DHS support
-  - Batch support
-  - Retention Policy for job documents
-  - Flush out the validator and validate flow files on deployment
-  - Support for Parallel and Map states
-  - Support for Retries
+See [Enhancements](https://github.com/aclavio/marklogic-state-conductor/labels/enhancement)

@@ -139,6 +139,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     // initializations
     boolean keepRunning = true;
     AtomicLong total = new AtomicLong(0);
+    AtomicLong totalErrors = new AtomicLong(0);
     AtomicLong batchCount = new AtomicLong(1);
     List<String> urisBuffer = Collections.synchronizedList(new ArrayList<>());
     Set<String> inProgressSet = Collections.synchronizedSet(new HashSet<>(config.getQueueThreshold()));
@@ -153,7 +154,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
 
     // start the metrics thread
-    MetricsTask metricsTask = new MetricsTask(config, total);
+    MetricsTask metricsTask = new MetricsTask(config, total, totalErrors);
     Thread metricsThread = new Thread(metricsTask);
     metricsThread.start();
 
@@ -212,9 +213,11 @@ public class StateConductorDriver implements Runnable, Destroyable {
                 errorCount.incrementAndGet();
             });
             logger.info("batch result: {} jobs complete - with {} errors", arr.size(), errorCount.get());
+            totalErrors.addAndGet(errorCount.get());
             completed.add(jsonNodeFuture);
           } catch (Exception e) {
             logger.error("error retrieving batch results", e);
+            totalErrors.incrementAndGet();
             errored.add(jsonNodeFuture);
           }
         }

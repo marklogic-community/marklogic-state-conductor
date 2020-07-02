@@ -12,11 +12,13 @@ public class MetricsTask implements Runnable {
 
   private StateConductorDriverConfig config;
   private AtomicLong total;
+  private AtomicLong errorCount;
   private long previous = 0L;
 
-  public MetricsTask(StateConductorDriverConfig config, AtomicLong total) {
+  public MetricsTask(StateConductorDriverConfig config, AtomicLong total, AtomicLong errorCount) {
     this.config = config;
     this.total = total;
+    this.errorCount = errorCount;
   }
 
   public void generateReport() {
@@ -25,7 +27,7 @@ public class MetricsTask implements Runnable {
 
     double rate = (double)delta / config.getMetricsInterval() * 1000L;
 
-    logger.info("Processed {} jobs.  Current rate {} jobs/second", total.get(), rate);
+    logger.info("Processed {} transitions, with {} errors.  Current rate {} transitions/second", total.get(), errorCount.get(), rate);
 
     previous = current;
   }

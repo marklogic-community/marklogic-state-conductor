@@ -28,7 +28,10 @@ public class StateConductorDriverConfig {
   private Integer threadCount = 10;
   private Integer pollSize = 1000;
   private Integer batchSize = 5;
+  private Integer queueThreshold = 20000;
   private Long cooldownMillis = 5000L;
+  private Long pollInterval = 1000L;
+  private Long metricsInterval = 5000L;
 
   private String flowNames;
   private String flowStatus;
@@ -73,7 +76,10 @@ public class StateConductorDriverConfig {
     config.threadCount = Integer.parseInt(getPropertyValue(props, "threadCount", "10"));
     config.pollSize = Integer.parseInt(getPropertyValue(props, "pollSize", "1000"));
     config.batchSize = Integer.parseInt(getPropertyValue(props, "batchSize", "5"));
+    config.queueThreshold = Integer.parseInt(getPropertyValue(props, "queueThreshold", "20000"));
     config.cooldownMillis = Long.parseLong(getPropertyValue(props, "cooldownMillis", "5000"));
+    config.pollInterval = Long.parseLong(getPropertyValue(props, "pollInterval", "1000"));
+    config.metricsInterval = Long.parseLong(getPropertyValue(props, "metricsInterval", "5000"));
     config.flowNames = getPropertyValue(props, "flowNames", null);
     config.flowStatus = getPropertyValue(props, "flowStatus", null);
     return config;
@@ -151,9 +157,33 @@ public class StateConductorDriverConfig {
     this.jobsDatabase = jobsDatabase;
   }
 
+  public Integer getQueueThreshold() {
+    return queueThreshold;
+  }
+
+  public void setQueueThreshold(Integer queueThreshold) {
+    this.queueThreshold = queueThreshold;
+  }
+
   public Long getCooldownMillis() { return cooldownMillis; }
 
   public void setCooldownMillis(Long cooldownMillis) { this.cooldownMillis = cooldownMillis; }
+
+  public Long getPollInterval() {
+    return pollInterval;
+  }
+
+  public void setPollInterval(Long pollInterval) {
+    this.pollInterval = pollInterval;
+  }
+
+  public Long getMetricsInterval() {
+    return metricsInterval;
+  }
+
+  public void setMetricsInterval(Long metricsInterval) {
+    this.metricsInterval = metricsInterval;
+  }
 
   public String getFlowNames() { return flowNames; }
 

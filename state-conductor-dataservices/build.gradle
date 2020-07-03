@@ -61,3 +61,12 @@ task generateStateConductorProxy(type: com.marklogic.client.tools.gradle.Endpoin
   dependsOn 'mlPrepareBundles'
   serviceDeclarationFile = 'build/mlBundle/marklogic-state-conductor/ml-modules/root/state-conductor/dataservices/service.json'
 }
+
+task stageDockerDirectory(type: Copy, dependsOn: jar) {
+  mustRunAfter jar
+  from "build/libs"
+  from "data"
+  into "docker"
+}
+
+jar.finalizedBy stageDockerDirectory

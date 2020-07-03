@@ -1315,7 +1315,6 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     modules: modules,
     createdDate: new Date().toISOString(),
     context: context,
-    provenance: [],
   });
 
   // insert the job document

@@ -5,12 +5,17 @@ import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.ext.DatabaseClientConfig;
 import com.marklogic.client.ext.SecurityContextType;
 import com.marklogic.client.ext.modulesloader.ssl.SimpleX509TrustManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class StateConductorDriverConfig {
+
+  private static Logger logger = LoggerFactory.getLogger(StateConductorDriverConfig.class);
 
   private String host = "localhost";
   private Integer port = 8000;
@@ -36,6 +41,10 @@ public class StateConductorDriverConfig {
   private String flowNames;
   private String flowStatus;
 
+  private StateConductorDriverConfig() {
+    // do nothing
+  }
+
   public DatabaseClientConfig getDatabaseClientConfig() {
     DatabaseClientConfig clientConfig = new DatabaseClientConfig();
     clientConfig.setHost(host);
@@ -60,7 +69,19 @@ public class StateConductorDriverConfig {
     return clientConfig;
   }
 
-  public static StateConductorDriverConfig newConfig(Map<String, String> props) {
+  protected static Map<String, String> getMergedProperties(Map<String, String>... properties) {
+    Map<String, String> merged = new HashMap<>();
+    for (Map<String, String> props : properties) {
+      merged.putAll(props);
+    }
+    return merged;
+  }
+
+  public static StateConductorDriverConfig newConfig(Map<String, String>... properties) {
+    // created a merged property map
+    Map<String, String> props = getMergedProperties(properties);
+    logger.debug("Configuration Properties: {}", props);
+    // build the configuration
     StateConductorDriverConfig config = new StateConductorDriverConfig();
     config.host = getPropertyValue(props, "mlHost", "localhost");
     config.port = Integer.parseInt(getPropertyValue(props, "mlPort", "8000"));

@@ -1,7 +1,7 @@
 # Alpine Linux with OpenJDK JRE
 FROM openjdk:8-jre-alpine
 # copy Driver files
-COPY state-conductor-dataservices-0.6.1.jar /state-conductor-dataservices-0.6.1.jar
+COPY state-conductor-dataservices-0.6.1.jar /state-conductor-dataservices.jar
 # specify environment configs
 ENV mlHost=localhost
 ENV mlPort=8888
@@ -24,4 +24,4 @@ ENV batchSize=5
 ENV threadCount=10
 ENV metricsInterval=5000
 # runs application
-CMD ["/usr/bin/java", "-jar", "/state-conductor-dataservices-0.6.1.jar"]
+CMD ["/usr/bin/java", "-jar", "/state-conductor-dataservices.jar"]

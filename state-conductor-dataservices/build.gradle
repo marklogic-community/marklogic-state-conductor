@@ -64,8 +64,8 @@ task generateStateConductorProxy(type: com.marklogic.client.tools.gradle.Endpoin
 
 task stageDockerDirectory(type: Copy, dependsOn: jar) {
   mustRunAfter jar
-  from "build/libs"
-  from "data"
+  from "${buildDir}/libs/${project.name}-${version}.jar"
+  rename(".*", "${project.name}.jar")
   into "docker"
 }
 

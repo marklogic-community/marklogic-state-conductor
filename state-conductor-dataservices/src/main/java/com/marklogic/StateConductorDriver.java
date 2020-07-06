@@ -59,6 +59,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     batch.setOptionalArg(true);
     Option config = new Option("c", "config", true, "Configuration File");
     config.setOptionalArg(true);
+    Option help = new Option("?", "help", false, "Display Help");
 
     opts.addOption(host);
     opts.addOption(port);
@@ -69,6 +70,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     opts.addOption(jobsDb);
     opts.addOption(batch);
     opts.addOption(config);
+    opts.addOption(help);
 
     return opts;
   }
@@ -89,25 +91,25 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
     StateConductorDriverConfig config;
 
-    if (cmd.hasOption("c")) {
-      // use the config file options
-      Properties props = loadConfigProps(cmd.getOptionValue("c"));
-      config = StateConductorDriverConfig.newConfig(Maps.fromProperties(props));
-    } else if (cmd.hasOption("h") && cmd.hasOption("p") && cmd.hasOption("u") && cmd.hasOption("x")) {
-      // manually set options
-      config = new StateConductorDriverConfig();
-      config.setHost(cmd.getOptionValue("h"));
-      config.setPort(Integer.parseInt(cmd.getOptionValue("p")));
-      config.setUsername(cmd.getOptionValue("u"));
-      config.setPassword(cmd.getOptionValue("x"));
-      config.setJobsDatabase(cmd.getOptionValue("db"));
-      if (cmd.hasOption("n")) config.setPollSize(Integer.parseInt(cmd.getOptionValue("n")));
-      if (cmd.hasOption("t")) config.setThreadCount(Integer.parseInt(cmd.getOptionValue("t")));
-      if (cmd.hasOption("b")) config.setBatchSize(Integer.parseInt(cmd.getOptionValue("b")));
-    } else {
-      // missing required args
+    if (cmd.hasOption("?")) {
       helpFormatter.printHelp(" ", opts);
       return;
+    } else if (cmd.hasOption("c")) {
+      // use the config file options
+      Properties props = loadConfigProps(cmd.getOptionValue("c"));
+      config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), Maps.fromProperties(props));
+    } else {
+      // manually set options
+      Map<String, String> props = new HashMap<>();
+      if (cmd.hasOption("h")) props.put("mlHost", cmd.getOptionValue("h"));
+      if (cmd.hasOption("p")) props.put("mlPort", cmd.getOptionValue("p"));
+      if (cmd.hasOption("u")) props.put("username", cmd.getOptionValue("u"));
+      if (cmd.hasOption("x")) props.put("password", cmd.getOptionValue("x"));
+      if (cmd.hasOption("db")) props.put("jobsDatabase", cmd.getOptionValue("db"));
+      if (cmd.hasOption("n")) props.put("pollSize", cmd.getOptionValue("n"));
+      if (cmd.hasOption("t")) props.put("threadCount", cmd.getOptionValue("t"));
+      if (cmd.hasOption("b")) props.put("batchSize", cmd.getOptionValue("b"));
+      config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), props);
     }
 
     ConfiguredDatabaseClientFactory configuredDatabaseClientFactory = new DefaultConfiguredDatabaseClientFactory();

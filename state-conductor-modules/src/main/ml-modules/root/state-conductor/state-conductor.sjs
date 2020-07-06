@@ -314,7 +314,7 @@ function getAllFlowsContextQuery() {
 function processJob(uri) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   xdmp.trace(TRACE_EVENT, `state-conductor job processing for job document "${uri}"`);
-  const startTime = xdmp.elapsedTime();
+
   // sanity check
   if (!fn.docAvailable(uri)) {
     fn.error(null, 'INVALID-JOB-DOCUMENT', `State Conductor job document "${uri}" not found!`);
@@ -322,8 +322,6 @@ function processJob(uri) {
   const jobDoc = cts.doc(uri);
   const job = jobDoc.toObject();
   const status = job.flowStatus;
-
-  jobDoc.latestExecutionStartTime = startTime;
 
   // check the flow state
   if (FLOW_STATUS_WORKING === status) {
@@ -384,7 +382,7 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
       date: new Date().toISOString(),
       from: FLOW_NEW_STEP,
       to: initialState,
-      executionTime: xdmp.elapsedTime().subtract(jobObj.latestExecutionStartTime),
+      executionTime: xdmp.elapsedTime(),
     });
 
     if (save) {
@@ -479,7 +477,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
       date: new Date().toISOString(),
       state: stateName,
       resumeBy: resumeBy,
-      executionTime: xdmp.elapsedTime().subtract(jobObj.latestExecutionStartTime),
+      executionTime: xdmp.elapsedTime(),
     });
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
@@ -558,7 +556,7 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
       date: new Date().toISOString(),
       state: stateName,
       retriedBy: retriedBy,
-      executionTime: xdmp.elapsedTime().subtract(jobObj.latestExecutionStartTime),
+      executionTime: xdmp.elapsedTime(),
     });
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
@@ -599,7 +597,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
         date: new Date().toISOString(),
         state: stateName,
         waiting: pro,
-        executionTime: xdmp.elapsedTime().subtract(jobObj.latestExecutionStartTime),
+        executionTime: xdmp.elapsedTime(),
       });
     } else if (!inTerminalState(jobObj, flowObj)) {
       xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
@@ -670,7 +668,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
           date: new Date().toISOString(),
           from: stateName,
           to: targetState,
-          executionTime: xdmp.elapsedTime().subtract(jobObj.latestExecutionStartTime),
+          executionTime: xdmp.elapsedTime(),
         });
       } else {
         fn.error(
@@ -694,7 +692,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
         date: new Date().toISOString(),
         from: stateName,
         to: 'COMPLETED',
-        executionTime: xdmp.elapsedTime().subtract(jobObj.latestExecutionStartTime),
+        executionTime: xdmp.elapsedTime(),
       });
     }
 
@@ -1086,7 +1084,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
           from: stateName,
           to: stateName,
           retryNumber: retryNumber,
-          executionTime: xdmp.elapsedTime().subtract(jobObj.latestExecutionStartTime),
+          executionTime: xdmp.elapsedTime(),
         });
 
         // capture error message in context
@@ -1125,7 +1123,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
           date: new Date().toISOString(),
           from: stateName,
           to: target,
-          executionTime: xdmp.elapsedTime().subtract(jobObj.latestExecutionStartTime),
+          executionTime: xdmp.elapsedTime(),
         });
         // capture error message in context
         jobObj.errors[stateName] = err;
@@ -1279,7 +1277,6 @@ function scaffoldJobDoc(jobDoc) {
     provenance: [],
     errors: {},
     retries: {},
-    latestExecutionStartTime: xdmp.elapsedTime(),
   };
 
   return Object.assign(needProps, jobDoc);

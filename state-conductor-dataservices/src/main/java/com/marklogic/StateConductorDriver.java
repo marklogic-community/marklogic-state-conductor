@@ -4,10 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Maps;
 import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.config.StateConductorDriverConfig;
+import com.marklogic.tasks.GetJobsTask;
+import com.marklogic.tasks.MetricsTask;
 import com.marklogic.tasks.ProcessJobTask;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
@@ -17,11 +18,7 @@ import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -62,6 +59,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     batch.setOptionalArg(true);
     Option config = new Option("c", "config", true, "Configuration File");
     config.setOptionalArg(true);
+    Option help = new Option("?", "help", false, "Display Help");
 
     opts.addOption(host);
     opts.addOption(port);
@@ -72,6 +70,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     opts.addOption(jobsDb);
     opts.addOption(batch);
     opts.addOption(config);
+    opts.addOption(help);
 
     return opts;
   }
@@ -92,25 +91,25 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
     StateConductorDriverConfig config;
 
-    if (cmd.hasOption("c")) {
-      // use the config file options
-      Properties props = loadConfigProps(cmd.getOptionValue("c"));
-      config = StateConductorDriverConfig.newConfig(Maps.fromProperties(props));
-    } else if (cmd.hasOption("h") && cmd.hasOption("p") && cmd.hasOption("u") && cmd.hasOption("x")) {
-      // manually set options
-      config = new StateConductorDriverConfig();
-      config.setHost(cmd.getOptionValue("h"));
-      config.setPort(Integer.parseInt(cmd.getOptionValue("p")));
-      config.setUsername(cmd.getOptionValue("u"));
-      config.setPassword(cmd.getOptionValue("x"));
-      config.setJobsDatabase(cmd.getOptionValue("db"));
-      if (cmd.hasOption("n")) config.setPollSize(Integer.parseInt(cmd.getOptionValue("n")));
-      if (cmd.hasOption("t")) config.setThreadCount(Integer.parseInt(cmd.getOptionValue("t")));
-      if (cmd.hasOption("b")) config.setBatchSize(Integer.parseInt(cmd.getOptionValue("b")));
-    } else {
-      // missing required args
+    if (cmd.hasOption("?")) {
       helpFormatter.printHelp(" ", opts);
       return;
+    } else if (cmd.hasOption("c")) {
+      // use the config file options
+      Properties props = loadConfigProps(cmd.getOptionValue("c"));
+      config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), Maps.fromProperties(props));
+    } else {
+      // manually set options
+      Map<String, String> props = new HashMap<>();
+      if (cmd.hasOption("h")) props.put("mlHost", cmd.getOptionValue("h"));
+      if (cmd.hasOption("p")) props.put("mlPort", cmd.getOptionValue("p"));
+      if (cmd.hasOption("u")) props.put("username", cmd.getOptionValue("u"));
+      if (cmd.hasOption("x")) props.put("password", cmd.getOptionValue("x"));
+      if (cmd.hasOption("db")) props.put("jobsDatabase", cmd.getOptionValue("db"));
+      if (cmd.hasOption("n")) props.put("pollSize", cmd.getOptionValue("n"));
+      if (cmd.hasOption("t")) props.put("threadCount", cmd.getOptionValue("t"));
+      if (cmd.hasOption("b")) props.put("batchSize", cmd.getOptionValue("b"));
+      config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), props);
     }
 
     ConfiguredDatabaseClientFactory configuredDatabaseClientFactory = new DefaultConfiguredDatabaseClientFactory();
@@ -135,103 +134,131 @@ public class StateConductorDriver implements Runnable, Destroyable {
     return prop;
   }
 
-  private Stream<String> FetchJobDocuments() {
-    Stream<String> jobUris = null;
-
-    try {
-      jobUris = service.getJobs(config.getPollSize(), null, null, null);
-    } catch (Exception ex) {
-      logger.error("An error occurred fetching job documents: {}", ex.getMessage());
-      ex.printStackTrace();
-      jobUris = Stream.empty();
-    }
-
-    return jobUris;
-  }
-
   @Override
   public void run() {
     logger.info("Starting StateConductorDriver...");
+
+    // initializations
+    boolean keepRunning = true;
+    AtomicLong total = new AtomicLong(0);
+    AtomicLong totalErrors = new AtomicLong(0);
+    AtomicLong batchCount = new AtomicLong(1);
+    List<String> urisBuffer = Collections.synchronizedList(new ArrayList<>());
+    Set<String> inProgressSet = Collections.synchronizedSet(new HashSet<>(config.getQueueThreshold()));
     List<Future<JsonNode>> results = new ArrayList<>();
+    List<Future<JsonNode>> completed = new ArrayList<>();
+    List<Future<JsonNode>> errored = new ArrayList<>();
 
-    while (true) {
-      AtomicLong total = new AtomicLong();
-      AtomicInteger batchCount = new AtomicInteger(1);
+    List<String> batch = new ArrayList<>();
+    List<ProcessJobTask> jobBuckets = new ArrayList<>();
 
-      // grab any "new" and "working" jobs
-      logger.info("Fetching Job Batch...");
-      // TODO allow configuration of flowNames, flowStatus
-      Stream<String> jobUris = FetchJobDocuments();
-      Iterator<String> jobs = jobUris.iterator();
+    // set up the thread pool
+    ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
 
-      // set up the thread pool
-      ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
+    // start the metrics thread
+    MetricsTask metricsTask = new MetricsTask(config, total, totalErrors);
+    Thread metricsThread = new Thread(metricsTask);
+    metricsThread.start();
 
-      // create tasks based on batch size
-      List<String> batch = new ArrayList<>();
-      List<ProcessJobTask> jobBuckets = new ArrayList<>();
+    // start the thread for getting jobs
+    Thread getJobsTask = new Thread(new GetJobsTask(service, config, urisBuffer, inProgressSet));
+    getJobsTask.start();
 
-      // create buckets for each batch
-      while(jobs.hasNext()) {
-        String uri = jobs.next();
-        total.getAndIncrement();
-        batch.add(uri);
-        if (batch.size() >= config.getBatchSize()) {
+    while (keepRunning) {
+      jobBuckets.clear();
+
+      // create batches from any new buffered tasks
+      synchronized (urisBuffer) {
+        Iterator<String> uris = urisBuffer.iterator();
+
+        while(uris.hasNext()) {
+          String uri = uris.next();
+          batch.add(uri);
+          if (batch.size() >= config.getBatchSize()) {
+            jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
+            batch = new ArrayList<>();
+          }
+        }
+
+        // cleanup batch
+        if (batch.size() > 0) {
           jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
           batch = new ArrayList<>();
         }
-      }
 
-      // cleanup batch
-      if (batch.size() > 0) {
-        jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
+        // clear the buffer
+        urisBuffer.clear();
       }
-
-      logger.info("created {} batches", jobBuckets.size());
 
       // submit the jobs to the executor pool
-      jobBuckets.forEach(bucket -> {
+      for (ProcessJobTask bucket : jobBuckets) {
         Future<JsonNode> future = pool.submit(bucket);
         results.add(future);
-      });
+      }
 
-      logger.info("Populated thread pool[{}] with {} Jobs", config.getThreadCount(), total);
-      pool.shutdown();
+      if (jobBuckets.size() > 0) {
+        logger.info("Populated thread pool[{}] with {} batches", config.getThreadCount(), jobBuckets.size());
+      }
+
+      // process any results that have come in
+      for (Future<JsonNode> jsonNodeFuture : results) {
+        if (jsonNodeFuture.isDone()) {
+          try {
+            AtomicInteger errorCount = new AtomicInteger(0);
+            ArrayNode arr = (ArrayNode) jsonNodeFuture.get();
+            arr.forEach(jsonNode -> {
+              total.getAndIncrement();
+              String jobUri = jsonNode.get("job").asText();
+              inProgressSet.remove(jobUri);
+              boolean hasError = jsonNode.get("error") != null;
+              if (hasError)
+                errorCount.incrementAndGet();
+            });
+            logger.info("batch result: {} jobs complete - with {} errors", arr.size(), errorCount.get());
+            totalErrors.addAndGet(errorCount.get());
+            completed.add(jsonNodeFuture);
+          } catch (Exception e) {
+            logger.error("error retrieving batch results", e);
+            totalErrors.incrementAndGet();
+            errored.add(jsonNodeFuture);
+          }
+        }
+      }
+
+      // remove any completed or errored futures
+      completed.forEach(jsonNodeFuture -> results.remove(jsonNodeFuture));
+      completed.clear();
+      errored.forEach(jsonNodeFuture -> results.remove(jsonNodeFuture));
+
+      logger.debug("errored: {}, in-progress: {}", errored.size(), inProgressSet.size());
 
       try {
-        logger.info("Awaiting Batch Completion...");
-        if (pool.awaitTermination(Integer.MAX_VALUE, TimeUnit.MINUTES)) {
-          // calculate results
-          for (Future<JsonNode> batchResult : results) {
-            AtomicInteger errorCount = new AtomicInteger(0);
-            try {
-              ArrayNode arr = (ArrayNode)batchResult.get();
-              arr.forEach(jsonNode -> {
-                boolean hasError = jsonNode.get("error") != null;
-                if (hasError) {
-                  errorCount.getAndIncrement();
-                }
-              });
-              logger.info("batch result: {} jobs complete - with {} errors", arr.size(), errorCount.get());
-            } catch (ExecutionException e) {
-              logger.error("error retrieving batch results");
-            }
-
-          }
-          results.clear();
-          // cooldown period
-          // TODO make configurable
-          if (0 == total.get())
-            Thread.sleep(5000L);
-          else
-            Thread.sleep(10L);
-        }
+        Thread.sleep(10L);
       } catch (InterruptedException e) {
-        logger.info("Stopping StateConductorDriver pool executor...");
-        pool.shutdownNow();
-        Thread.currentThread().interrupt();
-        break;
+        // initiate a thread shutdown
+        pool.shutdown();
+        // stop fetching tasks
+        logger.info("Stopping GetJobsTask thread...");
+        getJobsTask.interrupt();
+        metricsThread.interrupt();
+        // stop main loop
+        keepRunning = false;
       }
+    }
+
+    // terminate the processing pool
+    try {
+      logger.info("Awaiting Batch Completion...");
+      if (pool.awaitTermination(Integer.MAX_VALUE, TimeUnit.MINUTES)) {
+        logger.info("pool executor terminated.");
+        results.clear();
+      }
+      // final metrics report
+      metricsTask.generateReport();
+    } catch (InterruptedException e) {
+      logger.info("Stopping StateConductorDriver pool executor...");
+      pool.shutdownNow();
+      Thread.currentThread().interrupt();
     }
   }
 

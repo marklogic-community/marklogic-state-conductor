@@ -29,6 +29,7 @@ const FLOW_NEW_STEP = 'NEW';
 const DATE_TIME_REGEX =
   '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
+const DEFAULT_MAX_RETRY_ATTEMPTS = 3;
 const STATE_CHOICE = 'choice';
 const STATE_FAIL = 'fail';
 const STATE_PASS = 'pass';
@@ -313,6 +314,7 @@ function getAllFlowsContextQuery() {
 function processJob(uri) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   xdmp.trace(TRACE_EVENT, `state-conductor job processing for job document "${uri}"`);
+
   // sanity check
   if (!fn.docAvailable(uri)) {
     fn.error(null, 'INVALID-JOB-DOCUMENT', `State Conductor job document "${uri}" not found!`);
@@ -380,6 +382,7 @@ function startProcessingFlowByJobDoc(jobDoc, save = true) {
       date: new Date().toISOString(),
       from: FLOW_NEW_STEP,
       to: initialState,
+      executionTime: xdmp.elapsedTime(),
     });
 
     if (save) {
@@ -505,6 +508,7 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
       date: new Date().toISOString(),
       state: stateName,
       resumeBy: resumeBy,
+      executionTime: xdmp.elapsedTime(),
     });
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
@@ -583,6 +587,7 @@ function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
       date: new Date().toISOString(),
       state: stateName,
       retriedBy: retriedBy,
+      executionTime: xdmp.elapsedTime(),
     });
 
     return transition(jobDoc, jobObj, stateName, state, flowObj, save);
@@ -623,6 +628,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
         date: new Date().toISOString(),
         state: stateName,
         waiting: pro,
+        executionTime: xdmp.elapsedTime(),
       });
     } else if (!inTerminalState(jobObj, flowObj)) {
       xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
@@ -693,6 +699,7 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
           date: new Date().toISOString(),
           from: stateName,
           to: targetState,
+          executionTime: xdmp.elapsedTime(),
         });
       } else {
         fn.error(
@@ -716,8 +723,12 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
         date: new Date().toISOString(),
         from: stateName,
         to: 'COMPLETED',
+        executionTime: xdmp.elapsedTime(),
       });
     }
+
+    //resets the retries since the step has completed succesfully
+    jobObj.retries = {};
 
     // update the state status and provenence in the job doc
     if (save) {
@@ -749,6 +760,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
   const jobObj = scaffoldJobDoc(jobDoc.toObject());
   const flowName = jobObj.flowName;
   const stateName = jobObj.flowState;
+
   let state;
   let flowObj;
   xdmp.trace(TRACE_EVENT, `executing flow "${flowName}"`);
@@ -1066,6 +1078,58 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
     currState &&
     (STATE_TASK === currState.Type.toLowerCase() || STATE_CHOICE === currState.Type.toLowerCase())
   ) {
+    //State defined retry
+    if (currState.Retry && currState.Retry.length > 0) {
+      // find a matching retry state
+      let target = currState.Retry.reduce((acc, retry) => {
+        if (!acc) {
+          let errorEquals = retry.ErrorEquals.join(',');
+          if (
+            (retry.ErrorEquals.includes(err.name) ||
+              retry.ErrorEquals.includes('States.ALL') ||
+              retry.ErrorEquals.includes('*')) &&
+            (!jobObj.retries.hasOwnProperty(errorEquals) ||
+              jobObj.retries[errorEquals] < (retry.MaxAttempts || DEFAULT_MAX_RETRY_ATTEMPTS))
+          ) {
+            acc = retry;
+          }
+        }
+        return acc;
+      }, null);
+
+      if (target) {
+        let errorEquals = target.ErrorEquals.join(',');
+
+        let retryNumber = 1 + (jobObj.retries[errorEquals] || 0);
+
+        jobObj.retries[errorEquals] = retryNumber;
+
+        xdmp.trace(TRACE_EVENT, `retrying job "${uri}"`);
+
+        // changes job doc to retry state
+        jobObj.flowStatus = FLOW_STATUS_WORKING;
+        jobObj.flowState = stateName;
+
+        jobObj.provenance.push({
+          date: new Date().toISOString(),
+          from: stateName,
+          to: stateName,
+          retryNumber: retryNumber,
+          executionTime: xdmp.elapsedTime(),
+        });
+
+        // capture error message in context
+        jobObj.errors[stateName] = err;
+
+        if (save) {
+          xdmp.nodeReplace(jobDoc.root, jobObj);
+        }
+
+        return jobObj;
+      }
+    }
+
+    //State defined Catch
     if (currState.Catch && currState.Catch.length > 0) {
       // find a matching fallback state
       let target = currState.Catch.reduce((acc, fallback) => {
@@ -1090,6 +1154,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
           date: new Date().toISOString(),
           from: stateName,
           to: target,
+          executionTime: xdmp.elapsedTime(),
         });
         // capture error message in context
         jobObj.errors[stateName] = err;
@@ -1102,6 +1167,7 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
       }
     }
   }
+
   return handleError(
     'INVALID-STATE-DEFINITION',
     `no Catch defined for error "${err.name}" in state "${stateName}"`,
@@ -1241,6 +1307,7 @@ function scaffoldJobDoc(jobDoc) {
     context: {},
     provenance: [],
     errors: {},
+    retries: {},
   };
 
   return Object.assign(needProps, jobDoc);
@@ -1266,7 +1333,6 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
   const id = sem.uuidString();
   const jobUri = directory + id + '.json';
 
-  // TODO any benifit to defining a class for the job document?
   const job = scaffoldJobDoc({
     id: id,
     flowName: flowName,
@@ -1277,7 +1343,6 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     modules: modules,
     createdDate: new Date().toISOString(),
     context: context,
-    provenance: [],
   });
 
   // insert the job document
@@ -1510,6 +1575,7 @@ module.exports = {
   STATE_CONDUCTOR_JOBS_DB,
   STATE_CONDUCTOR_TRIGGERS_DB,
   STATE_CONDUCTOR_SCHEMAS_DB,
+  DEFAULT_MAX_RETRY_ATTEMPTS,
   FLOW_COLLECTION,
   FLOW_DIRECTORY,
   FLOW_ITEM_COLLECTION,

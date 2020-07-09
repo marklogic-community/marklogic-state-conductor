@@ -83,6 +83,8 @@ if (checkUriAgainstContext(uri)) {
     const flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
     sc.createStateConductorJob(flowName, uri);
   });
+} else {
+  xdmp.trace(sc.TRACE_EVENT, `no matching flows in ${DATABASE_NAME} for ${uri}`);
 }
 
 xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger completed in "${xdmp.elapsedTime()}"`);

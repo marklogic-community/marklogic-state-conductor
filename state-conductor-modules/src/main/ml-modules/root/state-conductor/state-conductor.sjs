@@ -445,6 +445,37 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
     );
   }
 
+  // wait state check for processJob event
+  if (resumeBy === 'processJob' && jobObj.currentlyWaiting.hasOwnProperty('event')) {
+    xdmp.trace(
+      TRACE_EVENT,
+      `INVALID-CurrentlyWaiting: Cannot resume a flow that is an event by processJob for uri: "${uri}"`
+    );
+
+    return fn.error(
+      null,
+      'INVALID-CurrentlyWaiting',
+      `Cannot resume a flow that is an event by processJob for uri: "${uri}"`
+    );
+  }
+
+  // check if current time is greater than nextTaskTime
+  if (
+    jobObj.currentlyWaiting.hasOwnProperty('nextTaskTime') &&
+    xs.dateTime(jobObj.currentlyWaiting.nextTaskTime) > fn.currentDateTime() + xdmp.elapsedTime()
+  ) {
+    xdmp.trace(
+      TRACE_EVENT,
+      `INVALID-CurrentlyWaiting: Cannot resume a flow where is wait time has not passed for uri: "${uri}"`
+    );
+
+    return fn.error(
+      null,
+      'INVALID-CurrentlyWaiting',
+      `Cannot resume a flow where is wait time has not passed for uri: "${uri}"`
+    );
+  }
+
   try {
     flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
 

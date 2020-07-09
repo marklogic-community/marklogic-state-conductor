@@ -161,6 +161,9 @@ jobDoc = xdmp.toJSON({
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
+  currentlyWaiting: {
+    event: 'testing',
+  },
 });
 
 assertion = sc.resumeWaitingJobByJobDoc(jobDoc, 'testing', false);

@@ -458,9 +458,9 @@ function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
       `Cannot resume a flow that is an event by processJob for uri: "${uri}"`
     );
   }
-  // wait state check for processJob time not passed
+
+  // check if current time is greater than nextTaskTime
   if (
-    resumeBy === 'processJob' &&
     jobObj.currentlyWaiting.hasOwnProperty('nextTaskTime') &&
     xs.dateTime(jobObj.currentlyWaiting.nextTaskTime) > fn.currentDateTime() + xdmp.elapsedTime()
   ) {

@@ -36,8 +36,7 @@ repositories {
   }
 }
 dependencies {
-  mlBundle "com.marklogic:marklogic-state-conductor:0.6.1"
-  mlBundle "com.marklogic:marklogic-state-conductor-cpf:0.6.1" // if using the cpf driver
+  mlBundle "com.marklogic:marklogic-state-conductor:0.7.0"
 }
 ```
 

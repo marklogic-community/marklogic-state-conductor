@@ -5,8 +5,9 @@ const sc = require('/state-conductor/state-conductor.sjs');
 var uri;
 var trigger;
 
-const FIELD_CTX_QUERY_ID = 'STATE-CONDUCTOR-CTX-QUERY';
-const FIELD_CTX_QUERY_TIMESTAMP = 'STATE-CONDUCTOR-CTX-QUERY-TIMESTAMP';
+const DATABASE_NAME = xdmp.databaseName(xdmp.database());
+const FIELD_CTX_QUERY_ID = `STATE-CONDUCTOR-CTX-QUERY-${xdmp.database()}`;
+const FIELD_CTX_QUERY_TIMESTAMP = `STATE-CONDUCTOR-CTX-QUERY-TIMESTAMP-${xdmp.database()}`;
 const FIELD_CTX_QUERY_TIMEOUT = 300000; // milliseconds (5 mins)
 
 function executeContextRegQuery(uri, regQueryId) {
@@ -33,7 +34,7 @@ function getCtxRegQueryId() {
   if (!regCtxQueryId || curr > timestamp + FIELD_CTX_QUERY_TIMEOUT) {
     xdmp.trace(
       sc.TRACE_EVENT,
-      'registered context query not found or timestamp expired - registering new context query'
+      `registered context query not found or timestamp expired - registering new context query (${DATABASE_NAME})`
     );
     regCtxQueryId = registerCtxQuery();
   }
@@ -50,7 +51,10 @@ function checkUriAgainstContext(uri) {
     resp = executeContextRegQuery(uri, regCtxQueryId);
   } catch (err) {
     if (err.name === 'XDMP-UNREGISTERED') {
-      xdmp.trace(sc.TRACE_EVENT, 'registered query not found - reregistering context query');
+      xdmp.trace(
+        sc.TRACE_EVENT,
+        `registered query not found - reregistering context query (${DATABASE_NAME})`
+      );
       // need to register a new query
       regCtxQueryId = registerCtxQuery();
       // execute the query
@@ -70,12 +74,17 @@ xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger check for "${uri}"`);
 if (checkUriAgainstContext(uri)) {
   // find the specific flow that applies
   const flows = sc.getApplicableFlows(uri);
-  xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger found "${flows.length}" matching flows`);
+  xdmp.trace(
+    sc.TRACE_EVENT,
+    `state-conductor-item-trigger found "${flows.length}" matching flows in ${DATABASE_NAME} for ${uri}`
+  );
   // create a state conductor job for each flow that applies
   flows.forEach((flow) => {
     const flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
     sc.createStateConductorJob(flowName, uri);
   });
+} else {
+  xdmp.trace(sc.TRACE_EVENT, `no matching flows in ${DATABASE_NAME} for ${uri}`);
 }
 
 xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger completed in "${xdmp.elapsedTime()}"`);

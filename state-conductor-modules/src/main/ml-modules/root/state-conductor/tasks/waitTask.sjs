@@ -6,6 +6,7 @@ const sc = require('/state-conductor/state-conductor.sjs');
 
 sc.invokeOrApplyFunction(
   () => {
+    declareUpdate();
     const uris = cts
       .uris(
         null,

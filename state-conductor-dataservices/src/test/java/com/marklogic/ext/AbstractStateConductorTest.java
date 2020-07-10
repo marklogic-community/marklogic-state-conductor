@@ -121,7 +121,7 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
     }
 
     File file = new File(resource.getFile());
-    String content = Files.readString(file.toPath());
+    String content = new String(Files.readAllBytes(file.toPath()));
 
     for (Map.Entry<String, String> token : tokens.entrySet()) {
       content = content.replaceAll(token.getKey(), token.getValue());

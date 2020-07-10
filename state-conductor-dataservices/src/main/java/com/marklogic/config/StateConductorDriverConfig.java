@@ -5,12 +5,17 @@ import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.ext.DatabaseClientConfig;
 import com.marklogic.client.ext.SecurityContextType;
 import com.marklogic.client.ext.modulesloader.ssl.SimpleX509TrustManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class StateConductorDriverConfig {
+
+  private static Logger logger = LoggerFactory.getLogger(StateConductorDriverConfig.class);
 
   private String host = "localhost";
   private Integer port = 8000;
@@ -28,6 +33,17 @@ public class StateConductorDriverConfig {
   private Integer threadCount = 10;
   private Integer pollSize = 1000;
   private Integer batchSize = 5;
+  private Integer queueThreshold = 20000;
+  private Long cooldownMillis = 5000L;
+  private Long pollInterval = 1000L;
+  private Long metricsInterval = 5000L;
+
+  private String flowNames;
+  private String flowStatus;
+
+  private StateConductorDriverConfig() {
+    // do nothing
+  }
 
   public DatabaseClientConfig getDatabaseClientConfig() {
     DatabaseClientConfig clientConfig = new DatabaseClientConfig();
@@ -53,7 +69,19 @@ public class StateConductorDriverConfig {
     return clientConfig;
   }
 
-  public static StateConductorDriverConfig newConfig(Map<String, String> props) {
+  protected static Map<String, String> getMergedProperties(Map<String, String>... properties) {
+    Map<String, String> merged = new HashMap<>();
+    for (Map<String, String> props : properties) {
+      merged.putAll(props);
+    }
+    return merged;
+  }
+
+  public static StateConductorDriverConfig newConfig(Map<String, String>... properties) {
+    // created a merged property map
+    Map<String, String> props = getMergedProperties(properties);
+    logger.debug("Configuration Properties: {}", props);
+    // build the configuration
     StateConductorDriverConfig config = new StateConductorDriverConfig();
     config.host = getPropertyValue(props, "mlHost", "localhost");
     config.port = Integer.parseInt(getPropertyValue(props, "mlPort", "8000"));
@@ -69,6 +97,12 @@ public class StateConductorDriverConfig {
     config.threadCount = Integer.parseInt(getPropertyValue(props, "threadCount", "10"));
     config.pollSize = Integer.parseInt(getPropertyValue(props, "pollSize", "1000"));
     config.batchSize = Integer.parseInt(getPropertyValue(props, "batchSize", "5"));
+    config.queueThreshold = Integer.parseInt(getPropertyValue(props, "queueThreshold", "20000"));
+    config.cooldownMillis = Long.parseLong(getPropertyValue(props, "cooldownMillis", "5000"));
+    config.pollInterval = Long.parseLong(getPropertyValue(props, "pollInterval", "1000"));
+    config.metricsInterval = Long.parseLong(getPropertyValue(props, "metricsInterval", "5000"));
+    config.flowNames = getPropertyValue(props, "flowNames", null);
+    config.flowStatus = getPropertyValue(props, "flowStatus", null);
     return config;
   }
 
@@ -143,4 +177,40 @@ public class StateConductorDriverConfig {
   public void setJobsDatabase(String jobsDatabase) {
     this.jobsDatabase = jobsDatabase;
   }
+
+  public Integer getQueueThreshold() {
+    return queueThreshold;
+  }
+
+  public void setQueueThreshold(Integer queueThreshold) {
+    this.queueThreshold = queueThreshold;
+  }
+
+  public Long getCooldownMillis() { return cooldownMillis; }
+
+  public void setCooldownMillis(Long cooldownMillis) { this.cooldownMillis = cooldownMillis; }
+
+  public Long getPollInterval() {
+    return pollInterval;
+  }
+
+  public void setPollInterval(Long pollInterval) {
+    this.pollInterval = pollInterval;
+  }
+
+  public Long getMetricsInterval() {
+    return metricsInterval;
+  }
+
+  public void setMetricsInterval(Long metricsInterval) {
+    this.metricsInterval = metricsInterval;
+  }
+
+  public String getFlowNames() { return flowNames; }
+
+  public void setFlowNames(String flowNames) { this.flowNames = flowNames; }
+
+  public String getFlowStatus() { return flowStatus; }
+
+  public void setFlowStatus(String flowStatus) { this.flowStatus = flowStatus; }
 }

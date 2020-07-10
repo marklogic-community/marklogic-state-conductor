@@ -17,6 +17,7 @@ public class StateConductorJob {
   private JsonNode context;
   private JsonNode[] provenance;
   private JsonNode errors;
+  private JsonNode retries;
 
   public String getId() {
     return id;
@@ -106,6 +107,14 @@ public class StateConductorJob {
     this.errors = errors;
   }
 
+  public JsonNode getRetries() {
+    return retries;
+  }
+
+  public void setRetries(JsonNode retries) {
+    this.retries = retries;
+  }
+
   @Override
   public String toString() {
     return "StateConductorJob{" +
@@ -120,6 +129,7 @@ public class StateConductorJob {
       ", context=" + context +
       ", provenance=" + Arrays.toString(provenance) +
       ", errors=" + errors +
+      ", retries=" + retries +
       '}';
   }
 }

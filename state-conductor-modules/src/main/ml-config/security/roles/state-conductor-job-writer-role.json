@@ -1,9 +1,7 @@
 {
   "role-name": "state-conductor-job-writer-role",
-  "description": "Permits reading flow documents and knowing flow status",
-  "role": [
-    "state-conductor-reader-role"
-  ],
+  "description": "Permits reading and writing job documents",
+  "role": ["state-conductor-reader-role"],
   "privilege": [
     {
       "privilege-name": "state-conductor-execute",
@@ -17,4 +15,3 @@
     }
   ]
 }
-

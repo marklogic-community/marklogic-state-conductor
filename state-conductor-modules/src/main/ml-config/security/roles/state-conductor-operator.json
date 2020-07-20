@@ -1,11 +1,7 @@
 {
   "role-name": "state-conductor-operator",
   "description": "Permits operating a state conductor, such as running flows and viewing job data.",
-  "role": [
-    "rest-extension-user",
-    "rest-reader",
-    "state-conductor-job-writer-role"
-  ],
+  "role": ["rest-extension-user", "rest-reader", "state-conductor-job-writer-role"],
   "privilege": [
     {
       "privilege-name": "any-uri",
@@ -20,6 +16,16 @@
     {
       "privilege-name": "xdmp:eval-in",
       "action": "http://marklogic.com/xdmp/privileges/xdmp-eval-in",
+      "kind": "execute"
+    },
+    {
+      "privilege-name": "xdmp:invoke",
+      "action": "http://marklogic.com/xdmp/privileges/xdmp-invoke",
+      "kind": "execute"
+    },
+    {
+      "privilege-name": "xdmp:invoke-in",
+      "action": "http://marklogic.com/xdmp/privileges/xdmp-invoke-in",
       "kind": "execute"
     },
     {

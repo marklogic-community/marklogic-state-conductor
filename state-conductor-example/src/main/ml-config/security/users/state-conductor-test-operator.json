@@ -1,0 +1,5 @@
+{
+  "user-name": "state-conductor-test-operator",
+  "password": "admin",
+  "role": ["state-conductor-operator"]
+}

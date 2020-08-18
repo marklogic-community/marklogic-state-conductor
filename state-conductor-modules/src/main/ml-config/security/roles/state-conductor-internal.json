@@ -1,0 +1,12 @@
+{
+  "role-name": "state-conductor-internal",
+  "description": "Internal state conducutor role used for amps",
+  "role": ["state-conductor-operator"],
+  "privilege": [
+    {
+      "privilege-name": "state-conductor-execute",
+      "action": "http://marklogic.com/state-conductor/privilege/execute",
+      "kind": "execute"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "namespace": "",
+  "local-name": "processJob",
+  "document-uri": "/state-conductor/state-conductor.sjs",
+  "modules-database": "%%MODULES_DATABASE%%",
+  "role": ["state-conductor-internal"]
+}

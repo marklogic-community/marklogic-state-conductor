@@ -988,6 +988,7 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
     {
       database: database ? database : xdmp.database(),
       modules: modules ? modules : xdmp.modulesDatabase(),
+      ignoreAmps: true,
     }
   );
   xdmp.trace(
@@ -1029,6 +1030,7 @@ function executeConditionModule(modulePath, uri, params, context, { database, mo
     {
       database: database ? database : xdmp.database(),
       modules: modules ? modules : xdmp.modulesDatabase(),
+      ignoreAmps: true,
     }
   );
   xdmp.trace(
@@ -1484,6 +1486,11 @@ function emmitEvent(event, batchSize = 100, save = true) {
  * @returns
  */
 function getJobDocuments(options) {
+  let roleNames = xdmp
+    .getCurrentRoles()
+    .toArray()
+    .map((id) => xdmp.roleName(id));
+  xdmp.log(`getJobDocument roles: ${roleNames}`);
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const count = options.count || 100;
   const flowStatus = Array.isArray(options.flowStatus)
@@ -1602,10 +1609,10 @@ module.exports = {
   getFlowNameFromUri,
   getFlowNames,
   getInitialState,
-  getJobDocuments,
+  getJobDocuments: module.amp(getJobDocuments),
   getJobIds,
   invokeOrApplyFunction,
-  processJob,
+  processJob: module.amp(processJob),
   resumeWaitingJob,
   resumeWaitingJobByJobDoc,
   retryJobAtState,

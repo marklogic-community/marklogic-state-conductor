@@ -1,7 +1,5 @@
 {
   "user-name": "state-conductor-test-non-developer",
   "password": "admin",
-  "role": [
-    "state-conductor-test-non-developer-role"
-  ]
+  "role": ["state-conductor-test-non-developer-role", "rest-reader", "rest-extension-user"]
 }

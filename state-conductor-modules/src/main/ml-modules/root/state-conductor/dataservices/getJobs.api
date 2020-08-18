@@ -3,6 +3,12 @@
   "desc": "Returns a list of MarkLogic State Conductor Job document URIs",
   "params": [
     {
+      "name": "start",
+      "datatype": "unsignedInt",
+      "desc": "Return records starting from this position.",
+      "nullable": true
+    },
+    {
       "name": "count",
       "datatype": "unsignedInt",
       "desc": "The number of uris to return",

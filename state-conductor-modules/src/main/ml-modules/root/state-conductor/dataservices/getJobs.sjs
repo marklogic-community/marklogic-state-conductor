@@ -5,6 +5,7 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 // external variables
+var start;
 var count;
 var flowNames;
 var flowStatus;
@@ -19,9 +20,8 @@ xdmp.trace(
   ])
 );
 
-if (!count) {
-  count = 1000;
-}
+start = start || 1;
+count = count || 1000;
 
 if (flowNames) {
   flowNames = flowNames.split(',');
@@ -46,6 +46,7 @@ if (Array.isArray(forestIds)) {
 }
 
 let options = {
+  start: start,
   count: count,
   flowStatus: flowStatus,
   flowNames: flowNames,

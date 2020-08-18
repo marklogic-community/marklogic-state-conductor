@@ -1485,6 +1485,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
  */
 function getJobDocuments(options) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
+  const start = options.start || 1;
   const count = options.count || 100;
   const flowStatus = Array.isArray(options.flowStatus)
     ? options.flowStatus
@@ -1530,7 +1531,9 @@ function getJobDocuments(options) {
       }
 
       uris = uris.concat(
-        cts.uris('', ['document', `limit=${count}`], ctsQuery, null, forestIds).toArray()
+        fn
+          .subsequence(cts.uris('', ['document'], ctsQuery, null, forestIds), start, count)
+          .toArray()
       );
     },
     {

@@ -33,16 +33,19 @@ public interface StateConductorService {
             }
 
             @Override
-            public Stream<String> getJobs(Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds) {
+            public Stream<String> getJobs(Integer start, Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds, String startDate, String endDate) {
               return BaseProxy.StringType.toString(
                 baseProxy
                 .request("getJobs.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
                 .withSession()
                 .withParams(
+                    BaseProxy.atomicParam("start", true, BaseProxy.UnsignedIntegerType.fromInteger(start)),
                     BaseProxy.atomicParam("count", true, BaseProxy.UnsignedIntegerType.fromInteger(count)),
                     BaseProxy.atomicParam("flowNames", true, BaseProxy.StringType.fromString(flowNames)),
                     BaseProxy.atomicParam("flowStatus", true, BaseProxy.StringType.fromString(flowStatus)),
-                    BaseProxy.atomicParam("forestIds", true, BaseProxy.StringType.fromString(forestIds)))
+                    BaseProxy.atomicParam("forestIds", true, BaseProxy.StringType.fromString(forestIds)),
+                    BaseProxy.atomicParam("startDate", true, BaseProxy.DateTimeType.fromString(startDate)),
+                    BaseProxy.atomicParam("endDate", true, BaseProxy.DateTimeType.fromString(endDate)))
                 .withMethod("POST")
                 .responseMultiple(true, null)
                 );
@@ -85,13 +88,16 @@ public interface StateConductorService {
   /**
    * Returns a list of MarkLogic State Conductor Job document URIs
    *
+   * @param start	Return records starting from this position.
    * @param count	The number of uris to return
    * @param flowNames	A list of flow names to filter the returned job documents
    * @param flowStatus	A list of flow status's to filter the returned job documents.  Defaults to 'new' and 'working'.
    * @param forestIds	The returned list of job documents will be limited to jobs found in this list of forests.
+   * @param startDate	Filter on jobs created after this date and time.
+   * @param endDate	Filter on jobs created prior to this date and time.
    * @return	as output
    */
-    Stream<String> getJobs(Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds);
+    Stream<String> getJobs(Integer start, Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds, String startDate, String endDate);
 
   /**
    * Creates a MarkLogic State Conductor Job document for the given uri and flow.

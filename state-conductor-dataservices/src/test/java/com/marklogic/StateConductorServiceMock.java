@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 public class StateConductorServiceMock implements StateConductorService {
 
   @Override
-  public Stream<String> getJobs(Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds) {
+  public Stream<String> getJobs(Integer start, Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds, String startDate, String endDate) {
     List<String> uris = new ArrayList<>();
     for (int i = 1; i <= count; i++) {
       uris.add(String.format("/test/test%s.json", i));

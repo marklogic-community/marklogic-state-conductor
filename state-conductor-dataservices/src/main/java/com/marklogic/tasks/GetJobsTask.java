@@ -39,7 +39,7 @@ public class GetJobsTask implements Runnable {
 
     try {
       logger.info("Fetching Jobs Batch...");
-      jobUris = service.getJobs(config.getPollSize(), config.getFlowNames(), flowStatus, null);
+      jobUris = service.getJobs(1, config.getPollSize(), config.getFlowNames(), flowStatus, null, null, null);
     } catch (Exception ex) {
       logger.error("An error occurred fetching job documents: {}", ex.getMessage());
       ex.printStackTrace();

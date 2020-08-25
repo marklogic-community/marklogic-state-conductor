@@ -10,14 +10,14 @@ var count;
 var flowNames;
 var flowStatus;
 var forestIds;
+var startDate;
+var endDate;
 
 xdmp.trace(
   sc.TRACE_EVENT,
-  Sequence.from([
-    `Count: ${count}`,
-    `flowNames: ${xdmp.describe(flowNames)}`,
-    `flowStatus: ${xdmp.describe(flowStatus)}`,
-  ])
+  `Start: ${start}, Count: ${count}, flowNames: ${xdmp.describe(
+    flowNames
+  )}, flowStatus: ${xdmp.describe(flowStatus)}, startDate: ${startDate}, endDate: ${endDate}`
 );
 
 start = start || 1;
@@ -46,13 +46,13 @@ if (Array.isArray(forestIds)) {
 }
 
 let options = {
-  start: start,
-  count: count,
-  flowStatus: flowStatus,
-  flowNames: flowNames,
-  forestIds: forestIds,
-  startDate: null,
-  endDate: null,
+  start,
+  count,
+  flowStatus,
+  flowNames,
+  forestIds,
+  startDate,
+  endDate,
 };
 
 const uris = sc.getJobDocuments(options);

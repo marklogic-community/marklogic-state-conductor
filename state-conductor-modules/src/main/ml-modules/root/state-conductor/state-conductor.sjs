@@ -1387,13 +1387,13 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
 }
 
 /**
- * Convienence function to emmitEvents
+ * Convienence function to emitEvents
  *
  * @param {*} event
  * @param {*} batchSize the size of the batch of uris that gets spawn off
  * @returns
  */
-function emmitEvent(event, batchSize = 100, save = true) {
+function emitEvent(event, batchSize = 100, save = true) {
   let uris = invokeOrApplyFunction(
     () => {
       declareUpdate();
@@ -1590,7 +1590,7 @@ module.exports = {
   batchCreateStateConductorJob,
   checkFlowContext,
   createStateConductorJob,
-  emmitEvent,
+  emitEvent,
   executeStateByJobDoc,
   getAllFlowsContextQuery,
   getApplicableFlows,

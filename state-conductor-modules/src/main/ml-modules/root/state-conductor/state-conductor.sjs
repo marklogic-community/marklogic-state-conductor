@@ -1428,7 +1428,7 @@ function emitEvent(event, batchSize = 100, save = true) {
         arrayOfwaitingURIJobsForEvent.forEach(function (uriArray) {
           xdmp.spawn('/state-conductor/resumeWaitingJobs.sjs', {
             uriArray: uriArray,
-            resumeBy: 'emmit event: ' + event,
+            resumeBy: 'emit event: ' + event,
             save: save,
           });
         });

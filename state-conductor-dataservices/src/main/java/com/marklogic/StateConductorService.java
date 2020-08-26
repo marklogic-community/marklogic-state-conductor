@@ -77,6 +77,23 @@ public interface StateConductorService {
                 );
             }
 
+
+            @Override
+            public com.fasterxml.jackson.databind.node.ObjectNode getFlowStatus(Stream<String> flowNames, String startDate, String endDate, Boolean detailed) {
+              return BaseProxy.ObjectType.toObjectNode(
+                baseProxy
+                .request("getFlowStatus.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("flowNames", true, BaseProxy.StringType.fromString(flowNames)),
+                    BaseProxy.atomicParam("startDate", true, BaseProxy.DateTimeType.fromString(startDate)),
+                    BaseProxy.atomicParam("endDate", true, BaseProxy.DateTimeType.fromString(endDate)),
+                    BaseProxy.atomicParam("detailed", true, BaseProxy.BooleanType.fromBoolean(detailed)))
+                .withMethod("POST")
+                .responseSingle(false, Format.JSON)
+                );
+            }
+
         }
 
         return new StateConductorServiceImpl(db);
@@ -109,5 +126,16 @@ public interface StateConductorService {
    * @return	as output
    */
     com.fasterxml.jackson.databind.node.ArrayNode processJob(Stream<String> uri);
+
+  /**
+   * Returns the status and states of one or more State Conductor flows.
+   *
+   * @param flowNames	The flow names for which to report status.
+   * @param startDate	Filter on jobs created after this date and time.
+   * @param endDate	Filter on jobs created prior to this date and time.
+   * @param detailed	Include detailed breakdown of jobs per state per status?
+   * @return	as output
+   */
+    com.fasterxml.jackson.databind.node.ObjectNode getFlowStatus(Stream<String> flowNames, String startDate, String endDate, Boolean detailed);
 
 }

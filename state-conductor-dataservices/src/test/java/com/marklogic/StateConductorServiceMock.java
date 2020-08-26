@@ -36,4 +36,19 @@ public class StateConductorServiceMock implements StateConductorService {
     return arr;
   }
 
+  @Override
+  public ObjectNode getFlowStatus(Stream<String> flowNames, String startDate, String endDate, Boolean detailed) {
+    ObjectNode obj = new ObjectNode(JsonNodeFactory.instance);
+
+    flowNames.forEach(flowName -> {
+      ObjectNode flowStatus = new ObjectNode(JsonNodeFactory.instance);
+      flowStatus.put("flowName", flowName);
+      flowStatus.put("totalPerStatus", "");
+      flowStatus.put("totalPerState", "");
+      obj.set(flowName, flowStatus);
+    });
+
+    return obj;
+  }
+
 }

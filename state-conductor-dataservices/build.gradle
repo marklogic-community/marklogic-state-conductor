@@ -5,7 +5,7 @@ buildscript {
   }
   dependencies {
     classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
-    classpath "com.marklogic:ml-gradle:${mlgradleVersion}"
+    classpath "com.marklogic:ml-gradle:3.17.0"
   }
 }
 
@@ -13,7 +13,7 @@ plugins {
   id "java"
   id "application"
   id "net.saliman.properties" version "1.5.1"
-  id "com.marklogic.ml-gradle" version "${mlgradleVersion}"
+  id "com.marklogic.ml-gradle" version "3.17.0"
   id 'com.marklogic.ml-development-tools' version '4.2.0'
 }
 
@@ -59,7 +59,7 @@ jar {
 
 task generateStateConductorProxy(type: com.marklogic.client.tools.gradle.EndpointProxiesGenTask) {
   dependsOn 'mlPrepareBundles'
-  serviceDeclarationFile = 'build/mlBundle/marklogic-state-conductor/ml-modules/root/state-conductor/dataservices/service.json'
+  serviceDeclarationFile = 'state-conductor-dataservices/build/mlBundle/marklogic-state-conductor/ml-modules/root/state-conductor/dataservices/service.json'
 }
 
 task stageDockerDirectory(type: Copy, dependsOn: jar) {

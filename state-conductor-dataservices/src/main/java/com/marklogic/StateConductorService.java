@@ -77,6 +77,21 @@ public interface StateConductorService {
                 );
             }
 
+
+            @Override
+            public String createFlow(com.fasterxml.jackson.databind.node.ObjectNode input, String flowName) {
+              return BaseProxy.StringType.toString(
+                baseProxy
+                .request("createFlow.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_MIXED)
+                .withSession()
+                .withParams(
+                    BaseProxy.documentParam("input", false, BaseProxy.ObjectType.fromObjectNode(input)),
+                    BaseProxy.atomicParam("flowName", false, BaseProxy.StringType.fromString(flowName)))
+                .withMethod("POST")
+                .responseSingle(false, null)
+                );
+            }
+
         }
 
         return new StateConductorServiceImpl(db);
@@ -109,5 +124,14 @@ public interface StateConductorService {
    * @return	as output
    */
     com.fasterxml.jackson.databind.node.ArrayNode processJob(Stream<String> uri);
+
+  /**
+   * Creates a MarkLogic State Conductor flow document using a given input and flowName
+   *
+   * @param input	The input for the flow
+   * @param flowName	The name of the State Conductor Flow
+   * @return	The Job ID of the State Conductor Job document
+   */
+    String createFlow(com.fasterxml.jackson.databind.node.ObjectNode input, String flowName);
 
 }

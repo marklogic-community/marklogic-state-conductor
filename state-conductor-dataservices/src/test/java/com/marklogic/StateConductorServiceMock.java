@@ -36,4 +36,10 @@ public class StateConductorServiceMock implements StateConductorService {
     return arr;
   }
 
+  @Override
+  public String createFlow(ObjectNode input, String flowName) {
+
+    return null;
+  }
+
 }

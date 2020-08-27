@@ -1,0 +1,23 @@
+{
+  "functionName": "createFlow",
+  "desc": "Creates a MarkLogic State Conductor flow document using a given input and flowName",
+  "params": [
+    {
+      "name": "input",
+      "datatype": "object",
+      "$javaClass": "com.fasterxml.jackson.databind.node.ObjectNode",
+      "desc": "The input for the flow",
+      "nullable": false
+    },
+    {
+      "name": "flowName",
+      "datatype": "string",
+      "desc": "The name of the State Conductor Flow",
+      "nullable": false
+    }
+  ],
+  "return": {
+    "datatype": "string",
+    "desc": "The Job ID of the State Conductor Job document"
+  }
+}

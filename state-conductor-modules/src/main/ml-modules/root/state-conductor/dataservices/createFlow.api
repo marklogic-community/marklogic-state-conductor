@@ -18,6 +18,6 @@
   ],
   "return": {
     "datatype": "string",
-    "desc": "The Job ID of the State Conductor Job document"
+    "desc": "The uri of the flow document created"
   }
 }

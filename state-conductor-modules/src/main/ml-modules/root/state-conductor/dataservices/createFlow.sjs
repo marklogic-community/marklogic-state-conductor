@@ -12,23 +12,38 @@ var flowName;
 var input ;
 
 if (flowName === '') {
-   fn.error(
-    null,
-    'STATE-CONDUCTOR-ERROR',
-    Sequence.from([400, 'Bad Request', `flowName not found.`])
-  );
+  try { fn.error(
+     null,
+     'STATE-CONDUCTOR-ERROR',
+     Sequence.from([400, 'Bad Request', `StateMachine not found.`])
+   ); }
+   catch(err){
+     err.toString();
+   }
 
 } else if (!input ) {
-  fn.error(
+  try {
+    fn.error(
     null,
     'STATE-CONDUCTOR-ERROR',
     Sequence.from([400, 'Bad Request', `input not found.`])
-  );
+  ); } catch(err){
+   err.toString();
+  }
 }
 //the validated need to be fixed.
 
 else if (!validator.validateFlowFile(input.toObject())) {
- 'input not valid flow';
+  try {
+fn.error(
+  null,
+  'STATE-CONDUCTOR-ERROR',
+  Sequence.from([400, 'Bad Request', `ERROR: input not a valid StateMachine.`])
+);
+  }catch (err){
+    err.toString();
+  }
+
 
 } else {
   const uri = `${sc.FLOW_DIRECTORY}${flowName}.asl.json`;
@@ -37,6 +52,6 @@ else if (!validator.validateFlowFile(input.toObject())) {
     collections: [sc.FLOW_COLLECTION],
   });
 
- flowName+ ' was created';
+ uri + ' was created';
 }
 

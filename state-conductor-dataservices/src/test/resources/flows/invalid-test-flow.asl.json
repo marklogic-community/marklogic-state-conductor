@@ -1,0 +1,18 @@
+{
+  "Comment": "Missing required StartAt field",
+  "mlDomain": {
+    "context": []
+  },
+  "States": {
+    "test-data": {
+      "Type": "Pass",
+      "Result": {
+        "data": "Lorem ipsum dolor sit amet"
+      },
+      "Next": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

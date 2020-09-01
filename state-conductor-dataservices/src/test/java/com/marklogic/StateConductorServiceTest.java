@@ -7,16 +7,21 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.FileHandle;
+import com.marklogic.client.io.StringHandle;
 import com.marklogic.ext.AbstractStateConductorTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.FileHandler;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -408,94 +413,24 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   public void testCreateFlow() throws IOException {
 
 
-    String inputString = "{\n" +
-      "  \"Comment\": \"is used in the executeStateByJobDoc\",\n" +
-      "  \"mlDomain\": {\n" +
-      "    \"context\": [\n" +
-      "      {\n" +
-      "        \"scope\": \"directory\",\n" +
-      "        \"value\": \"/test1/\"\n" +
-      "      },\n" +
-      "      {\n" +
-      "        \"scope\": \"collection1\",\n" +
-      "        \"value\": \"test1\"\n" +
-      "      }\n" +
-      "    ]\n" +
-      "  },\n" +
-      "  \"StartAt\": \"update-context\",\n" +
-      "  \"States\": {\n" +
-      "    \"update-context\": {\n" +
-      "      \"Type\": \"Task\",\n" +
-      "      \"Comment\": \"initial state of the flow\",\n" +
-      "      \"Resource\": \"/state-conductor/actions/custom/return-into-context.sjs\",\n" +
-      "      \"Next\": \"parameters-check\"\n" +
-      "    },\n" +
-      "    \"parameters-check\": {\n" +
-      "      \"Type\": \"Task\",\n" +
-      "      \"Comment\": \"initial state of the flow\",\n" +
-      "      \"Resource\": \"/state-conductor/actions/custom/parameters-check.sjs\",\n" +
-      "      \"Parameters\": {\n" +
-      "        \"name\": [\"David\"]\n" +
-      "      },\n" +
-      "      \"End\": true\n" +
-      "    }\n" +
-      "  }\n" +
-      "}" ;
- String goodflow = "{\n" +
-   "  \"Comment\": \"does things\",\n" +
-   "  \"mlDomain\": {\n" +
-   "    \"context\": [\n" +
-   "      {\n" +
-   "        \"scope\": \"collection\",\n" +
-   "        \"value\": \"enrollee\"\n" +
-   "      }\n" +
-   "    ]\n" +
-   "  },\n" +
-   "  \"StartAt\": \"find-gender\",\n" +
-   "  \"States\": {\n" +
-   "    \"find-gender\": {\n" +
-   "      \"Type\": \"Choice\",\n" +
-   "      \"Comment\": \"determine's enrollee's gender\",\n" +
-   "      \"Choices\": [\n" +
-   "        {\n" +
-   "          \"Resource\": \"/state-conductor/actions/custom/branching-test-flow/gender-is-male.sjs\",\n" +
-   "          \"Next\": \"enroll-in-mens-health\"\n" +
-   "        },\n" +
-   "        {\n" +
-   "          \"Resource\": \"/state-conductor/actions/custom/branching-test-flow/gender-is-female.sjs\",\n" +
-   "          \"Next\": \"enroll-in-womens-health\"\n" +
-   "        }\n" +
-   "      ],\n" +
-   "      \"Default\": \"has-undetermined-gender\"\n" +
-   "    },\n" +
-   "    \"enroll-in-mens-health\": {\n" +
-   "      \"Type\": \"Task\",\n" +
-   "      \"End\": true,\n" +
-   "      \"Comment\": \"adds enrollee to the men's health program\",\n" +
-   "      \"Resource\": \"/state-conductor/actions/custom/branching-test-flow/enroll-in-mens-health.sjs\"\n" +
-   "    },\n" +
-   "    \"enroll-in-womens-health\": {\n" +
-   "      \"Type\": \"Task\",\n" +
-   "      \"End\": true,\n" +
-   "      \"Comment\": \"adds enrollee to the womens's health program\",\n" +
-   "      \"Resource\": \"/state-conductor/actions/custom/branching-test-flow/enroll-in-womens-health.sjs\"\n" +
-   "    },\n" +
-   "    \"has-undetermined-gender\": {\n" +
-   "      \"Type\": \"Task\",\n" +
-   "      \"End\": true,\n" +
-   "      \"Comment\": \"flags enrollee for follow-up\",\n" +
-   "      \"Resource\": \"/state-conductor/actions/custom/branching-test-flow/flag-for-follow-up.sjs\"\n" +
-   "    }\n" +
-   "  }\n" +
-   "}\n" ;
 
-    ObjectMapper mapper = new ObjectMapper();
-    JsonNode inputBad = mapper.readTree(inputString);
-    String resp = service.createFlow((ObjectNode) inputBad, "createFlowTest");
-    assertEquals(resp, "input not valid flow");
-    JsonNode inputGoodFlow = mapper.readTree(goodflow);
-    String resp1 = service.createFlow((ObjectNode) inputGoodFlow, "createFlowTest");
-    assertEquals(resp1, "createFlowTest was created");
+    ClassLoader classLoader = getClass().getClassLoader();
+
+    String validStateMachine = "flows/test-flow.asl.json";
+    File validFile = new File(classLoader.getResource(validStateMachine).getFile());
+    String  validString = new String(Files.readAllBytes(validFile.toPath()));
+    JsonNode inputGoodStateMachine = mapper.readTree((validString));
+    String resp1 = service.createFlow((ObjectNode) inputGoodStateMachine, "testFlow1");
+    assertTrue(resp1.contains("testFlow1"));
+
+    String invalidStateMachine = "flows/invalid-test-flow.asl.json";
+    File invalidFile = new File(classLoader.getResource(invalidStateMachine).getFile());
+    String  invalidString = new String(Files.readAllBytes(invalidFile.toPath()));
+    JsonNode inputGoodFlow = mapper.readTree((invalidString));
+
+    String resp = service.createFlow((ObjectNode) inputGoodFlow, "testFlow1");
+    assertTrue(resp.contains("ERROR: input not a valid StateMachine"));
+
   }
 
 }

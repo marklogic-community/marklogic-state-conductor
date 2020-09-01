@@ -130,7 +130,7 @@ public interface StateConductorService {
    *
    * @param input	The input for the flow
    * @param flowName	The name of the State Conductor Flow
-   * @return	The Job ID of the State Conductor Job document
+   * @return	The uri of the flow document created
    */
     String createFlow(com.fasterxml.jackson.databind.node.ObjectNode input, String flowName);
 

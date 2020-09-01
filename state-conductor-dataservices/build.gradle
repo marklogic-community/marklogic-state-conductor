@@ -13,7 +13,7 @@ plugins {
   id "java"
   id "application"
   id "net.saliman.properties" version "1.5.1"
-  id "com.marklogic.ml-gradle" version "3.17.0"
+  id "com.marklogic.ml-gradle" version "${mlgradleVersion}"
   id 'com.marklogic.ml-development-tools' version '4.2.0'
 }
 

@@ -1,14 +1,11 @@
 package com.marklogic;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.client.io.FileHandle;
-import com.marklogic.client.io.StringHandle;
 import com.marklogic.ext.AbstractStateConductorTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +18,6 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.FileHandler;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -411,9 +407,6 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
   @Test
   public void testCreateFlow() throws IOException {
-
-
-
     ClassLoader classLoader = getClass().getClassLoader();
 
     String validStateMachine = "flows/test-flow.asl.json";

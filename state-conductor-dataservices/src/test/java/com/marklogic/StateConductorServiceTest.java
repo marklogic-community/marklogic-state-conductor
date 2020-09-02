@@ -2,10 +2,18 @@ package com.marklogic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.FailedRequestException;
+import com.marklogic.client.datamovement.DataMovementManager;
+import com.marklogic.client.datamovement.DeleteListener;
+import com.marklogic.client.datamovement.QueryBatcher;
 import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.query.StructuredQueryBuilder;
+import com.marklogic.client.query.StructuredQueryDefinition;
 import com.marklogic.ext.AbstractStateConductorTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -48,7 +56,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     // add job docs
     DocumentWriteSet batch = getJobsManager().newWriteSet();
     DocumentMetadataHandle jobMeta = new DocumentMetadataHandle();
-    jobMeta.getCollections().add("stateConductorJob");
+    jobMeta.getCollections().addAll("stateConductorJob", "test");
     jobMeta.getPermissions().add("state-conductor-reader-role", DocumentMetadataHandle.Capability.READ);
     jobMeta.getPermissions().add("state-conductor-job-writer-role", DocumentMetadataHandle.Capability.UPDATE);
     batch.add("/test/stateConductorJob/job1.json", jobMeta, loadTokenizedResource("jobs/job1.json", tokens));
@@ -71,6 +79,11 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     batch = getContentManager().newWriteSet();
     batch.add("/state-conductor-flow/test-flow.asl.json", flowMeta, loadFileResource("flows/test-flow.asl.json"));
     getContentManager().write(batch);
+  }
+
+  @AfterEach
+  public void teardown() {
+    deleteCollections(getJobsDatabaseClient(), "test");
   }
 
   @Test

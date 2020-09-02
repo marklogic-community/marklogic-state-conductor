@@ -64,15 +64,15 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
     // add data docs
     batch = getContentManager().newWriteSet();
-    batch.add("/test/doc1.json", loadFileResource("data/doc1.json"));
-    batch.add("/test/doc2.json", loadFileResource("data/doc2.json"));
+    batch.add("/test/doc1.json", loadFileHandleResource("data/doc1.json"));
+    batch.add("/test/doc2.json", loadFileHandleResource("data/doc2.json"));
     getContentManager().write(batch);
 
     // add flow docs
     DocumentMetadataHandle flowMeta = new DocumentMetadataHandle();
     flowMeta.getCollections().add("state-conductor-flow");
     batch = getContentManager().newWriteSet();
-    batch.add("/state-conductor-flow/test-flow.asl.json", flowMeta, loadFileResource("flows/test-flow.asl.json"));
+    batch.add("/state-conductor-flow/test-flow.asl.json", flowMeta, loadFileHandleResource("flows/test-flow.asl.json"));
     getContentManager().write(batch);
   }
 
@@ -407,21 +407,15 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
   @Test
   public void testCreateFlow() throws IOException {
-    ClassLoader classLoader = getClass().getClassLoader();
 
-    String validStateMachine = "flows/test-flow.asl.json";
-    File validFile = new File(classLoader.getResource(validStateMachine).getFile());
-    String  validString = new String(Files.readAllBytes(validFile.toPath()));
+    String  validString = loadFileResource("flows/test-flow.asl.json");
     JsonNode inputGoodStateMachine = mapper.readTree((validString));
     String resp1 = service.createFlow((ObjectNode) inputGoodStateMachine, "testFlow1");
     assertTrue(resp1.contains("testFlow1"));
 
-    String invalidStateMachine = "flows/invalid-test-flow.asl.json";
-    File invalidFile = new File(classLoader.getResource(invalidStateMachine).getFile());
-    String  invalidString = new String(Files.readAllBytes(invalidFile.toPath()));
+    String  invalidString = loadFileResource("flows/invalid-test-flow.asl.json");
     JsonNode inputGoodFlow = mapper.readTree((invalidString));
-
-    String resp = service.createFlow((ObjectNode) inputGoodFlow, "testFlow1");
+    String resp = service.createFlow((ObjectNode) inputGoodFlow, "testFlow2");
     assertTrue(resp.contains("ERROR: input not a valid StateMachine"));
 
   }

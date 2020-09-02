@@ -15,7 +15,7 @@ if (flowName === '') {
   try { fn.error(
      null,
      'STATE-CONDUCTOR-ERROR',
-     Sequence.from([400, 'Bad Request', `StateMachine not found.`])
+     Sequence.from([400, 'Bad Request', `invalid StateMachine name.`])
    ); }
    catch(err){
      err.toString();

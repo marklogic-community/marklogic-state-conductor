@@ -5,23 +5,23 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 // external variables
+var start;
 var count;
 var flowNames;
 var flowStatus;
 var forestIds;
+var startDate;
+var endDate;
 
 xdmp.trace(
   sc.TRACE_EVENT,
-  Sequence.from([
-    `Count: ${count}`,
-    `flowNames: ${xdmp.describe(flowNames)}`,
-    `flowStatus: ${xdmp.describe(flowStatus)}`,
-  ])
+  `Start: ${start}, Count: ${count}, flowNames: ${xdmp.describe(
+    flowNames
+  )}, flowStatus: ${xdmp.describe(flowStatus)}, startDate: ${startDate}, endDate: ${endDate}`
 );
 
-if (!count) {
-  count = 1000;
-}
+start = start || 1;
+count = count || 1000;
 
 if (flowNames) {
   flowNames = flowNames.split(',');
@@ -46,12 +46,13 @@ if (Array.isArray(forestIds)) {
 }
 
 let options = {
-  count: count,
-  flowStatus: flowStatus,
-  flowNames: flowNames,
-  forestIds: forestIds,
-  startDate: null,
-  endDate: null,
+  start,
+  count,
+  flowStatus,
+  flowNames,
+  forestIds,
+  startDate,
+  endDate,
 };
 
 const uris = sc.getJobDocuments(options);

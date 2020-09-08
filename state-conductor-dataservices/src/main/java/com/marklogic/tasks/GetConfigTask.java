@@ -1,0 +1,77 @@
+package com.marklogic.tasks;
+
+import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.eval.EvalResultIterator;
+import com.marklogic.config.StateConductorDriverConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class GetConfigTask implements Runnable {
+
+  private static final Logger logger = LoggerFactory.getLogger(GetConfigTask.class);
+
+  DatabaseClient client;
+  StateConductorDriverConfig config;
+  ThreadPoolExecutor pool;
+
+  Integer currHosts;
+  Integer maxPoolSize;
+
+
+  public GetConfigTask(DatabaseClient client, StateConductorDriverConfig config, ThreadPoolExecutor pool, int initialThreads) {
+    this.client = client;
+    this.config = config;
+    this.pool = pool;
+    this.currHosts = 1;
+    this.maxPoolSize = initialThreads;
+  }
+
+  protected void setMaximumPoolSize(int size) {
+    synchronized (pool) {
+      pool.setMaximumPoolSize(size);
+    }
+  }
+
+  @Override
+  public void run() {
+    currHosts = 1;
+
+    while (true) {
+
+      EvalResultIterator result = client.newServerEval().javascript("xdmp.hosts()").eval();
+      AtomicInteger hostCount = new AtomicInteger(0);
+
+      result.forEach(evalResult -> {
+        hostCount.incrementAndGet();
+      });
+
+      logger.info("***** DETECTED {} HOSTS *****", hostCount.get());
+      if (currHosts != hostCount.get()) {
+        currHosts = hostCount.get();
+
+        if (!config.useFixedThreadCount()) {
+          maxPoolSize = Math.min(config.getMaxThreadCount(), currHosts * config.getThreadsPerHost());
+          logger.info("Scaling to {} threads!", maxPoolSize);
+          setMaximumPoolSize(maxPoolSize);
+        }
+      }
+
+      if (config.useFixedThreadCount()) {
+        logger.info("***** FIXED THREAD POOL SIZE: {} *****", config.getFixedThreadCount());
+      } else {
+        logger.info("***** THREAD POOL SIZE: {} *****", maxPoolSize);
+      }
+
+      try {
+        Thread.sleep(60000);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        break;
+      }
+    }
+  }
+
+}

@@ -7,6 +7,7 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.config.StateConductorDriverConfig;
+import com.marklogic.tasks.GetConfigTask;
 import com.marklogic.tasks.GetJobsTask;
 import com.marklogic.tasks.MetricsTask;
 import com.marklogic.tasks.ProcessJobTask;
@@ -22,20 +23,24 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
 
 public class StateConductorDriver implements Runnable, Destroyable {
 
-  private static Logger logger = LoggerFactory.getLogger(StateConductorDriver.class);
+  private final static Logger logger = LoggerFactory.getLogger(StateConductorDriver.class);
 
   private StateConductorDriverConfig config;
   private DatabaseClient client;
+  private DatabaseClient appServicesClient;
   private StateConductorService service;
 
-  public StateConductorDriver(DatabaseClient client, StateConductorDriverConfig config) {
-    this.client = client;
+  public StateConductorDriver(StateConductorDriverConfig config) {
     this.config = config;
-    service = StateConductorService.on(this.client);
+
+    ConfiguredDatabaseClientFactory configuredDatabaseClientFactory = new DefaultConfiguredDatabaseClientFactory();
+    client = configuredDatabaseClientFactory.newDatabaseClient(config.getDatabaseClientConfig());
+    appServicesClient = configuredDatabaseClientFactory.newDatabaseClient(config.getAppServicesDatabaseClientConfig());
+
+    service = StateConductorService.on(client);
   }
 
   public static Options getOptions() {
@@ -112,10 +117,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
       config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), props);
     }
 
-    ConfiguredDatabaseClientFactory configuredDatabaseClientFactory = new DefaultConfiguredDatabaseClientFactory();
-    DatabaseClient client = configuredDatabaseClientFactory.newDatabaseClient(config.getDatabaseClientConfig());
-
-    StateConductorDriver driver = new StateConductorDriver(client, config);
+    StateConductorDriver driver = new StateConductorDriver(config);
     Thread driverThread = new Thread(driver);
     driverThread.start();
 
@@ -153,7 +155,16 @@ public class StateConductorDriver implements Runnable, Destroyable {
     List<ProcessJobTask> jobBuckets = new ArrayList<>();
 
     // set up the thread pool
-    ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
+    //ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
+    int initialThreads = config.getThreadsPerHost();
+    if (config.useFixedThreadCount())
+      initialThreads = config.getFixedThreadCount();
+    ThreadPoolExecutor pool = new ThreadPoolExecutor(initialThreads, initialThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue());
+
+    // start the getConfig thread
+    GetConfigTask configTask = new GetConfigTask(appServicesClient, config, pool, initialThreads);
+    Thread configThread = new Thread(configTask);
+    configThread.start();
 
     // start the metrics thread
     MetricsTask metricsTask = new MetricsTask(config, total, totalErrors);
@@ -197,7 +208,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
       }
 
       if (jobBuckets.size() > 0) {
-        logger.info("Populated thread pool[{}] with {} batches", config.getThreadCount(), jobBuckets.size());
+        logger.info("Populated thread pool with {} batches", jobBuckets.size());
       }
 
       // process any results that have come in
@@ -241,6 +252,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
         logger.info("Stopping GetJobsTask thread...");
         getJobsTask.interrupt();
         metricsThread.interrupt();
+        configThread.interrupt();
         // stop main loop
         keepRunning = false;
       }

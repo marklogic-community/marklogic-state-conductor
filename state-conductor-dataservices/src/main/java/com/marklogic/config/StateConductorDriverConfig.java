@@ -30,7 +30,10 @@ public class StateConductorDriverConfig {
   private String certPassword;
   private DatabaseClient.ConnectionType connectionType = DatabaseClient.ConnectionType.DIRECT;
 
-  private Integer threadCount = 10;
+  private boolean useFixedThreadCount = false;
+  private Integer fixedThreadCount = -1;
+  private Integer threadsPerHost = 16;
+  private Integer maxThreadCount = 128;
   private Integer pollSize = 1000;
   private Integer batchSize = 5;
   private Integer queueThreshold = 20000;
@@ -43,6 +46,30 @@ public class StateConductorDriverConfig {
 
   private StateConductorDriverConfig() {
     // do nothing
+  }
+
+  public DatabaseClientConfig getAppServicesDatabaseClientConfig() {
+    DatabaseClientConfig clientConfig = new DatabaseClientConfig();
+    clientConfig.setHost(host);
+    clientConfig.setPort(8000);
+    clientConfig.setUsername(username);
+    clientConfig.setPassword(password);
+    clientConfig.setSecurityContextType(securityContextType);
+    clientConfig.setExternalName(externalName);
+    clientConfig.setCertFile(certFile);
+    clientConfig.setCertPassword(certPassword);
+    clientConfig.setConnectionType(connectionType);
+
+    if (simpleSsl == true) {
+      try {
+        clientConfig.setSslContext(SSLContext.getDefault());
+      } catch (NoSuchAlgorithmException e) {
+        throw new RuntimeException("Unable to get default SSLContext: " + e.getMessage(), e);
+      }
+      clientConfig.setSslHostnameVerifier(DatabaseClientFactory.SSLHostnameVerifier.ANY);
+      clientConfig.setTrustManager(new SimpleX509TrustManager());
+    }
+    return clientConfig;
   }
 
   public DatabaseClientConfig getDatabaseClientConfig() {
@@ -94,7 +121,6 @@ public class StateConductorDriverConfig {
     config.certFile = getPropertyValue(props, "certFile", null);
     config.certPassword = getPropertyValue(props, "certPassword", null);
     config.connectionType = DatabaseClient.ConnectionType.valueOf(getPropertyValue(props, "connectionType", "direct").toUpperCase());
-    config.threadCount = Integer.parseInt(getPropertyValue(props, "threadCount", "10"));
     config.pollSize = Integer.parseInt(getPropertyValue(props, "pollSize", "1000"));
     config.batchSize = Integer.parseInt(getPropertyValue(props, "batchSize", "5"));
     config.queueThreshold = Integer.parseInt(getPropertyValue(props, "queueThreshold", "20000"));
@@ -103,6 +129,14 @@ public class StateConductorDriverConfig {
     config.metricsInterval = Long.parseLong(getPropertyValue(props, "metricsInterval", "5000"));
     config.flowNames = getPropertyValue(props, "flowNames", null);
     config.flowStatus = getPropertyValue(props, "flowStatus", null);
+
+    // thread settings
+    config.fixedThreadCount = Integer.parseInt(getPropertyValue(props, "fixedThreadCount", "-1"));
+    config.threadsPerHost = Integer.parseInt(getPropertyValue(props, "threadsPerHost", "16"));
+    config.maxThreadCount = Integer.parseInt(getPropertyValue(props, "maxThreadCount", "128"));
+    if (config.fixedThreadCount > 0)
+      config.useFixedThreadCount = true;
+
     return config;
   }
 
@@ -114,12 +148,32 @@ public class StateConductorDriverConfig {
     return value;
   }
 
-  public Integer getThreadCount() {
-    return threadCount;
+  public boolean useFixedThreadCount() {
+    return useFixedThreadCount;
+  }
+
+  public Integer getFixedThreadCount() {
+    return fixedThreadCount;
   }
 
   public void setThreadCount(Integer threadCount) {
-    this.threadCount = threadCount;
+    this.fixedThreadCount = threadCount;
+  }
+
+  public Integer getThreadsPerHost() {
+    return threadsPerHost;
+  }
+
+  public void setThreadsPerHost(Integer threadsPerHost) {
+    this.threadsPerHost = threadsPerHost;
+  }
+
+  public Integer getMaxThreadCount() {
+    return maxThreadCount;
+  }
+
+  public void setMaxThreadCount(Integer maxThreadCount) {
+    this.maxThreadCount = maxThreadCount;
   }
 
   public Integer getPollSize() {

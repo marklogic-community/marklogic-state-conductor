@@ -13,6 +13,9 @@ public class GetConfigTask implements Runnable {
 
   private static final Logger logger = LoggerFactory.getLogger(GetConfigTask.class);
 
+  static final String HOSTS_QUERY = "xdmp.hosts()";
+  static final String ACTIVE_HOSTS_QUERY = "xdmp.hosts().toArray().map(id => fn.head(xdmp.hostStatus(id))).filter(status => !status.error)";
+
   DatabaseClient client;
   StateConductorDriverConfig config;
   ThreadPoolExecutor pool;
@@ -41,14 +44,14 @@ public class GetConfigTask implements Runnable {
 
     while (true) {
 
-      EvalResultIterator result = client.newServerEval().javascript("xdmp.hosts()").eval();
+      EvalResultIterator result = client.newServerEval().javascript(ACTIVE_HOSTS_QUERY).eval();
       AtomicInteger hostCount = new AtomicInteger(0);
 
       result.forEach(evalResult -> {
         hostCount.incrementAndGet();
       });
 
-      logger.info("***** DETECTED {} HOSTS *****", hostCount.get());
+      logger.info("DETECTED {} ACTIVE HOST(S)", hostCount.get());
       if (currHosts != hostCount.get()) {
         currHosts = hostCount.get();
 
@@ -60,9 +63,9 @@ public class GetConfigTask implements Runnable {
       }
 
       if (config.useFixedThreadCount()) {
-        logger.info("***** FIXED THREAD POOL SIZE: {} *****", config.getFixedThreadCount());
+        logger.info("FIXED THREAD POOL SIZE: {}", config.getFixedThreadCount());
       } else {
-        logger.info("***** THREAD POOL SIZE: {} *****", maxPoolSize);
+        logger.info("THREAD POOL SIZE: {}", maxPoolSize);
       }
 
       try {

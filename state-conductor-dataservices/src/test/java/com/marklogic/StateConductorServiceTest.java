@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -94,6 +95,50 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertEquals("/test/test1.json", uris[0].toString());
     assertEquals("/test/test2.json", uris[1].toString());
     assertEquals("/test/test10.json", uris[9].toString());
+  }
+
+  @Test
+  public void testGetFlow() throws IOException {
+    final String flowName = "test-flow";
+    final ObjectNode allFlows = service.getFlow(null);
+    assertEquals("does things", allFlows.get(flowName).get("Comment").asText());
+    final ObjectNode testFlow = service.getFlow(flowName);
+    assertEquals("does things", testFlow.get("Comment").asText());
+    try {
+      service.getFlow("test-flow-that-does-not-exist");
+      assertTrue(false, "Failed to throw exception for bad flowName");
+    }
+    catch(Exception e) {
+      assertTrue(true);
+    }
+  }
+
+  @Test
+  public void testInsertFlow() throws IOException {
+    final String flowName = "test-flow";
+    final ObjectNode testFlow = service.getFlow(flowName);
+    assertEquals("does things", testFlow.get("Comment").asText());
+    testFlow.put("Comment", "Also Does Other Things");
+    service.insertFlow(flowName, new StringReader(testFlow.toString()));
+    final ObjectNode updatedTestFlow = service.getFlow(flowName);
+    assertEquals("Also Does Other Things", testFlow.get("Comment").asText());
+  }
+
+  @Test
+  public void testDeleteFlow() throws IOException {
+    final String newFlowName = "new-test-flow";
+    final String flowName = "test-flow";
+    service.insertFlow(newFlowName, new StringReader(service.getFlow(flowName).toString()));
+    final ObjectNode updatedTestFlow = service.getFlow(flowName);
+    assertEquals("does things", updatedTestFlow.get("Comment").asText());
+    service.deleteFlow(newFlowName);
+    try {
+      service.getFlow(newFlowName);
+      assertTrue(false, "Failed to delete newFlowName");
+    }
+    catch(Exception e) {
+      assertTrue(true);
+    }
   }
 
   @Test

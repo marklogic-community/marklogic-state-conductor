@@ -3,13 +3,15 @@ package com.marklogic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 
+import java.io.Reader;
 import java.util.*;
 import java.util.stream.Stream;
 
 public class StateConductorServiceMock implements StateConductorService {
 
   @Override
-  public Stream<String> getJobs(Integer start, Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds, String startDate, String endDate) {
+  public Stream<String> getJobs(Integer start, Integer count, String flowNames, Stream<String> flowStatus,
+      Stream<String> forestIds, String startDate, String endDate) {
     List<String> uris = new ArrayList<>();
     for (int i = 1; i <= count; i++) {
       uris.add(String.format("/test/test%s.json", i));
@@ -49,6 +51,26 @@ public class StateConductorServiceMock implements StateConductorService {
     });
 
     return obj;
+  }
+
+  @Override
+  public com.fasterxml.jackson.databind.node.ObjectNode getFlow(String flowName) {
+    // TODO Auto-generated method stub
+
+    ObjectNode obj = new ObjectNode(JsonNodeFactory.instance);
+    return obj;
+  }
+
+  @Override
+  public void deleteFlow(String flowName) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public void insertFlow(String flowName, Reader flow) {
+    // TODO Auto-generated method stub
+
   }
 
 }

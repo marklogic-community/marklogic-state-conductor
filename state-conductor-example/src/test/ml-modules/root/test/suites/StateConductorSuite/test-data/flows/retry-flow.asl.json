@@ -16,7 +16,7 @@
   "States": {
     "errorOut": {
       "Type": "Task",
-      "Comment": "initial state of the flow",
+      "Comment": "initial state of the stateMachine",
       "Resource": "/state-conductor/actions/custom/errorOut.sjs",
       "Next": "fourMaxAttempts",
       "Retry": [

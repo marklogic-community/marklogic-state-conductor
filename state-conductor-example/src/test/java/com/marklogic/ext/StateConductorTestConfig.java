@@ -66,9 +66,9 @@ public class StateConductorTestConfig implements InitializingBean {
 	}
 
 	@Bean
-	public DatabaseClientProvider jobsDatabaseClientProvider() {
+	public DatabaseClientProvider executionsDatabaseClientProvider() {
 	  DatabaseClientConfig config = new DatabaseClientConfig(getHost(), getRestPort(), getUsername(), getPassword());
-	  config.setDatabase("state-conductor-jobs");
+	  config.setDatabase("state-conductor-executions");
 	  return new SimpleDatabaseClientProvider(config);
   }
 

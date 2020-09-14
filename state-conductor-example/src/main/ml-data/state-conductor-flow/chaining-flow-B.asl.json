@@ -1,5 +1,5 @@
 {
-  "Comment": "Example of a flow that picks up where another left off",
+  "Comment": "Example of a stateMachine that picks up where another left off",
   "mlDomain": {
     "context": [
       {

@@ -1,17 +1,10 @@
 package com.marklogic;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.FailedRequestException;
-import com.marklogic.client.datamovement.DataMovementManager;
-import com.marklogic.client.datamovement.DeleteListener;
-import com.marklogic.client.datamovement.QueryBatcher;
 import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.client.query.StructuredQueryBuilder;
-import com.marklogic.client.query.StructuredQueryDefinition;
 import com.marklogic.ext.AbstractStateConductorTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,12 +26,12 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
   final String data1Uri = "/test/doc1.json";
   final String data2Uri = "/test/doc2.json";
-  final String job1Uri = "/test/stateConductorJob/job1.json";
-  final String job2Uri = "/test/stateConductorJob/job2.json";
-  final String job3Uri = "/test/stateConductorJob/job3.json";
-  final String job4Uri = "/test/stateConductorJob/job4.json";
-  final String job5Uri = "/test/stateConductorJob/job5.json";
-  final String badJob1Uri = "/test/stateConductorJob/badJob1.json";
+  final String execution1Uri = "/test/stateConductorExecution/execution1.json";
+  final String execution2Uri = "/test/stateConductorExecution/execution2.json";
+  final String execution3Uri = "/test/stateConductorExecution/execution3.json";
+  final String execution4Uri = "/test/stateConductorExecution/execution4.json";
+  final String execution5Uri = "/test/stateConductorExecution/execution5.json";
+  final String badExecution1Uri = "/test/stateConductorExecution/badExecution1.json";
 
   StateConductorService mockService;
   StateConductorService service;
@@ -54,19 +47,19 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     tokens.put("%DATABASE%", getContentDatabaseId());
     tokens.put("%MODULES%", getModulesDatabaseId());
 
-    // add job docs
-    DocumentWriteSet batch = getJobsManager().newWriteSet();
-    DocumentMetadataHandle jobMeta = new DocumentMetadataHandle();
-    jobMeta.getCollections().addAll("stateConductorJob", "test");
-    jobMeta.getPermissions().add("state-conductor-reader-role", DocumentMetadataHandle.Capability.READ);
-    jobMeta.getPermissions().add("state-conductor-job-writer-role", DocumentMetadataHandle.Capability.UPDATE);
-    batch.add("/test/stateConductorJob/job1.json", jobMeta, loadTokenizedResource("jobs/job1.json", tokens));
-    batch.add("/test/stateConductorJob/job2.json", jobMeta, loadTokenizedResource("jobs/job2.json", tokens));
-    batch.add("/test/stateConductorJob/job3.json", jobMeta, loadTokenizedResource("jobs/job3.json", tokens));
-    batch.add("/test/stateConductorJob/job4.json", jobMeta, loadTokenizedResource("jobs/job4.json", tokens));
-    batch.add("/test/stateConductorJob/job5.json", jobMeta, loadTokenizedResource("jobs/job5.json", tokens));
-    batch.add("/test/stateConductorJob/badJob1.json", jobMeta, loadTokenizedResource("jobs/badJob1.json", tokens));
-    getJobsManager().write(batch);
+    // add execution docs
+    DocumentWriteSet batch = getExecutionsManager().newWriteSet();
+    DocumentMetadataHandle executionMeta = new DocumentMetadataHandle();
+    executionMeta.getCollections().addAll("stateConductorExecution", "test");
+    executionMeta.getPermissions().add("state-conductor-reader-role", DocumentMetadataHandle.Capability.READ);
+    executionMeta.getPermissions().add("state-conductor-execution-writer-role", DocumentMetadataHandle.Capability.UPDATE);
+    batch.add("/test/stateConductorExecution/execution1.json", executionMeta, loadTokenizedResource("executions/execution1.json", tokens));
+    batch.add("/test/stateConductorExecution/execution2.json", executionMeta, loadTokenizedResource("executions/execution2.json", tokens));
+    batch.add("/test/stateConductorExecution/execution3.json", executionMeta, loadTokenizedResource("executions/execution3.json", tokens));
+    batch.add("/test/stateConductorExecution/execution4.json", executionMeta, loadTokenizedResource("executions/execution4.json", tokens));
+    batch.add("/test/stateConductorExecution/execution5.json", executionMeta, loadTokenizedResource("executions/execution5.json", tokens));
+    batch.add("/test/stateConductorExecution/badExecution1.json", executionMeta, loadTokenizedResource("executions/badExecution1.json", tokens));
+    getExecutionsManager().write(batch);
 
     // add data docs
     batch = getContentManager().newWriteSet();
@@ -74,23 +67,23 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     batch.add("/test/doc2.json", loadFileResource("data/doc2.json"));
     getContentManager().write(batch);
 
-    // add flow docs
-    DocumentMetadataHandle flowMeta = new DocumentMetadataHandle();
-    flowMeta.getCollections().add("state-conductor-flow");
+    // add state machine docs
+    DocumentMetadataHandle meta = new DocumentMetadataHandle();
+    meta.getCollections().add("state-conductor-state-machine");
     batch = getContentManager().newWriteSet();
-    batch.add("/state-conductor-flow/test-flow.asl.json", flowMeta, loadFileResource("flows/test-flow.asl.json"));
+    batch.add("/state-conductor-state-machine/test-state-machine.asl.json", meta, loadFileResource("state-machines/test-state-machine.asl.json"));
     getContentManager().write(batch);
   }
 
   @AfterEach
   public void teardown() {
-    deleteCollections(getJobsDatabaseClient(), "test");
+    deleteCollections(getExecutionsDatabaseClient(), "test");
   }
 
   @Test
-  public void testGetJobsMock() {
+  public void testGetExecutionsMock() {
     int count = 10;
-    Object[] uris = mockService.getJobs(1, count, null, null, null, null, null).toArray();
+    Object[] uris = mockService.getExecutions(1, count, null, null, null, null, null).toArray();
     assertEquals(count, uris.length);
     assertEquals("/test/test1.json", uris[0].toString());
     assertEquals("/test/test2.json", uris[1].toString());
@@ -98,15 +91,15 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   }
 
   @Test
-  public void testGetFlow() throws IOException {
-    final String flowName = "test-flow";
-    final ObjectNode allFlows = service.getFlow(null);
-    assertEquals("does things", allFlows.get(flowName).get("Comment").asText());
-    final ObjectNode testFlow = service.getFlow(flowName);
-    assertEquals("does things", testFlow.get("Comment").asText());
+  public void testGetStateMachine() throws IOException {
+    final String stateMachineName = "test-state-machine";
+    final ObjectNode allStateMachines = service.getStateMachine(null);
+    assertEquals("does things", allStateMachines.get(stateMachineName).get("Comment").asText());
+    final ObjectNode testStateMachine = service.getStateMachine(stateMachineName);
+    assertEquals("does things", testStateMachine.get("Comment").asText());
     try {
-      service.getFlow("test-flow-that-does-not-exist");
-      assertTrue(false, "Failed to throw exception for bad flowName");
+      service.getStateMachine("test-state-machine-that-does-not-exist");
+      assertTrue(false, "Failed to throw exception for bad stateMachineName");
     }
     catch(Exception e) {
       assertTrue(true);
@@ -114,27 +107,28 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   }
 
   @Test
-  public void testInsertFlow() throws IOException {
-    final String flowName = "test-flow";
-    final ObjectNode testFlow = service.getFlow(flowName);
-    assertEquals("does things", testFlow.get("Comment").asText());
-    testFlow.put("Comment", "Also Does Other Things");
-    service.insertFlow(flowName, new StringReader(testFlow.toString()));
-    final ObjectNode updatedTestFlow = service.getFlow(flowName);
-    assertEquals("Also Does Other Things", testFlow.get("Comment").asText());
+  public void testInsertStateMachine() throws IOException {
+    final String stateMachineName = "test-state-machine";
+    final ObjectNode testStateMachine = service.getStateMachine(stateMachineName);
+    assertEquals("does things", testStateMachine.get("Comment").asText());
+    testStateMachine.put("Comment", "Also Does Other Things");
+    service.insertStateMachine(stateMachineName, new StringReader(testStateMachine.toString()));
+    final ObjectNode updatedTestStateMachine = service.getStateMachine(stateMachineName);
+    assertNotNull(updatedTestStateMachine);
+    assertEquals("Also Does Other Things", testStateMachine.get("Comment").asText());
   }
 
   @Test
-  public void testDeleteFlow() throws IOException {
-    final String newFlowName = "new-test-flow";
-    final String flowName = "test-flow";
-    service.insertFlow(newFlowName, new StringReader(service.getFlow(flowName).toString()));
-    final ObjectNode updatedTestFlow = service.getFlow(flowName);
-    assertEquals("does things", updatedTestFlow.get("Comment").asText());
-    service.deleteFlow(newFlowName);
+  public void testDeleteStateMachine() throws IOException {
+    final String newStateMachineName = "new-test-state-machine";
+    final String stateMachineName = "test-state-machine";
+    service.insertStateMachine(newStateMachineName, new StringReader(service.getStateMachine(stateMachineName).toString()));
+    final ObjectNode updatedTestStateMachine = service.getStateMachine(stateMachineName);
+    assertEquals("does things", updatedTestStateMachine.get("Comment").asText());
+    service.deleteStateMachine(newStateMachineName);
     try {
-      service.getFlow(newFlowName);
-      assertTrue(false, "Failed to delete newFlowName");
+      service.getStateMachine(newStateMachineName);
+      assertTrue(false, "Failed to delete newStateMachineName");
     }
     catch(Exception e) {
       assertTrue(true);
@@ -142,212 +136,210 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   }
 
   @Test
-  public void testGetJobs() throws IOException {
+  public void testGetExecutions() throws IOException {
     int count = 10;
     String[] status;
     String[] uris;
-    StateConductorJob jobDoc;
 
-    uris = service.getJobs(1, 1000, null, null, null, null, null).toArray(String[]::new);
+    uris = service.getExecutions(1, 1000, null, null, null, null, null).toArray(String[]::new);
     assertTrue(3 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
-      String flowStatus = getJobDocument(uris[i]).getFlowStatus();
-      assertTrue((flowStatus.equals("new") || flowStatus.equals("working")));
+      String stateMachineStatus = getExecutionDocument(uris[i]).getStateMachineStatus();
+      assertTrue((stateMachineStatus.equals("new") || stateMachineStatus.equals("working")));
     }
 
     status = new String[]{ "new" };
-    uris = service.getJobs(1, count, null, Arrays.stream(status), null, null, null).toArray(String[]::new);
+    uris = service.getExecutions(1, count, null, Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
-      assertEquals("new", getJobDocument(uris[i]).getFlowStatus());
+      assertEquals("new", getExecutionDocument(uris[i]).getStateMachineStatus());
     }
 
     status = new String[]{ "new" };
-    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
+    uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
-      assertEquals("new", getJobDocument(uris[i]).getFlowStatus());
-      assertEquals("test-flow", getJobDocument(uris[i]).getFlowName());
+      assertEquals("new", getExecutionDocument(uris[i]).getStateMachineStatus());
+      assertEquals("test-state-machine", getExecutionDocument(uris[i]).getStateMachineName());
     }
 
     status = new String[]{ "working" };
-    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
+    uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertEquals(1, uris.length);
-    assertEquals("working", getJobDocument(uris[0]).getFlowStatus());
-    assertEquals("test-flow", getJobDocument(uris[0]).getFlowName());
-    assertEquals("job3", getJobDocument(uris[0]).getId());
+    assertEquals("working", getExecutionDocument(uris[0]).getStateMachineStatus());
+    assertEquals("test-state-machine", getExecutionDocument(uris[0]).getStateMachineName());
+    assertEquals("execution3", getExecutionDocument(uris[0]).getId());
 
     status = new String[]{ "complete" };
-    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
+    uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertEquals(1, uris.length);
-    assertEquals("complete", getJobDocument(uris[0]).getFlowStatus());
-    assertEquals("test-flow", getJobDocument(uris[0]).getFlowName());
-    assertEquals("job4", getJobDocument(uris[0]).getId());
+    assertEquals("complete", getExecutionDocument(uris[0]).getStateMachineStatus());
+    assertEquals("test-state-machine", getExecutionDocument(uris[0]).getStateMachineName());
+    assertEquals("execution4", getExecutionDocument(uris[0]).getId());
 
     status = new String[]{ "failed" };
-    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
+    uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertEquals(1, uris.length);
-    assertEquals("failed", getJobDocument(uris[0]).getFlowStatus());
-    assertEquals("test-flow", getJobDocument(uris[0]).getFlowName());
-    assertEquals("job5", getJobDocument(uris[0]).getId());
+    assertEquals("failed", getExecutionDocument(uris[0]).getStateMachineStatus());
+    assertEquals("test-state-machine", getExecutionDocument(uris[0]).getStateMachineName());
+    assertEquals("execution5", getExecutionDocument(uris[0]).getId());
 
     status = new String[]{ "complete", "failed" };
-    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
+    uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
-      String flowStatus = getJobDocument(uris[i]).getFlowStatus();
-      assertTrue((flowStatus.equals("complete") || flowStatus.equals("failed")));
-      assertEquals("test-flow", getJobDocument(uris[i]).getFlowName());
+      String stateMachineStatus = getExecutionDocument(uris[i]).getStateMachineStatus();
+      assertTrue((stateMachineStatus.equals("complete") || stateMachineStatus.equals("failed")));
+      assertEquals("test-state-machine", getExecutionDocument(uris[i]).getStateMachineName());
     }
 
-    uris = service.getJobs(1, count, "fake-flow", null, null, null, null).toArray(String[]::new);
+    uris = service.getExecutions(1, count, "fake-state-machine", null, null, null, null).toArray(String[]::new);
     assertEquals(0, uris.length);
   }
 
   @Test
-  public void testCreateJobMock() {
-    String resp = mockService.createJob(data2Uri, "test-flow");
+  public void testCreateExecutionMock() {
+    String resp = mockService.createExecution(data2Uri, "test-state-machine");
     assertTrue(resp.length() > 0);
   }
 
   @Test
-  public void testCreateJob() throws IOException {
-    String resp = service.createJob(data2Uri, "test-flow");
+  public void testCreateExecution() throws IOException {
+    String resp = service.createExecution(data2Uri, "test-state-machine");
     assertTrue(resp.length() > 0);
 
-    StateConductorJob jobDoc = getJobDocument("/stateConductorJob/" + resp + ".json");
-    assertTrue(jobDoc != null);
-    assertEquals(resp, jobDoc.getId());
-    assertEquals(data2Uri, jobDoc.getUri());
-    assertEquals("test-flow", jobDoc.getFlowName());
+    StateConductorExecution executionDoc = getExecutionDocument("/stateConductorExecution/" + resp + ".json");
+    assertTrue(executionDoc != null);
+    assertEquals(resp, executionDoc.getId());
+    assertEquals(data2Uri, executionDoc.getUri());
+    assertEquals("test-state-machine", executionDoc.getStateMachineName());
 
     assertThrows(FailedRequestException.class, () -> {
-      service.createJob("/my/fake/document.json", "test-flow");
+      service.createExecution("/my/fake/document.json", "test-state-machine");
     });
 
     assertThrows(FailedRequestException.class, () -> {
-      service.createJob(data2Uri, "my-fake-flow");
+      service.createExecution(data2Uri, "my-fake-state-machine");
     });
   }
 
   @Test
-  public void testProcessJobMock() {
-    ArrayNode resp = mockService.processJob(Arrays.stream(new String[]{"/test.json"}));
-    assertEquals("/test.json", resp.get(0).get("job").asText());
+  public void testProcessExecutionMock() {
+    ArrayNode resp = mockService.processExecution(Arrays.stream(new String[]{"/test.json"}));
+    assertEquals("/test.json", resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
   }
 
   @Test
-  public void testProcessJob() throws IOException {
+  public void testProcessExecution() throws IOException {
     ArrayNode resp;
     DocumentMetadataHandle meta = new DocumentMetadataHandle();
-    StateConductorJob job1Doc;
+    StateConductorExecution execution1Doc;
 
-    // start job 1
-    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
-    job1Doc = getJobDocument(job1Uri);
+    // start execution 1
+    resp = service.processExecution(Arrays.stream(new String[]{execution1Uri}));
+    execution1Doc = getExecutionDocument(execution1Uri);
     getContentManager().readMetadata(data1Uri, meta);
-    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(false, meta.getCollections().contains("testcol1"));
     assertEquals(false, meta.getCollections().contains("testcol2"));
-    assertEquals("test-flow", job1Doc.getFlowName());
-    assertEquals("working", job1Doc.getFlowStatus());
-    assertEquals("add-collection-1", job1Doc.getFlowState());
-    // continue job 1
-    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
-    job1Doc = getJobDocument(job1Uri);
+    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
+    assertEquals("working", execution1Doc.getStateMachineStatus());
+    assertEquals("add-collection-1", execution1Doc.getStateMachineState());
+    // continue execution 1
+    resp = service.processExecution(Arrays.stream(new String[]{execution1Uri}));
+    execution1Doc = getExecutionDocument(execution1Uri);
     getContentManager().readMetadata(data1Uri, meta);
-    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(true, meta.getCollections().contains("testcol1"));
     assertEquals(false, meta.getCollections().contains("testcol2"));
-    assertEquals("test-flow", job1Doc.getFlowName());
-    assertEquals("working", job1Doc.getFlowStatus());
-    assertEquals("add-collection-2", job1Doc.getFlowState());
-    // continue job 1
-    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
-    job1Doc = getJobDocument(job1Uri);
+    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
+    assertEquals("working", execution1Doc.getStateMachineStatus());
+    assertEquals("add-collection-2", execution1Doc.getStateMachineState());
+    // continue execution 1
+    resp = service.processExecution(Arrays.stream(new String[]{execution1Uri}));
+    execution1Doc = getExecutionDocument(execution1Uri);
     getContentManager().readMetadata(data1Uri, meta);
-    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(true, meta.getCollections().contains("testcol1"));
     assertEquals(true, meta.getCollections().contains("testcol2"));
-    assertEquals("test-flow", job1Doc.getFlowName());
-    assertEquals("working", job1Doc.getFlowStatus());
-    assertEquals("success", job1Doc.getFlowState());
-    // continue job 1
-    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
-    job1Doc = getJobDocument(job1Uri);
-    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
+    assertEquals("working", execution1Doc.getStateMachineStatus());
+    assertEquals("success", execution1Doc.getStateMachineState());
+    // continue execution 1
+    resp = service.processExecution(Arrays.stream(new String[]{execution1Uri}));
+    execution1Doc = getExecutionDocument(execution1Uri);
+    assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
-    assertEquals("test-flow", job1Doc.getFlowName());
-    assertEquals("complete", job1Doc.getFlowStatus());
-    assertEquals("success", job1Doc.getFlowState());
-    // end job 1
-    resp = service.processJob(Arrays.stream(new String[]{job1Uri}));
-    job1Doc = getJobDocument(job1Uri);
-    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
+    assertEquals("complete", execution1Doc.getStateMachineStatus());
+    assertEquals("success", execution1Doc.getStateMachineState());
+    // end execution 1
+    resp = service.processExecution(Arrays.stream(new String[]{execution1Uri}));
+    execution1Doc = getExecutionDocument(execution1Uri);
+    assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(false, resp.get(0).get("result").asBoolean());
-    assertEquals("test-flow", job1Doc.getFlowName());
-    assertEquals("complete", job1Doc.getFlowStatus());
-    assertEquals("success", job1Doc.getFlowState());
+    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
+    assertEquals("complete", execution1Doc.getStateMachineStatus());
+    assertEquals("success", execution1Doc.getStateMachineState());
   }
 
   @Test
-  public void testBatchProcessJob() throws IOException {
+  public void testBatchProcessExecution() throws IOException {
     ArrayNode resp;
-    DocumentMetadataHandle meta = new DocumentMetadataHandle();
 
-    String[] jobs = new String[] {job1Uri, job2Uri, job3Uri, job4Uri, job5Uri};
+    String[] executions = new String[] {execution1Uri, execution2Uri, execution3Uri, execution4Uri, execution5Uri};
 
-    // start job 1
-    resp = service.processJob(Arrays.stream(jobs));
-    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    // start execution 1
+    resp = service.processExecution(Arrays.stream(executions));
+    assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
-    assertEquals(job2Uri, resp.get(1).get("job").asText());
+    assertEquals(execution2Uri, resp.get(1).get("execution").asText());
     assertEquals(true, resp.get(1).get("result").asBoolean());
-    assertEquals(job3Uri, resp.get(2).get("job").asText());
+    assertEquals(execution3Uri, resp.get(2).get("execution").asText());
     assertEquals(true, resp.get(2).get("result").asBoolean());
-    assertEquals(job4Uri, resp.get(3).get("job").asText());
+    assertEquals(execution4Uri, resp.get(3).get("execution").asText());
     assertEquals(false, resp.get(3).get("result").asBoolean());
-    assertEquals(job5Uri, resp.get(4).get("job").asText());
+    assertEquals(execution5Uri, resp.get(4).get("execution").asText());
     assertEquals(false, resp.get(4).get("result").asBoolean());
   }
 
   @Test
-  public void testProcessBadJob() throws IOException {
+  public void testProcessBadExecution() throws IOException {
     ArrayNode resp = null;
     Exception errorResp = null;
-    StateConductorJob badJob1Doc;
+    StateConductorExecution badExecution1Doc;
 
     try {
-      resp = service.processJob(Arrays.stream(new String[]{badJob1Uri}));
+      resp = service.processExecution(Arrays.stream(new String[]{badExecution1Uri}));
     } catch (Exception err) {
       errorResp = err;
     }
 
-    badJob1Doc = getJobDocument(badJob1Uri);
-    logger.info(badJob1Doc.toString());
+    badExecution1Doc = getExecutionDocument(badExecution1Uri);
+    logger.info(badExecution1Doc.toString());
 
     assertEquals(null, errorResp);
     assertNotNull(resp);
-    assertEquals("missing-flow", badJob1Doc.getFlowName());
-    assertEquals("failed", badJob1Doc.getFlowStatus());
+    assertEquals("missing-state-machine", badExecution1Doc.getStateMachineName());
+    assertEquals("failed", badExecution1Doc.getStateMachineStatus());
   }
 
   @Test
-  public void testBatchProcessWithBadJob() throws IOException {
+  public void testBatchProcessWithBadExecution() throws IOException {
     ArrayNode resp = null;
     Exception errorResp = null;
-    StateConductorJob jobDoc = null;
+    StateConductorExecution executionDoc = null;
     DocumentMetadataHandle meta = new DocumentMetadataHandle();
 
-    String[] jobs = new String[] {job1Uri, job2Uri, badJob1Uri, job3Uri};
+    String[] executions = new String[] {execution1Uri, execution2Uri, badExecution1Uri, execution3Uri};
 
-    // this batch contains a job that will fail
+    // this batch contains a execution that will fail
     try {
-      resp = service.processJob(Arrays.stream(jobs));
+      resp = service.processExecution(Arrays.stream(executions));
     } catch (Exception ex) {
       errorResp = ex;
     }
@@ -355,75 +347,75 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertEquals(null, errorResp);
     assertNotNull(resp);
 
-    jobDoc = getJobDocument(job1Uri);
-    logger.info(jobDoc.toString());
-    assertEquals("test-flow", jobDoc.getFlowName());
-    assertEquals("working", jobDoc.getFlowStatus());
-    assertEquals("add-collection-1", jobDoc.getFlowState());
+    executionDoc = getExecutionDocument(execution1Uri);
+    logger.info(executionDoc.toString());
+    assertEquals("test-state-machine", executionDoc.getStateMachineName());
+    assertEquals("working", executionDoc.getStateMachineStatus());
+    assertEquals("add-collection-1", executionDoc.getStateMachineState());
 
-    jobDoc = getJobDocument(job2Uri);
-    logger.info(jobDoc.toString());
-    assertEquals("test-flow", jobDoc.getFlowName());
-    assertEquals("working", jobDoc.getFlowStatus());
-    assertEquals("add-collection-1", jobDoc.getFlowState());
+    executionDoc = getExecutionDocument(execution2Uri);
+    logger.info(executionDoc.toString());
+    assertEquals("test-state-machine", executionDoc.getStateMachineName());
+    assertEquals("working", executionDoc.getStateMachineStatus());
+    assertEquals("add-collection-1", executionDoc.getStateMachineState());
 
-    jobDoc = getJobDocument(job3Uri);
-    logger.info(jobDoc.toString());
+    executionDoc = getExecutionDocument(execution3Uri);
+    logger.info(executionDoc.toString());
     getContentManager().readMetadata(data2Uri, meta);
-    assertEquals("test-flow", jobDoc.getFlowName());
-    assertEquals("working", jobDoc.getFlowStatus());
-    assertEquals("add-collection-2", jobDoc.getFlowState());
+    assertEquals("test-state-machine", executionDoc.getStateMachineName());
+    assertEquals("working", executionDoc.getStateMachineStatus());
+    assertEquals("add-collection-2", executionDoc.getStateMachineState());
     assertEquals(true, meta.getCollections().contains("testcol1"));
 
-    jobDoc = getJobDocument(badJob1Uri);
-    logger.info(jobDoc.toString());
-    assertEquals("missing-flow", jobDoc.getFlowName());
-    assertEquals("failed", jobDoc.getFlowStatus());
+    executionDoc = getExecutionDocument(badExecution1Uri);
+    logger.info(executionDoc.toString());
+    assertEquals("missing-state-machine", executionDoc.getStateMachineName());
+    assertEquals("failed", executionDoc.getStateMachineStatus());
 
-    assertEquals(job1Uri, resp.get(0).get("job").asText());
+    assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
-    assertEquals(job2Uri, resp.get(1).get("job").asText());
+    assertEquals(execution2Uri, resp.get(1).get("execution").asText());
     assertEquals(true, resp.get(1).get("result").asBoolean());
-    assertEquals(badJob1Uri, resp.get(2).get("job").asText());
+    assertEquals(badExecution1Uri, resp.get(2).get("execution").asText());
     assertEquals(true, resp.get(2).get("result").asBoolean());
-    assertEquals(job3Uri, resp.get(3).get("job").asText());
+    assertEquals(execution3Uri, resp.get(3).get("execution").asText());
     assertEquals(true, resp.get(3).get("result").asBoolean());
   }
 
   @Test
-  public void testProcessFailedJob() throws IOException {
-    // this bad job will go into 'failed' the first time through
-    // the second attempt should return 'false' for the failed job
+  public void testProcessFailedExecution() throws IOException {
+    // this bad execution will go into 'failed' the first time through
+    // the second attempt should return 'false' for the failed execution
 
     ArrayNode resp = null;
     Exception errorResp = null;
-    StateConductorJob badJob1Doc;
+    StateConductorExecution badExecution1Doc;
 
     try {
-      resp = service.processJob(Arrays.stream(new String[]{badJob1Uri}));
+      resp = service.processExecution(Arrays.stream(new String[]{badExecution1Uri}));
     } catch (Exception err) {
       errorResp = err;
     }
 
-    badJob1Doc = getJobDocument(badJob1Uri);
-    logger.info(badJob1Doc.toString());
+    badExecution1Doc = getExecutionDocument(badExecution1Uri);
+    logger.info(badExecution1Doc.toString());
 
     assertEquals(null, errorResp);
     assertNotNull(resp);
-    assertEquals(badJob1Uri, resp.get(0).get("job").asText());
+    assertEquals(badExecution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
-    assertEquals("missing-flow", badJob1Doc.getFlowName());
-    assertEquals("failed", badJob1Doc.getFlowStatus());
+    assertEquals("missing-state-machine", badExecution1Doc.getStateMachineName());
+    assertEquals("failed", badExecution1Doc.getStateMachineStatus());
 
     try {
-      resp = service.processJob(Arrays.stream(new String[]{badJob1Uri}));
+      resp = service.processExecution(Arrays.stream(new String[]{badExecution1Uri}));
     } catch (Exception err) {
       errorResp = err;
     }
 
     assertEquals(null, errorResp);
     assertNotNull(resp);
-    assertEquals(badJob1Uri, resp.get(0).get("job").asText());
+    assertEquals(badExecution1Uri, resp.get(0).get("execution").asText());
     assertEquals(false, resp.get(0).get("result").asBoolean());
   }
 
@@ -431,12 +423,11 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   public void testExpectedExceptions() throws IOException {
     ArrayNode resp = null;
     Exception errorResp = null;
-    StateConductorJob badJob1Doc;
 
-    String[] jobs = new String[] {"/not/a/real/job1.json", "/not/a/real/job2.json"};
+    String[] executions = new String[] {"/not/a/real/execution1.json", "/not/a/real/execution2.json"};
 
     try {
-      resp = service.processJob(Arrays.stream(jobs));
+      resp = service.processExecution(Arrays.stream(executions));
     } catch (Exception err) {
       errorResp = err;
     }
@@ -445,10 +436,10 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
     assertEquals(null, errorResp);
     assertNotNull(resp);
-    assertEquals("/not/a/real/job1.json", resp.get(0).get("job").asText());
+    assertEquals("/not/a/real/execution1.json", resp.get(0).get("execution").asText());
     assertEquals(false, resp.get(0).get("result").asBoolean());
     assertNotNull(resp.get(0).get("error").asText());
-    assertEquals("/not/a/real/job2.json", resp.get(1).get("job").asText());
+    assertEquals("/not/a/real/execution2.json", resp.get(1).get("execution").asText());
     assertEquals(false, resp.get(1).get("result").asBoolean());
     assertNotNull(resp.get(1).get("error").asText());
   }

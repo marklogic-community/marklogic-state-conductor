@@ -26,7 +26,7 @@
     },
     "parameters-check": {
       "Type": "Task",
-      "Comment": "initial state of the flow",
+      "Comment": "initial state of the stateMachine",
       "Resource": "/state-conductor/actions/custom/parameters-check.sjs",
       "Parameters": {
         "name": ["David"]

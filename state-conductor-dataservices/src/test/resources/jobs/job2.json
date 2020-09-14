@@ -1,8 +1,8 @@
 {
-  "id": "job2",
-  "flowName": "test-flow",
-  "flowStatus": "new",
-  "flowState": null,
+  "id": "execution2",
+  "name": "test-state-machine",
+  "status": "new",
+  "state": null,
   "uri": "/test/doc2.json",
   "database": "%DATABASE%",
   "modules": "%MODULES%",

@@ -1,8 +1,8 @@
 {
-  "id": "job4",
-  "flowName": "test-flow",
-  "flowStatus": "complete",
-  "flowState": "success",
+  "id": "execution4",
+  "name": "test-state-machine",
+  "status": "complete",
+  "state": "success",
   "uri": "/test/doc2.json",
   "database": "%DATABASE%",
   "modules": "%MODULES%",

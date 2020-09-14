@@ -14,7 +14,7 @@
     "log-message": {
       "Type": "Task",
       "Comment": "announces the time",
-      "Resource": "/ext/state-conductor/periodic-flow/town-crier.sjs",
+      "Resource": "/ext/state-conductor/periodic-state-machine/town-crier.sjs",
       "Next": "success"
     },
     "success": {

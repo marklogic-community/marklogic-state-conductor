@@ -16,7 +16,7 @@
   "States": {
     "set-prop1": {
       "Type": "Task",
-      "Comment": "initial state of the flow",
+      "Comment": "initial state of the stateMachine",
       "Resource": "/state-conductor/actions/custom/set-prop1.sjs",
       "Next": "set-prop2"
     },

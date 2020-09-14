@@ -1,5 +1,5 @@
 {
-  "Comment": "bad flow file that references a non-existent module",
+  "Comment": "bad stateMachine file that references a non-existent module",
   "mlDomain": {
     "context": [
       {
@@ -12,7 +12,7 @@
   "States": {
     "set-prop1": {
       "Type": "Task",
-      "Comment": "initial state of the flow",
+      "Comment": "initial state of the stateMachine",
       "Resource": "/state-conductor/actions/custom/missing-modules.sjs",
       "End": true
     },

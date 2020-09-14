@@ -1,5 +1,5 @@
 {
-  "database-name": "state-conductor-jobs",
+  "database-name": "state-conductor-executions",
   "maintain-last-modified": true,
   "range-element-index": [
     {

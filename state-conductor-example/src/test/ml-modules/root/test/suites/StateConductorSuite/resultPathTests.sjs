@@ -4,7 +4,7 @@ const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 const assertions = [];
-let jobDoc, resp, colls;
+let executionDoc, resp, colls;
 
 let uri = '/data/test-doc1.json';
 
@@ -24,18 +24,18 @@ function isolate(func) {
 }
 
 // test filtering output by OutputPath
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
-  flowName: 'ref-path-flow',
-  flowStatus: 'working',
-  flowState: 'test-data',
+  name: 'ref-path-state-machine',
+  status: 'working',
+  status: 'test-data',
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
   provenance: [],
 });
 
-resp = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
+resp = isolate(() => sc.executeStateByExecutionDoc(executionDoc, false));
 colls = isolate(() => xdmp.documentGetCollections(uri));
 
 assertions.push(
@@ -48,34 +48,34 @@ assertions.push(
     resp.context.test,
     'context was filtered by OutputPath'
   ),
-  test.assertEqual('add-collections', resp.flowState),
+  test.assertEqual('add-collections', resp.status),
   test.assertFalse(colls.includes('test-col-1'), 'doc does not yet have collection')
 );
 
 // test filtering Parameters and output by OutputPath
-resp = isolate(() => sc.executeStateByJobDoc(xdmp.toJSON(resp), false));
+resp = isolate(() => sc.executeStateByExecutionDoc(xdmp.toJSON(resp), false));
 colls = isolate(() => xdmp.documentGetCollections(uri));
 
 assertions.push(
   test.assertTrue(resp.context !== null, 'context was set'),
   test.assertEqual('testing, testing, 1-2-3', resp.context, 'context was filtered by OutputPath'),
-  test.assertEqual('success', resp.flowState),
+  test.assertEqual('success', resp.status),
   test.assertTrue(colls.includes('test-col-1'), 'doc had collection applied using params')
 );
 
 // test root level OutputPath
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
-  flowName: 'ref-path-flow',
-  flowStatus: 'working',
-  flowState: 'test-data2',
+  name: 'ref-path-state-machine',
+  status: 'working',
+  status: 'test-data2',
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
   provenance: [],
 });
 
-resp = sc.executeStateByJobDoc(jobDoc, false);
+resp = sc.executeStateByExecutionDoc(executionDoc, false);
 
 assertions.push(
   test.assertTrue(resp.context !== null, 'context was set'),
@@ -84,34 +84,34 @@ assertions.push(
     JSON.stringify(resp.context),
     'context was returned at root level'
   ),
-  test.assertEqual('success', resp.flowState)
+  test.assertEqual('success', resp.status)
 );
 
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
-  flowName: 'ref-path-flow',
-  flowStatus: 'working',
-  flowState: 'test-data3',
+  name: 'ref-path-state-machine',
+  status: 'working',
+  status: 'test-data3',
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
   provenance: [],
 });
 
-resp = sc.executeStateByJobDoc(jobDoc, false);
+resp = sc.executeStateByExecutionDoc(executionDoc, false);
 
 assertions.push(
   test.assertTrue(resp.context !== null, 'context was set'),
   test.assertEqual('foo', resp.context, 'context was returned at root level'),
-  test.assertEqual('success', resp.flowState)
+  test.assertEqual('success', resp.status)
 );
 
 // test InputPath filtering
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
-  flowName: 'ref-path-flow',
-  flowStatus: 'working',
-  flowState: 'add-collections2',
+  name: 'ref-path-state-machine',
+  status: 'working',
+  status: 'add-collections2',
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -131,7 +131,7 @@ jobDoc = xdmp.toJSON({
 colls = isolate(() => xdmp.documentGetCollections(uri));
 assertions.push(test.assertFalse(colls.includes('test-col-2'), 'doc does not yet have collection'));
 
-resp = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
+resp = isolate(() => sc.executeStateByExecutionDoc(executionDoc, false));
 colls = isolate(() => xdmp.documentGetCollections(uri));
 
 xdmp.log(resp);
@@ -141,7 +141,7 @@ assertions.push(
   test.assertTrue(resp.context !== null, 'context was set'),
   test.assertTrue(colls.includes('test-col-2'), 'doc had collection applied using params'),
   test.assertEqual('hello world', resp.context, 'context was filtered by OutputPath'),
-  test.assertEqual('success', resp.flowState)
+  test.assertEqual('success', resp.status)
 );
 
 // return

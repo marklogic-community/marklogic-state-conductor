@@ -1,5 +1,5 @@
 {
-  "Comment": "a flow for unit testing",
+  "Comment": "a stateMachine for unit testing",
   "mlDomain": {
     "context": [
       {

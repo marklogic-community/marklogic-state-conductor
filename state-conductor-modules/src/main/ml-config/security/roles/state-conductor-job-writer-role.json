@@ -1,6 +1,6 @@
 {
-  "role-name": "state-conductor-job-writer-role",
-  "description": "Permits reading flow documents and knowing flow status",
+  "role-name": "state-conductor-execution-writer-role",
+  "description": "Permits reading stateMachine documents and knowing stateMachine status",
   "role": [
     "state-conductor-reader-role"
   ],
@@ -11,7 +11,7 @@
       "kind": "execute"
     },
     {
-      "privilege-name": "state-conductor-job",
+      "privilege-name": "state-conductor-execution",
       "action": "/state-conductor/",
       "kind": "uri"
     }

@@ -38,21 +38,21 @@ function main(content, options) {
   let context = content.context;
 
   //let's set our output format, so we know what we're exporting
-  let outputFormat = options.outputFormat ? options.outputFormat.toLowerCase() : datahub.flow.consts.DEFAULT_FORMAT;
+  let outputFormat = options.outputFormat ? options.outputFormat.toLowerCase() : datahub.stateMachine.consts.DEFAULT_FORMAT;
 
   //here we check to make sure we're not trying to push out a binary or text document, just xml or json
-  if (outputFormat !== datahub.flow.consts.JSON && outputFormat !== datahub.flow.consts.XML) {
+  if (outputFormat !== datahub.stateMachine.consts.JSON && outputFormat !== datahub.stateMachine.consts.XML) {
     datahub.debug.log({
-      message: 'The output format of type ' + outputFormat + ' is invalid. Valid options are ' + datahub.flow.consts.XML + ' or ' + datahub.flow.consts.JSON + '.',
+      message: 'The output format of type ' + outputFormat + ' is invalid. Valid options are ' + datahub.stateMachine.consts.XML + ' or ' + datahub.stateMachine.consts.JSON + '.',
       type: 'error'
     });
-    throw Error('The output format of type ' + outputFormat + ' is invalid. Valid options are ' + datahub.flow.consts.XML + ' or ' + datahub.flow.consts.JSON + '.');
+    throw Error('The output format of type ' + outputFormat + ' is invalid. Valid options are ' + datahub.stateMachine.consts.XML + ' or ' + datahub.stateMachine.consts.JSON + '.');
   }
 
   /*
   This scaffolding assumes we obtained the document from the database. If you are inserting information, you will
   have to map data from the content.value appropriately and create an instance (object), headers (object), and triples
-  (array) instead of using the flowUtils functions to grab them from a document that was pulled from MarkLogic.
+  (array) instead of using the stateMachineUtils functions to grab them from a document that was pulled from MarkLogic.
   Also you do not have to check if the document exists as in the code below.
 
   Example code for using data that was sent to MarkLogic server for the document
@@ -77,13 +77,13 @@ function main(content, options) {
   }
 
   //get our instance, default shape of envelope is envelope/instance, else it'll return an empty object/array
-  let instance = datahub.flow.flowUtils.getInstanceAsObject(doc) || {};
+  let instance = datahub.stateMachine.stateMachineUtils.getInstanceAsObject(doc) || {};
 
   // get triples, return null if empty or cannot be found
-  let triples = datahub.flow.flowUtils.getTriplesAsObject(doc) || [];
+  let triples = datahub.stateMachine.stateMachineUtils.getTriplesAsObject(doc) || [];
 
   //gets headers, return null if cannot be found
-  let headers = datahub.flow.flowUtils.getHeadersAsObject(doc) || {};
+  let headers = datahub.stateMachine.stateMachineUtils.getHeadersAsObject(doc) || {};
 
   //If you want to set attachments, uncomment here
   // instance['$attachments'] = doc;
@@ -103,11 +103,11 @@ function main(content, options) {
 
 
   //form our envelope here now, specifying our output format
-  let envelope = datahub.flow.flowUtils.makeEnvelope(instance, headers, triples, outputFormat);
+  let envelope = datahub.stateMachine.stateMachineUtils.makeEnvelope(instance, headers, triples, outputFormat);
 
   //create our return content object, we have a handy helper function for creating a json scaffolding, but you
   //can also do a node-based one by using nodebuilder, especially if you're dealing with xml!
-  let newContent = datahub.flow.flowUtils.createContentAsObject();
+  let newContent = datahub.stateMachine.stateMachineUtils.createContentAsObject();
 
   //assign our envelope value
   newContent.value = envelope;

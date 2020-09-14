@@ -1,8 +1,8 @@
 {
   "id": "badJob1",
-  "flowName": "missing-flow",
-  "flowStatus": "new",
-  "flowState": null,
+  "name": "missing-state-machine",
+  "status": "new",
+  "state": null,
   "uri": "/test/doc1.json",
   "database": "%DATABASE%",
   "modules": "%MODULES%",

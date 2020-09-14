@@ -5,27 +5,27 @@ const lib = require('/state-conductor/state-conductor-lib.sjs');
 const configuration = lib.getConfiguration();
 
 // configurable //
-const STATE_CONDUCTOR_JOBS_DB = configuration.databases.jobs;
+const STATE_CONDUCTOR_EXECUTIONS_DB = configuration.databases.executions;
 const STATE_CONDUCTOR_TRIGGERS_DB = configuration.databases.triggers;
 const STATE_CONDUCTOR_SCHEMAS_DB = configuration.databases.schemas;
-const FLOW_ITEM_COLLECTION = configuration.collections.item;
-const JOB_COLLECTION = configuration.collections.job;
-const FLOW_COLLECTION = configuration.collections.flow;
-const FLOW_DIRECTORY = configuration.URIPrefixes.flow;
-const JOB_DIRECTORY = configuration.URIPrefixes.job;
+const STATE_MACHINE_ITEM_COLLECTION = configuration.collections.item;
+const EXECUTION_COLLECTION = configuration.collections.execution;
+const STATE_MACHINE_COLLECTION = configuration.collections.stateMachine;
+const STATE_MACHINE_DIRECTORY = configuration.URIPrefixes.stateMachine;
+const EXECUTION_DIRECTORY = configuration.URIPrefixes.execution;
 
 // non-configurable //
-const JOB_DOC_READ_PERMISSION = 'state-conductor-reader-role';
-const JOB_DOC_WRITE_PERMISSION = 'state-conductor-job-writer-role';
+const EXECUTION_DOC_READ_PERMISSION = 'state-conductor-reader-role';
+const EXECUTION_DOC_WRITE_PERMISSION = 'state-conductor-execution-writer-role';
 const TRACE_EVENT = 'state-conductor';
-const FLOW_FILE_EXTENSION = '.asl.json';
-const FLOW_JOBID_PROP_NAME = 'state-conductor-job';
-const FLOW_STATUS_NEW = 'new';
-const FLOW_STATUS_WORKING = 'working';
-const FLOW_STATUS_WAITING = 'waiting';
-const FLOW_STATUS_COMPLETE = 'complete';
-const FLOW_STATUS_FAILED = 'failed';
-const FLOW_NEW_STEP = 'NEW';
+const STATE_MACHINE_FILE_EXTENSION = '.asl.json';
+const STATE_MACHINE_EXECUTIONID_PROP_NAME = 'state-conductor-execution';
+const STATE_MACHINE_STATUS_NEW = 'new';
+const STATE_MACHINE_STATUS_WORKING = 'working';
+const STATE_MACHINE_STATUS_WAITING = 'waiting';
+const STATE_MACHINE_STATUS_COMPLETE = 'complete';
+const STATE_MACHINE_STATUS_FAILED = 'failed';
+const STATE_MACHINE_NEW_STEP = 'NEW';
 const DATE_TIME_REGEX =
   '^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((1[6789]|[2-9][0-9])[0-9]{2}-(0[469]|11)-(0[1-9]|[12][0-9]|30))T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?((16|[248][048]|[3579][26])00)|(1[6789]|[2-9][0-9])(0[48]|[13579][26]|[2468][048])-02-(0[1-9]|1[0-9]|2[0-9])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$|^[-]?(1[6789]|[2-9][0-9])[0-9]{2}-02-(0[1-9]|1[0-9]|2[0-8])T([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])([Z]|.[0-9]{4}|[-|+]([0-1][0-9]|2[0-3]):([0-5][0-9]))?$';
 
@@ -52,7 +52,7 @@ const parseSerializedQuery = (serializedQuery) => {
 
 /**
  * This function should be called when ever we are
- * invoking for the jobs/content database.
+ * invoking for the executions/content database.
  * Since now its possible that they are
  * already with in that database
  * @param {*} name
@@ -82,18 +82,18 @@ function invokeOrApplyFunction(functionIn, optionsIn) {
 }
 
 /**
- * Gets a flow definition by flowName
+ * Gets a stateMachine definition by stateMachineName
  *
  * @param {*} name
- * @returns the flow document or null if not found
+ * @returns the stateMachine document or null if not found
  */
-function getFlowDocument(name) {
-  let nameWithExtension = fn.normalizeSpace(name) + FLOW_FILE_EXTENSION;
+function getStateMachineDocument(name) {
+  let nameWithExtension = fn.normalizeSpace(name) + STATE_MACHINE_FILE_EXTENSION;
   const uri = fn.head(
     cts.uriMatch(
       '*' + nameWithExtension,
       ['document', 'case-sensitive'],
-      cts.collectionQuery(FLOW_COLLECTION)
+      cts.collectionQuery(STATE_MACHINE_COLLECTION)
     )
   );
 
@@ -101,21 +101,21 @@ function getFlowDocument(name) {
 }
 
 /**
- * Gets a flow definition by flowName from the given database.
+ * Gets a stateMachine definition by stateMachineName from the given database.
  * Throws an error if not found
  *
  * @param {*} name
  * @param {*} databaseId
  * @returns
  */
-function getFlowDocumentFromDatabase(name, databaseId) {
+function getStateMachineDocumentFromDatabase(name, databaseId) {
   let resp = invokeOrApplyFunction(
     () => {
-      let flow = getFlowDocument(name);
-      if (!flow) {
-        fn.error(null, 'MISSING-FLOW-FILE', `Cannot find a a flow file with the name: ${name}`);
+      let stateMachine = getStateMachineDocument(name);
+      if (!stateMachine) {
+        fn.error(null, 'MISSING-STATE_MACHINE-FILE', `Cannot find a a stateMachine file with the name: ${name}`);
       }
-      return flow;
+      return stateMachine;
     },
     {
       database: databaseId,
@@ -125,108 +125,108 @@ function getFlowDocumentFromDatabase(name, databaseId) {
 }
 
 /**
- * Gets all flow definition documents
+ * Gets all stateMachine definition documents
  *
  * @returns
  */
-function getFlowDocuments() {
-  return fn.collection(FLOW_COLLECTION);
+function getStateMachineDocuments() {
+  return fn.collection(STATE_MACHINE_COLLECTION);
 }
 
 /**
- * Gets all flow definition names
+ * Gets all stateMachine definition names
  *
  * @returns
  */
-function getFlowNames() {
+function getStateMachineNames() {
   return cts
-    .uris('/', ['document'], cts.collectionQuery(FLOW_COLLECTION))
+    .uris('/', ['document'], cts.collectionQuery(STATE_MACHINE_COLLECTION))
     .toArray()
-    .map((uri) => getFlowNameFromUri(uri));
+    .map((uri) => getStateMachineNameFromUri(uri));
 }
 
 /**
- * Given a flow definition URI, determine it's flow name
+ * Given a stateMachine definition URI, determine it's stateMachine name
  *
  * @param {*} uri
  * @returns
  */
-function getFlowNameFromUri(uri) {
+function getStateMachineNameFromUri(uri) {
   uri = uri.toString();
   uri = uri.slice(uri.lastIndexOf('/') + 1);
-  return uri.lastIndexOf(FLOW_FILE_EXTENSION) !== -1
-    ? uri.slice(0, uri.lastIndexOf(FLOW_FILE_EXTENSION))
+  return uri.lastIndexOf(STATE_MACHINE_FILE_EXTENSION) !== -1
+    ? uri.slice(0, uri.lastIndexOf(STATE_MACHINE_FILE_EXTENSION))
     : uri;
 }
 
 /**
  * Returns the initial state for the given state machine definition
  *
- * @param {*} { flowName, StartAt }
+ * @param {*} { stateMachineName, StartAt }
  * @returns
  */
-function getInitialState({ flowName, StartAt }) {
+function getInitialState({ stateMachineName, StartAt }) {
   if (!StartAt || StartAt.length === 0) {
     fn.error(
       null,
       'INVALID-STATE-DEFINITION',
-      `no "StartAt" defined for state machine "${flowName}"`
+      `no "StartAt" defined for state machine "${stateMachineName}"`
     );
   }
   return StartAt;
 }
 
 /**
- * Gets the value of the property which links a document to a State Conductor job
+ * Gets the value of the property which links a document to a State Conductor execution
  *
  * @param {*} uri
- * @param {*} flowName
+ * @param {*} stateMachineName
  * @returns
  */
-function getJobMetadatProperty(uri, flowName) {
+function getExecutionMetadataProperty(uri, stateMachineName) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   if (fn.docAvailable(uri)) {
     return xdmp
-      .documentGetProperties(uri, fn.QName('', FLOW_JOBID_PROP_NAME))
+      .documentGetProperties(uri, fn.QName('', STATE_MACHINE_EXECUTIONID_PROP_NAME))
       .toArray()
-      .filter((prop) => prop.getAttributeNode('flow-name').nodeValue === flowName);
+      .filter((prop) => prop.getAttributeNode('stateMachine-name').nodeValue === stateMachineName);
   }
 }
 
 /**
- * Links the given document to a state conductor job
+ * Links the given document to a state conductor execution
  *
  * @param {*} uri
- * @param {*} flowName
- * @param {*} jobId
+ * @param {*} stateMachineName
+ * @param {*} executionId
  */
-function addJobMetadata(uri, flowName, jobId) {
+function addExecutionMetadata(uri, stateMachineName, executionId) {
   const builder = new NodeBuilder();
-  builder.startElement(FLOW_JOBID_PROP_NAME);
-  builder.addAttribute('flow-name', flowName);
-  builder.addAttribute('job-id', jobId);
+  builder.startElement(STATE_MACHINE_EXECUTIONID_PROP_NAME);
+  builder.addAttribute('stateMachine-name', stateMachineName);
+  builder.addAttribute('execution-id', executionId);
   builder.addAttribute('date', new Date().toISOString());
   builder.endElement();
-  let jobMetaElem = builder.toNode();
-  xdmp.documentAddProperties(uri, [jobMetaElem]);
+  let executionMetaElem = builder.toNode();
+  xdmp.documentAddProperties(uri, [executionMetaElem]);
 }
 
-function getJobIds(uri, flowName) {
+function getExecutionIds(uri, stateMachineName) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
-  const jobProps = getJobMetadatProperty(uri, flowName);
-  return jobProps.map((prop) => prop.getAttributeNode('job-id').nodeValue);
+  const executionProps = getExecutionMetadataProperty(uri, stateMachineName);
+  return executionProps.map((prop) => prop.getAttributeNode('execution-id').nodeValue);
 }
 
 /**
- * Determines if the given document matches the given flow's context
+ * Determines if the given document matches the given stateMachine's context
  *
  * @param {*} uri
- * @param {*} flow
+ * @param {*} stateMachine
  * @returns
  */
-function checkFlowContext(uri, flow) {
+function checkStateMachineContext(uri, stateMachine) {
   if (fn.docAvailable(uri)) {
-    const query = getFlowContextQuery(flow);
+    const query = getStateMachineContextQuery(stateMachine);
     const uris = cts.uris('', 'limit=1', cts.andQuery([cts.documentQuery(uri), query]));
     return uri === fn.string(fn.head(uris));
   }
@@ -235,32 +235,32 @@ function checkFlowContext(uri, flow) {
 }
 
 /**
- * Given a document's uri, finds all the flows whose context applies,
+ * Given a document's uri, finds all the stateMachines whose context applies,
  * and which have not previously processed this document.
  *
  * @param {*} uri
  * @returns
  */
-function getApplicableFlows(uri) {
-  const flows = getFlowDocuments()
+function getApplicableStateMachines(uri) {
+  const stateMachines = getStateMachineDocuments()
     .toArray()
-    .filter((flow) => {
-      let flowName = getFlowNameFromUri(fn.documentUri(flow));
-      let flowOjb = flow.toObject();
-      return getJobIds(uri, flowName).length === 0 && checkFlowContext(uri, flowOjb);
+    .filter((stateMachine) => {
+      let stateMachineName = getStateMachineNameFromUri(fn.documentUri(stateMachine));
+      let stateMachineOjb = stateMachine.toObject();
+      return getExecutionIds(uri, stateMachineName).length === 0 && checkStateMachineContext(uri, stateMachineOjb);
     });
 
-  return flows;
+  return stateMachines;
 }
 
 /**
- * Given a flow, generate a cts query for it's context
+ * Given a stateMachine, generate a cts query for it's context
  *
- * @param {*} flow
+ * @param {*} stateMachine
  * @returns
  */
-function getFlowContextQuery(flow) {
-  const domain = flow.mlDomain;
+function getStateMachineContextQuery(stateMachine) {
+  const domain = stateMachine.mlDomain;
   const context = domain.context || [];
   let queries = context.map((ctx) => {
     if (ctx.scope === 'collection') {
@@ -285,14 +285,14 @@ function getFlowContextQuery(flow) {
 }
 
 /**
- * Generate a cts query matching the context of all flows
+ * Generate a cts query matching the context of all stateMachines
  *
  * @returns
  */
-function getAllFlowsContextQuery() {
-  let queries = getFlowDocuments()
+function getAllStateMachinesContextQuery() {
+  let queries = getStateMachineDocuments()
     .toArray()
-    .map((flow) => getFlowContextQuery(flow.toObject()));
+    .map((stateMachine) => getStateMachineContextQuery(stateMachine.toObject()));
 
   if (queries.length === 0) {
     queries = cts.falseQuery();
@@ -306,306 +306,306 @@ function getAllFlowsContextQuery() {
 }
 
 /**
- * Main unit of processing for a job document.  Performs state actions and transitions to next state.
+ * Main unit of processing for a execution document.  Performs state actions and transitions to next state.
  *
- * @param {*} uri - the uri of the job document
- * @returns (boolean) indicates if processing of the job document should continue
+ * @param {*} uri - the uri of the execution document
+ * @returns (boolean) indicates if processing of the execution document should continue
  */
-function processJob(uri) {
+function processExecution(uri) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
-  xdmp.trace(TRACE_EVENT, `state-conductor job processing for job document "${uri}"`);
+  xdmp.trace(TRACE_EVENT, `state-conductor execution processing for execution document "${uri}"`);
 
   // sanity check
   if (!fn.docAvailable(uri)) {
-    fn.error(null, 'INVALID-JOB-DOCUMENT', `State Conductor job document "${uri}" not found!`);
+    fn.error(null, 'INVALID-EXECUTION-DOCUMENT', `State Conductor execution document "${uri}" not found!`);
   }
-  const jobDoc = cts.doc(uri);
-  const job = jobDoc.toObject();
-  const status = job.flowStatus;
+  const executionDoc = cts.doc(uri);
+  const execution = executionDoc.toObject();
+  const status = execution.stateMachineStatus;
 
-  // check the flow state
-  if (FLOW_STATUS_WORKING === status) {
+  // check the stateMachine state
+  if (STATE_MACHINE_STATUS_WORKING === status) {
     // execute state actions and transition to next state
-    executeStateByJobDoc(jobDoc);
+    executeStateByExecutionDoc(executionDoc);
     // continue processing
     return true;
-  } else if (FLOW_STATUS_WAITING === status) {
+  } else if (STATE_MACHINE_STATUS_WAITING === status) {
     // execute resume
-    resumeWaitingJobByJobDoc(jobDoc, 'processJob');
+    resumeWaitingExecutionByExecutionDoc(executionDoc, 'processExecution');
     // continue processing
     return true;
-  } else if (FLOW_STATUS_NEW === status) {
-    // job document is not being processed, grab the embedded flow, and start the initial state
-    // begin the flow processing
-    startProcessingFlowByJobDoc(jobDoc);
+  } else if (STATE_MACHINE_STATUS_NEW === status) {
+    // execution document is not being processed, grab the embedded stateMachine, and start the initial state
+    // begin the stateMachine processing
+    startProcessingStateMachineByExecutionDoc(executionDoc);
     // continue processing
     return true;
   } else {
-    // we're done processing the flow
-    xdmp.trace(TRACE_EVENT, `state-conductor flow completed for job document "${uri}"`);
+    // we're done processing the stateMachine
+    xdmp.trace(TRACE_EVENT, `state-conductor stateMachine completed for execution document "${uri}"`);
     // end processing
     return false;
   }
 }
 
-function startProcessingFlowByJobDoc(jobDoc, save = true) {
+function startProcessingStateMachineByExecutionDoc(executionDoc, save = true) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
-  const jobObj = scaffoldJobDoc(jobDoc.toObject());
-  const currFlowName = jobObj.flowName;
-  const status = jobObj.flowStatus;
+  const executionObj = scaffoldExecutionDoc(executionDoc.toObject());
+  const currStateMachineName = executionObj.stateMachineName;
+  const status = executionObj.stateMachineStatus;
 
   // sanity check
-  if (FLOW_STATUS_NEW !== status) {
+  if (STATE_MACHINE_STATUS_NEW !== status) {
     xdmp.trace(
       TRACE_EVENT,
-      `INVALID-FLOW-STATUS: Cannot start a flow that is not in the ${FLOW_STATUS_NEW} status`
+      `INVALID-STATE_MACHINE-STATUS: Cannot start a stateMachine that is not in the ${STATE_MACHINE_STATUS_NEW} status`
     );
-    fn.error(null, 'INVALID-FLOW-STATUS', 'Cannot start a flow not in the NEW status');
+    fn.error(null, 'INVALID-STATE_MACHINE-STATUS', 'Cannot start a stateMachine not in the NEW status');
   }
 
   try {
-    // grab the flow definition from the correct db
-    const currFlow = getFlowDocumentFromDatabase(currFlowName, jobObj.database).toObject();
-    currFlow.flowName = jobObj.flowName;
-    let initialState = getInitialState(currFlow);
+    // grab the stateMachine definition from the correct db
+    const currStateMachine = getStateMachineDocumentFromDatabase(currStateMachineName, executionObj.database).toObject();
+    currStateMachine.stateMachineName = executionObj.stateMachineName;
+    let initialState = getInitialState(currStateMachine);
 
-    // update job state, status, and provenence
-    jobObj.flowStatus = FLOW_STATUS_WORKING;
-    jobObj.flowState = initialState;
+    // update execution state, status, and provenence
+    executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
+    executionObj.stateMachineState = initialState;
 
     xdmp.trace(
       TRACE_EVENT,
-      `adding document to flow: "${currFlowName}" in state: "${initialState}"`
+      `adding document to stateMachine: "${currStateMachineName}" in state: "${initialState}"`
     );
 
-    jobObj.provenance.push({
+    executionObj.provenance.push({
       date: new Date().toISOString(),
-      from: FLOW_NEW_STEP,
+      from: STATE_MACHINE_NEW_STEP,
       to: initialState,
       executionTime: xdmp.elapsedTime(),
     });
 
     if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
+      xdmp.nodeReplace(executionDoc.root, executionObj);
     }
   } catch (err) {
     return handleError(
       err.name,
-      `startProcessingFlowByJobDoc error for flow "${currFlowName}"`,
+      `startProcessingStateMachineByExecutionDoc error for stateMachine "${currStateMachineName}"`,
       err,
-      jobDoc,
-      jobObj,
+      executionDoc,
+      executionObj,
       save
     );
   }
-  return jobObj;
+  return executionObj;
 }
 
 /**
  * Performs the actions and transitions for a state.
  *
- * @param {*} uri - the job document's uri
+ * @param {*} uri - the execution document's uri
  */
-function resumeWaitingJob(uri, resumeBy = 'unspecified', save = true) {
+function resumeWaitingExecution(uri, resumeBy = 'unspecified', save = true) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
   // checks if document is there
   if (!fn.docAvailable(uri)) {
-    fn.error(null, 'INVALID-JOB-DOCUMENT', `Document Job "${uri}" not found."`);
+    fn.error(null, 'INVALID-EXECUTION-DOCUMENT', `Document Execution "${uri}" not found."`);
   }
 
-  const jobDoc = cts.doc(uri);
-  resumeWaitingJobByJobDoc(jobDoc, resumeBy, save);
+  const executionDoc = cts.doc(uri);
+  resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save);
 }
 
-function resumeWaitingJobByJobDoc(jobDoc, resumeBy, save = true) {
+function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = true) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
-  const uri = xdmp.nodeUri(jobDoc);
-  const jobObj = scaffoldJobDoc(jobDoc.toObject());
-  const flowName = jobObj.flowName;
-  const stateName = jobObj.flowState;
-  const flowStatus = jobObj.flowStatus;
+  const uri = xdmp.nodeUri(executionDoc);
+  const executionObj = scaffoldExecutionDoc(executionDoc.toObject());
+  const stateMachineName = executionObj.stateMachineName;
+  const stateName = executionObj.stateMachineState;
+  const stateMachineStatus = executionObj.stateMachineStatus;
   let state;
-  let flowObj;
+  let stateMachineObj;
 
-  xdmp.trace(TRACE_EVENT, `resumeWaitingJob uri "${uri}"`);
-  xdmp.trace(TRACE_EVENT, `resumeWaitingJob flow "${flowName}"`);
-  xdmp.trace(TRACE_EVENT, `resumeWaitingJob flow state "${stateName}"`);
+  xdmp.trace(TRACE_EVENT, `resumeWaitingExecution uri "${uri}"`);
+  xdmp.trace(TRACE_EVENT, `resumeWaitingExecution stateMachine "${stateMachineName}"`);
+  xdmp.trace(TRACE_EVENT, `resumeWaitingExecution stateMachine state "${stateName}"`);
 
   // sanity check
-  if (FLOW_STATUS_WAITING !== flowStatus) {
+  if (STATE_MACHINE_STATUS_WAITING !== stateMachineStatus) {
     xdmp.trace(
       TRACE_EVENT,
-      `INVALID-FLOW-STATUS: Cannot resume a flow that is not in the ${FLOW_STATUS_WAITING} status`
+      `INVALID-STATE_MACHINE-STATUS: Cannot resume a stateMachine that is not in the ${STATE_MACHINE_STATUS_WAITING} status`
     );
     return fn.error(
       null,
-      'INVALID-FLOW-STATUS',
-      'Cannot resume a flow that is not in the ' + FLOW_STATUS_WAITING + ' status'
+      'INVALID-STATE_MACHINE-STATUS',
+      'Cannot resume a stateMachine that is not in the ' + STATE_MACHINE_STATUS_WAITING + ' status'
     );
   }
 
-  // wait state check for processJob event
-  if (resumeBy === 'processJob' && jobObj.currentlyWaiting.hasOwnProperty('event')) {
+  // wait state check for processExecution event
+  if (resumeBy === 'processExecution' && executionObj.currentlyWaiting.hasOwnProperty('event')) {
     xdmp.trace(
       TRACE_EVENT,
-      `INVALID-CurrentlyWaiting: Cannot resume a flow that is an event by processJob for uri: "${uri}"`
+      `INVALID-CurrentlyWaiting: Cannot resume a stateMachine that is an event by processExecution for uri: "${uri}"`
     );
 
     return fn.error(
       null,
       'INVALID-CurrentlyWaiting',
-      `Cannot resume a flow that is an event by processJob for uri: "${uri}"`
+      `Cannot resume a stateMachine that is an event by processExecution for uri: "${uri}"`
     );
   }
 
   // check if current time is greater than nextTaskTime
   if (
-    jobObj.currentlyWaiting.hasOwnProperty('nextTaskTime') &&
-    xs.dateTime(jobObj.currentlyWaiting.nextTaskTime) > fn.currentDateTime() + xdmp.elapsedTime()
+    executionObj.currentlyWaiting.hasOwnProperty('nextTaskTime') &&
+    xs.dateTime(executionObj.currentlyWaiting.nextTaskTime) > fn.currentDateTime() + xdmp.elapsedTime()
   ) {
     xdmp.trace(
       TRACE_EVENT,
-      `INVALID-CurrentlyWaiting: Cannot resume a flow where is wait time has not passed for uri: "${uri}"`
+      `INVALID-CurrentlyWaiting: Cannot resume a stateMachine where is wait time has not passed for uri: "${uri}"`
     );
 
     return fn.error(
       null,
       'INVALID-CurrentlyWaiting',
-      `Cannot resume a flow where is wait time has not passed for uri: "${uri}"`
+      `Cannot resume a stateMachine where is wait time has not passed for uri: "${uri}"`
     );
   }
 
   try {
-    flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
+    stateMachineObj = getStateMachineDocumentFromDatabase(stateMachineName, executionObj.database).toObject();
 
     try {
-      state = flowObj.States[stateName];
+      state = stateMachineObj.States[stateName];
     } catch (e) {
       return fn.error(
         null,
         'INVALID-STATE-DEFINITION',
-        `Can't Find the state "${stateName}" in flow "${flowName}"`
+        `Can't Find the state "${stateName}" in stateMachine "${stateMachineName}"`
       );
     }
   } catch (err) {
     return handleError(
       err.name,
-      `resumeWaitingJobByJobDoc error for flow "${flowName}"`,
+      `resumeWaitingExecutionByExecutionDoc error for stateMachine "${stateMachineName}"`,
       err,
-      jobDoc,
-      jobObj,
+      executionDoc,
+      executionObj,
       save
     );
   }
 
   try {
     //removes old waiting data
-    delete jobObj.currentlyWaiting;
+    delete executionObj.currentlyWaiting;
 
-    jobObj.flowStatus = FLOW_STATUS_WORKING;
-    jobObj.provenance.push({
+    executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
+    executionObj.provenance.push({
       date: new Date().toISOString(),
       state: stateName,
       resumeBy: resumeBy,
       executionTime: xdmp.elapsedTime(),
     });
 
-    return transition(jobDoc, jobObj, stateName, state, flowObj, save);
+    return transition(executionDoc, executionObj, stateName, state, stateMachineObj, save);
   } catch (err) {
-    return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobDoc);
+    return handleStateFailure(uri, stateMachineName, stateMachineObj, stateName, err, save, executionDoc);
   }
 }
 
 /**
  * Performs the actions and transitions for a state.
  *
- * @param {*} uri - the job document's uri
+ * @param {*} uri - the execution document's uri
  */
-function retryJobAtState(uri, stateName = FLOW_NEW_STEP, retriedBy = 'unspecified', save = true) {
+function retryExecutionAtState(uri, stateName = STATE_MACHINE_NEW_STEP, retriedBy = 'unspecified', save = true) {
   // checks if document is there
   if (!fn.docAvailable(uri)) {
-    fn.error(null, 'INVALID-JOB-DOCUMENT', `Document Job "${uri}" not found."`);
+    fn.error(null, 'INVALID-EXECUTION-DOCUMENT', `Document Execution "${uri}" not found."`);
   }
 
-  const jobDoc = cts.doc(uri);
-  retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save);
+  const executionDoc = cts.doc(uri);
+  retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy, save);
 }
 
-function retryJobAtStateByJobDoc(jobDoc, stateName, retriedBy, save = true) {
-  const uri = xdmp.nodeUri(jobDoc);
-  const jobObj = scaffoldJobDoc(jobDoc.toObject());
-  const flowName = jobObj.flowName;
-  const flowStatus = jobObj.flowStatus;
+function retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy, save = true) {
+  const uri = xdmp.nodeUri(executionDoc);
+  const executionObj = scaffoldExecutionDoc(executionDoc.toObject());
+  const stateMachineName = executionObj.stateMachineName;
+  const stateMachineStatus = executionObj.stateMachineStatus;
   let state;
-  let flowObj;
+  let stateMachineObj;
 
-  xdmp.trace(TRACE_EVENT, `retryJobAtStateByJobDoc uri "${uri}"`);
-  xdmp.trace(TRACE_EVENT, `retryJobAtStateByJobDoc flow "${flowName}"`);
-  xdmp.trace(TRACE_EVENT, `retryJobAtStateByJobDoc flow state "${stateName}"`);
+  xdmp.trace(TRACE_EVENT, `retryExecutionAtStateByExecutionDoc uri "${uri}"`);
+  xdmp.trace(TRACE_EVENT, `retryExecutionAtStateByExecutionDoc stateMachine "${stateMachineName}"`);
+  xdmp.trace(TRACE_EVENT, `retryExecutionAtStateByExecutionDoc stateMachine state "${stateName}"`);
 
   // sanity check
-  if (FLOW_STATUS_FAILED !== flowStatus) {
+  if (STATE_MACHINE_STATUS_FAILED !== stateMachineStatus) {
     xdmp.trace(
       TRACE_EVENT,
-      `INVALID-FLOW-STATUS: Cannot retry a flow that is not in the ${FLOW_STATUS_FAILED} status`
+      `INVALID-STATE_MACHINE-STATUS: Cannot retry a stateMachine that is not in the ${STATE_MACHINE_STATUS_FAILED} status`
     );
     return fn.error(
       null,
-      'INVALID-FLOW-STATUS',
-      'Cannot try a flow that is not in the ' + FLOW_STATUS_FAILED + ' status'
+      'INVALID-STATE_MACHINE-STATUS',
+      'Cannot try a stateMachine that is not in the ' + STATE_MACHINE_STATUS_FAILED + ' status'
     );
   }
 
   try {
-    flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
-    state = flowObj.States[stateName];
+    stateMachineObj = getStateMachineDocumentFromDatabase(stateMachineName, executionObj.database).toObject();
+    state = stateMachineObj.States[stateName];
     if (!state) {
       fn.error(
         null,
         'INVALID-STATE-DEFINITION',
-        `Can't Find the state "${stateName}" in flow "${flowName}"`
+        `Can't Find the state "${stateName}" in stateMachine "${stateMachineName}"`
       );
     }
   } catch (err) {
     return handleError(
       err.name,
-      `retryJobAtStateByJobDoc error for flow "${flowName}"`,
+      `retryExecutionAtStateByExecutionDoc error for stateMachine "${stateMachineName}"`,
       err,
-      jobDoc,
-      jobObj,
+      executionDoc,
+      executionObj,
       save
     );
   }
 
   try {
     //removes old waiting data
-    delete jobObj.currentlyWaiting;
+    delete executionObj.currentlyWaiting;
 
-    jobObj.flowStatus = FLOW_STATUS_WORKING;
-    jobObj.provenance.push({
+    executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
+    executionObj.provenance.push({
       date: new Date().toISOString(),
       state: stateName,
       retriedBy: retriedBy,
       executionTime: xdmp.elapsedTime(),
     });
 
-    return transition(jobDoc, jobObj, stateName, state, flowObj, save);
+    return transition(executionDoc, executionObj, stateName, state, stateMachineObj, save);
   } catch (err) {
-    return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
+    return handleStateFailure(uri, stateMachineName, stateMachineObj, stateName, err, save, executionObj);
   }
 }
 
 /**
  * transition to the next state.
  *
- * @param {*} jobDoc - the job document
- * @param {*} jobObj - the job object
- * @param {*} stateName - the name of the state most like coming from flowState
+ * @param {*} executionDoc - the execution document
+ * @param {*} executionObj - the execution object
+ * @param {*} stateName - the name of the state most like coming from stateMachineState
  * @param {*} state - the state object
- * @param {*} flowObj - the flow object
+ * @param {*} stateMachineObj - the stateMachine object
  */
-function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
+function transition(executionDoc, executionObj, stateName, state, stateMachineObj, save = true) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
   try {
@@ -614,23 +614,23 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
 
     xdmp.trace(
       TRACE_EVENT,
-      `executing transitions for state: ${stateName} with status of ${jobObj.flowStatus}`
+      `executing transitions for state: ${stateName} with status of ${executionObj.stateMachineStatus}`
     );
 
-    if (jobObj.flowStatus === FLOW_STATUS_WAITING) {
+    if (executionObj.stateMachineStatus === STATE_MACHINE_STATUS_WAITING) {
       xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
 
-      let pro = JSON.parse(JSON.stringify(jobObj.currentlyWaiting));
+      let pro = JSON.parse(JSON.stringify(executionObj.currentlyWaiting));
       pro['doneNextTaskTime'] = pro['nextTaskTime'];
       delete pro['nextTaskTime'];
 
-      jobObj.provenance.push({
+      executionObj.provenance.push({
         date: new Date().toISOString(),
         state: stateName,
         waiting: pro,
         executionTime: xdmp.elapsedTime(),
       });
-    } else if (!inTerminalState(jobObj, flowObj)) {
+    } else if (!inTerminalState(executionObj, stateMachineObj)) {
       xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
 
       if (STATE_TASK === state.Type.toLowerCase()) {
@@ -648,18 +648,18 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
                   let resp = fn.head(
                     executeConditionModule(
                       choice.Resource,
-                      jobObj.uri,
+                      executionObj.uri,
                       choice.Parameters,
-                      jobObj.context,
+                      executionObj.context,
                       {
-                        database: jobObj.database,
-                        modules: jobObj.modules,
+                        database: executionObj.database,
+                        modules: executionObj.modules,
                       }
                     )
                   );
                   targetState = resp ? choice.Next : null;
                 } else {
-                  let resp = lib.evaluateChoiceRule(choice, jobObj.context);
+                  let resp = lib.evaluateChoiceRule(choice, executionObj.context);
                   targetState = resp ? choice.Next : null;
                 }
               }
@@ -674,13 +674,13 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
           }
         } catch (err) {
           return handleStateFailure(
-            xdmp.nodeUri(jobDoc),
-            flowObj.flowName,
-            flowObj,
+            xdmp.nodeUri(executionDoc),
+            stateMachineObj.stateMachineName,
+            stateMachineObj,
             stateName,
             err,
             save,
-            jobObj
+            executionObj
           );
         }
       } else {
@@ -693,9 +693,9 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
 
       // perform the transition
       if (targetState) {
-        jobObj.flowState = targetState;
+        executionObj.stateMachineState = targetState;
 
-        jobObj.provenance.push({
+        executionObj.provenance.push({
           date: new Date().toISOString(),
           from: stateName,
           to: targetState,
@@ -713,13 +713,13 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
 
       // determine the final status
       if (STATE_FAIL === state.Type.toLowerCase()) {
-        jobObj.flowStatus = FLOW_STATUS_FAILED;
+        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_FAILED;
       } else {
-        jobObj.flowStatus = FLOW_STATUS_COMPLETE;
+        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_COMPLETE;
       }
 
       // terminal states have no "Next" target state
-      jobObj.provenance.push({
+      executionObj.provenance.push({
         date: new Date().toISOString(),
         from: stateName,
         to: 'COMPLETED',
@@ -728,76 +728,76 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     }
 
     //resets the retries since the step has completed succesfully
-    jobObj.retries = {};
+    executionObj.retries = {};
 
-    // update the state status and provenence in the job doc
+    // update the state status and provenence in the execution doc
     if (save) {
-      xdmp.nodeReplace(jobDoc.root, jobObj);
+      xdmp.nodeReplace(executionDoc.root, executionObj);
     }
   } catch (err) {
     return handleError(
       'TRANSITIONERROR',
       `transition error for state "${stateName}"`,
       err,
-      jobDoc,
-      jobObj,
+      executionDoc,
+      executionObj,
       save
     );
   }
 
-  return jobObj;
+  return executionObj;
 }
 
 /**
  * Performs the actions and transitions for a state.
  *
- * @param {*} jobDoc - the job document
+ * @param {*} executionDoc - the execution document
  */
-function executeStateByJobDoc(jobDoc, save = true) {
+function executeStateByExecutionDoc(executionDoc, save = true) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
-  const uri = xdmp.nodeUri(jobDoc);
-  const jobObj = scaffoldJobDoc(jobDoc.toObject());
-  const flowName = jobObj.flowName;
-  const stateName = jobObj.flowState;
+  const uri = xdmp.nodeUri(executionDoc);
+  const executionObj = scaffoldExecutionDoc(executionDoc.toObject());
+  const stateMachineName = executionObj.stateMachineName;
+  const stateName = executionObj.stateMachineState;
 
   let state;
-  let flowObj;
-  xdmp.trace(TRACE_EVENT, `executing flow "${flowName}"`);
-  xdmp.trace(TRACE_EVENT, `flow state "${stateName}"`);
+  let stateMachineObj;
+  xdmp.trace(TRACE_EVENT, `executing stateMachine "${stateMachineName}"`);
+  xdmp.trace(TRACE_EVENT, `stateMachine state "${stateName}"`);
 
   // sanity check
-  if (FLOW_STATUS_WORKING !== jobObj.flowStatus) {
+  if (STATE_MACHINE_STATUS_WORKING !== executionObj.stateMachineStatus) {
     xdmp.trace(
       TRACE_EVENT,
-      'INVALID-FLOW-STATUS: Cannot execute a flow that is not in the WORKING status'
+      'INVALID-STATE_MACHINE-STATUS: Cannot execute a stateMachine that is not in the WORKING status'
     );
     return fn.error(
       null,
-      'INVALID-FLOW-STATUS',
-      'Cannot execute a flow that is not in the WORKING status'
+      'INVALID-STATE_MACHINE-STATUS',
+      'Cannot execute a stateMachine that is not in the WORKING status'
     );
   }
 
   try {
-    flowObj = getFlowDocumentFromDatabase(flowName, jobObj.database).toObject();
+    stateMachineObj = getStateMachineDocumentFromDatabase(stateMachineName, executionObj.database).toObject();
 
     try {
-      state = flowObj.States[stateName];
+      state = stateMachineObj.States[stateName];
     } catch (e) {
       fn.error(
         null,
         'INVALID-STATE-DEFINITION',
-        `Can't Find the state "${stateName}" in flow "${flowName}"`
+        `Can't Find the state "${stateName}" in stateMachine "${stateMachineName}"`
       );
     }
   } catch (err) {
     return handleError(
       err.name,
-      `executeStateByJobDoc error for flow "${flowName}"`,
+      `executeStateByExecutionDoc error for stateMachine "${stateMachineName}"`,
       err,
-      jobDoc,
-      jobObj,
+      executionDoc,
+      executionObj,
       save
     );
   }
@@ -805,14 +805,14 @@ function executeStateByJobDoc(jobDoc, save = true) {
   if (state) {
     try {
       //removes old waiting data
-      delete jobObj.currentlyWaiting;
+      delete executionObj.currentlyWaiting;
 
       // perform the actions for the "Task" state
       if (state.Type && state.Type.toLowerCase() === STATE_TASK) {
         xdmp.trace(TRACE_EVENT, `executing action for state: ${stateName}`);
 
         if (state.Resource) {
-          let context = jobObj.context;
+          let context = executionObj.context;
 
           // filter the context through the InputPath if set
           if (state.InputPath && state.InputPath !== '$') {
@@ -820,17 +820,17 @@ function executeStateByJobDoc(jobDoc, save = true) {
           }
 
           // execute the resource modules
-          let resp = executeActionModule(state.Resource, jobObj.uri, state.Parameters, context, {
-            database: jobObj.database,
-            modules: jobObj.modules,
+          let resp = executeActionModule(state.Resource, executionObj.uri, state.Parameters, context, {
+            database: executionObj.database,
+            modules: executionObj.modules,
           });
 
-          // add the data from the result to the job's context
+          // add the data from the result to the execution's context
           if (state.OutputPath && state.OutputPath !== '$') {
-            // update the job context with the response optionally modified by the OutputPath config
-            jobObj.context = lib.materializeReferencePath(state.OutputPath, resp);
+            // update the execution context with the response optionally modified by the OutputPath config
+            executionObj.context = lib.materializeReferencePath(state.OutputPath, resp);
           } else {
-            jobObj.context = resp;
+            executionObj.context = resp;
           }
         } else {
           fn.error(
@@ -843,12 +843,12 @@ function executeStateByJobDoc(jobDoc, save = true) {
         if (state.Result) {
           let result = state.Result;
 
-          // add the data from the result to the job's context
+          // add the data from the result to the execution's context
           if (state.OutputPath && state.OutputPath !== '$') {
-            // update the job context with the result data optionally modified by the OutputPath config
-            jobObj.context = lib.materializeReferencePath(state.OutputPath, result);
+            // update the execution context with the result data optionally modified by the OutputPath config
+            executionObj.context = lib.materializeReferencePath(state.OutputPath, result);
           } else {
-            jobObj.context = result;
+            executionObj.context = result;
           }
         }
       } else if (
@@ -856,7 +856,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
         state.Type.toLowerCase() === STATE_WAIT &&
         (state.Event || state.EventPath)
       ) {
-        //updated the job Doc to have info about why its waiting
+        //updated the execution Doc to have info about why its waiting
 
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
 
@@ -864,7 +864,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
 
         ///checks if there is EventPath use that over using Event
         if (state.hasOwnProperty('EventPath')) {
-          eventToWaitFor = lib.materializeReferencePath(state.EventPath, jobObj.context);
+          eventToWaitFor = lib.materializeReferencePath(state.EventPath, executionObj.context);
         } else {
           eventToWaitFor = state.Event;
         }
@@ -879,12 +879,12 @@ function executeStateByJobDoc(jobDoc, save = true) {
         }
 
         /* eventToWaitFor = state.Event;  */
-        jobObj.currentlyWaiting = {
+        executionObj.currentlyWaiting = {
           event: eventToWaitFor,
         };
-        jobObj.flowStatus = FLOW_STATUS_WAITING;
+        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WAITING;
       } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Seconds) {
-        //updated the job Doc to have info about why its waiting
+        //updated the execution Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
         if (state.Seconds) {
           let waitTime = Number(state.Seconds);
@@ -895,11 +895,11 @@ function executeStateByJobDoc(jobDoc, save = true) {
             xs.dayTimeDuration('PT' + WaitTimeToMinutes + 'M' + WaitTimeToSeconds + 'S')
           );
           xdmp.trace(TRACE_EVENT, `waiting for state nextTaskTime : ${nextTaskTime}`);
-          jobObj.currentlyWaiting = {
+          executionObj.currentlyWaiting = {
             seconds: state.Seconds,
             nextTaskTime: nextTaskTime,
           };
-          jobObj.flowStatus = FLOW_STATUS_WAITING;
+          executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WAITING;
         } else {
           fn.error(
             null,
@@ -908,7 +908,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
           );
         }
       } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Timestamp) {
-        //updated the job Doc to have info about why its waiting
+        //updated the execution Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state Timestamp : ${stateName}`);
         if (state.Timestamp) {
           xdmp.trace(TRACE_EVENT, ` timestamp  value is : ${state.Timestamp}`);
@@ -922,7 +922,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
             if (nextTaskTime < fn.currentDateTime()) {
               xdmp.trace(TRACE_EVENT, `Time for Schedule task has passed : ${nextTaskTime}`);
             }
-            jobObj.currentlyWaiting = {
+            executionObj.currentlyWaiting = {
               timestamp: timestamp,
               nextTaskTime: nextTaskTime,
             };
@@ -934,7 +934,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
             );
           }
 
-          jobObj.flowStatus = FLOW_STATUS_WAITING;
+          executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WAITING;
         } else {
           fn.error(
             null,
@@ -944,16 +944,16 @@ function executeStateByJobDoc(jobDoc, save = true) {
         }
       }
     } catch (err) {
-      return handleStateFailure(uri, flowName, flowObj, stateName, err, save, jobObj);
+      return handleStateFailure(uri, stateMachineName, stateMachineObj, stateName, err, save, executionObj);
     }
-    return transition(jobDoc, jobObj, stateName, state, flowObj, save);
+    return transition(executionDoc, executionObj, stateName, state, stateMachineObj, save);
   } else {
     return handleError(
       'INVALID-STATE-DEFINITION',
-      Sequence.from([`state "${stateName}" not found in flow`]),
+      Sequence.from([`state "${stateName}" not found in stateMachine`]),
       null,
-      jobDoc,
-      jobObj,
+      executionDoc,
+      executionObj,
       save
     );
   }
@@ -965,7 +965,7 @@ function executeStateByJobDoc(jobDoc, save = true) {
  * @param {*} modulePath the uri of the module to execute
  * @param {*} uri the uri of the in-process document
  * @param {*} params the parameters passed to this state
- * @param {*} context the current job's context
+ * @param {*} context the current execution's context
  * @param {*} options { database, modules } the execution context of the module
  * @returns the action module's resposne
  */
@@ -1003,7 +1003,7 @@ function executeActionModule(modulePath, uri, params, context, { database, modul
  * @param {*} modulePath the uri of the module to execute
  * @param {*} uri the uri of the in-process document
  * @param {*} params the parameters passed to this Choice rule
- * @param {*} context the current job's context
+ * @param {*} context the current execution's context
  * @param {*} options { database, modules } the execution context of the module
  * @returns boolean response of the module
  */
@@ -1043,16 +1043,16 @@ function executeConditionModule(modulePath, uri, params, context, { database, mo
  * Uses "Choices" to transition to a failure state
  *
  * @param {*} uri
- * @param {*} flowName
- * @param {*} flow
+ * @param {*} stateMachineName
+ * @param {*} stateMachine
  * @param {*} stateName
  * @param {*} err
  * @param {*} save
- * @param {*} jobDoc
+ * @param {*} executionDoc
  * @returns
  */
-function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jobDocIn) {
-  const currState = flow.States[stateName];
+function handleStateFailure(uri, stateMachineName, stateMachine, stateName, err, save = true, executionDocIn) {
+  const currState = stateMachine.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
 
@@ -1064,14 +1064,14 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
     );
   }
 
-  let jobDoc;
-  let jobObj;
+  let executionDoc;
+  let executionObj;
 
   if (save) {
-    jobDoc = cts.doc(uri);
-    jobObj = jobDoc.toObject();
+    executionDoc = cts.doc(uri);
+    executionObj = executionDoc.toObject();
   } else {
-    jobObj = jobDocIn;
+    executionObj = executionDocIn;
   }
 
   if (
@@ -1088,8 +1088,8 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
             (retry.ErrorEquals.includes(err.name) ||
               retry.ErrorEquals.includes('States.ALL') ||
               retry.ErrorEquals.includes('*')) &&
-            (!jobObj.retries.hasOwnProperty(errorEquals) ||
-              jobObj.retries[errorEquals] < (retry.MaxAttempts || DEFAULT_MAX_RETRY_ATTEMPTS))
+            (!executionObj.retries.hasOwnProperty(errorEquals) ||
+              executionObj.retries[errorEquals] < (retry.MaxAttempts || DEFAULT_MAX_RETRY_ATTEMPTS))
           ) {
             acc = retry;
           }
@@ -1100,17 +1100,17 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
       if (target) {
         let errorEquals = target.ErrorEquals.join(',');
 
-        let retryNumber = 1 + (jobObj.retries[errorEquals] || 0);
+        let retryNumber = 1 + (executionObj.retries[errorEquals] || 0);
 
-        jobObj.retries[errorEquals] = retryNumber;
+        executionObj.retries[errorEquals] = retryNumber;
 
-        xdmp.trace(TRACE_EVENT, `retrying job "${uri}"`);
+        xdmp.trace(TRACE_EVENT, `retrying execution "${uri}"`);
 
-        // changes job doc to retry state
-        jobObj.flowStatus = FLOW_STATUS_WORKING;
-        jobObj.flowState = stateName;
+        // changes execution doc to retry state
+        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
+        executionObj.stateMachineState = stateName;
 
-        jobObj.provenance.push({
+        executionObj.provenance.push({
           date: new Date().toISOString(),
           from: stateName,
           to: stateName,
@@ -1119,13 +1119,13 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
         });
 
         // capture error message in context
-        jobObj.errors[stateName] = err;
+        executionObj.errors[stateName] = err;
 
         if (save) {
-          xdmp.nodeReplace(jobDoc.root, jobObj);
+          xdmp.nodeReplace(executionDoc.root, executionObj);
         }
 
-        return jobObj;
+        return executionObj;
       }
     }
 
@@ -1148,22 +1148,22 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
       if (target) {
         xdmp.trace(TRACE_EVENT, `transitioning to fallback state "${target}"`);
         // move to the target state
-        jobObj.flowStatus = FLOW_STATUS_WORKING;
-        jobObj.flowState = target;
-        jobObj.provenance.push({
+        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
+        executionObj.stateMachineState = target;
+        executionObj.provenance.push({
           date: new Date().toISOString(),
           from: stateName,
           to: target,
           executionTime: xdmp.elapsedTime(),
         });
         // capture error message in context
-        jobObj.errors[stateName] = err;
+        executionObj.errors[stateName] = err;
 
         if (save) {
-          xdmp.nodeReplace(jobDoc.root, jobObj);
+          xdmp.nodeReplace(executionDoc.root, executionObj);
         }
 
-        return jobObj;
+        return executionObj;
       }
     }
   }
@@ -1172,22 +1172,22 @@ function handleStateFailure(uri, flowName, flow, stateName, err, save = true, jo
     'INVALID-STATE-DEFINITION',
     `no Catch defined for error "${err.name}" in state "${stateName}"`,
     err,
-    jobDoc,
-    jobObj,
+    executionDoc,
+    executionObj,
     save
   );
 }
 
 /**
- * Determines if the given document is in terminal (final) state for the given flow
+ * Determines if the given document is in terminal (final) state for the given stateMachine
  *
  * @param {*} uri
- * @param {*} flow
+ * @param {*} stateMachine
  * @returns
  */
-function inTerminalState(job, flow) {
-  const currStateName = job.flowState;
-  let currState = flow.States[currStateName];
+function inTerminalState(execution, stateMachine) {
+  const currStateName = execution.stateMachineState;
+  let currState = stateMachine.States[currStateName];
 
   if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
     fn.error(null, 'INVALID-STATE-DEFINITION', `unsupported state type: "${currState.Type}"`);
@@ -1201,20 +1201,20 @@ function inTerminalState(job, flow) {
 }
 
 /**
- * Calculates the state of documents being processed by, and completed through this flow
+ * Calculates the state of documents being processed by, and completed through this stateMachine
  *
- * @param {*} flowName
+ * @param {*} stateMachineName
  * @returns
  */
-function getFlowCounts(flowName, { startDate, endDate, detailed = false }) {
-  const flow = getFlowDocument(flowName).toObject();
-  const states = Object.keys(flow.States);
+function getStateMachineCounts(stateMachineName, { startDate, endDate, detailed = false }) {
+  const stateMachine = getStateMachineDocument(stateMachineName).toObject();
+  const states = Object.keys(stateMachine.States);
   const statuses = [
-    FLOW_STATUS_NEW,
-    FLOW_STATUS_WORKING,
-    FLOW_STATUS_WAITING,
-    FLOW_STATUS_COMPLETE,
-    FLOW_STATUS_FAILED,
+    STATE_MACHINE_STATUS_NEW,
+    STATE_MACHINE_STATUS_WORKING,
+    STATE_MACHINE_STATUS_WAITING,
+    STATE_MACHINE_STATUS_COMPLETE,
+    STATE_MACHINE_STATUS_FAILED,
   ];
 
   let baseQuery = [];
@@ -1233,8 +1233,8 @@ function getFlowCounts(flowName, { startDate, endDate, detailed = false }) {
         cts.andQuery(
           [].concat(
             baseQuery,
-            cts.jsonPropertyValueQuery('flowName', flowName),
-            cts.jsonPropertyValueQuery('flowStatus', status)
+            cts.jsonPropertyValueQuery('stateMachineName', stateMachineName),
+            cts.jsonPropertyValueQuery('stateMachineStatus', status)
           )
         )
       )
@@ -1248,16 +1248,16 @@ function getFlowCounts(flowName, { startDate, endDate, detailed = false }) {
         cts.andQuery(
           [].concat(
             baseQuery,
-            cts.jsonPropertyValueQuery('flowName', flowName),
-            cts.jsonPropertyValueQuery('flowStatus', status),
-            cts.jsonPropertyValueQuery('flowState', state)
+            cts.jsonPropertyValueQuery('stateMachineName', stateMachineName),
+            cts.jsonPropertyValueQuery('stateMachineStatus', status),
+            cts.jsonPropertyValueQuery('stateMachineState', state)
           )
         )
       )
     );
 
   const resp = {
-    flowName: flowName,
+    stateMachineName: stateMachineName,
     totalPerStatus: {},
     totalPerState: {},
   };
@@ -1282,7 +1282,7 @@ function getFlowCounts(flowName, { startDate, endDate, detailed = false }) {
       }
     },
     {
-      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
+      database: xdmp.database(STATE_CONDUCTOR_EXECUTIONS_DB),
     }
   );
 
@@ -1290,16 +1290,16 @@ function getFlowCounts(flowName, { startDate, endDate, detailed = false }) {
 }
 
 /**
- * Should be used when take a job doc from the database
+ * Should be used when take a execution doc from the database
  * insures all the needed properties are there
- * @param {*} jobDoc
+ * @param {*} executionDoc
  */
-function scaffoldJobDoc(jobDoc) {
+function scaffoldExecutionDoc(executionDoc) {
   const needProps = {
     id: null,
-    flowName: null,
-    flowStatus: null,
-    flowState: null,
+    stateMachineName: null,
+    stateMachineStatus: null,
+    stateMachineState: null,
     uri: null,
     database: null,
     modules: null,
@@ -1310,34 +1310,34 @@ function scaffoldJobDoc(jobDoc) {
     retries: {},
   };
 
-  return Object.assign(needProps, jobDoc);
+  return Object.assign(needProps, executionDoc);
 }
 
 /**
- * Convienence function to create a job record for a document to be
- * processed by a state conductor flow.
+ * Convienence function to create a execution record for a document to be
+ * processed by a state conductor stateMachine.
  *
- * @param {*} flowName
+ * @param {*} stateMachineName
  * @param {*} uri
  * @param {*} [context={}]
  * @param {*} [options={}]
  */
-function createStateConductorJob(flowName, uri, context = {}, options = {}) {
+function createStateConductorExecution(stateMachineName, uri, context = {}, options = {}) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
-  const collections = [JOB_COLLECTION].concat(options.collections || []);
-  const directory = options.directory || '/' + JOB_COLLECTION + '/';
+  const collections = [EXECUTION_COLLECTION].concat(options.collections || []);
+  const directory = options.directory || '/' + EXECUTION_COLLECTION + '/';
   const database = options.database || xdmp.database();
   const modules = options.modules || xdmp.modulesDatabase();
 
   const id = sem.uuidString();
-  const jobUri = directory + id + '.json';
+  const executionUri = directory + id + '.json';
 
-  const job = scaffoldJobDoc({
+  const execution = scaffoldExecutionDoc({
     id: id,
-    flowName: flowName,
-    flowStatus: FLOW_STATUS_NEW,
-    flowState: null,
+    stateMachineName: stateMachineName,
+    stateMachineStatus: STATE_MACHINE_STATUS_NEW,
+    stateMachineState: null,
     uri: uri,
     database: database,
     modules: modules,
@@ -1345,44 +1345,44 @@ function createStateConductorJob(flowName, uri, context = {}, options = {}) {
     context: context,
   });
 
-  // insert the job document
-  xdmp.trace(TRACE_EVENT, `inserting job document: ${jobUri} into db ${STATE_CONDUCTOR_JOBS_DB}`);
+  // insert the execution document
+  xdmp.trace(TRACE_EVENT, `inserting execution document: ${executionUri} into db ${STATE_CONDUCTOR_EXECUTIONS_DB}`);
   invokeOrApplyFunction(
     () => {
       declareUpdate();
-      xdmp.documentInsert(jobUri, job, {
+      xdmp.documentInsert(executionUri, execution, {
         permissions: [
-          xdmp.permission(JOB_DOC_READ_PERMISSION, 'read'),
-          xdmp.permission(JOB_DOC_WRITE_PERMISSION, 'update'),
+          xdmp.permission(EXECUTION_DOC_READ_PERMISSION, 'read'),
+          xdmp.permission(EXECUTION_DOC_WRITE_PERMISSION, 'update'),
         ],
         collections: collections,
       });
     },
     {
-      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
+      database: xdmp.database(STATE_CONDUCTOR_EXECUTIONS_DB),
     }
   );
 
-  // add job metadata to the target document (if one was passed)
+  // add execution metadata to the target document (if one was passed)
   if (uri) {
-    addJobMetadata(uri, flowName, id); // prevents updates to the target from retriggering this flow
+    addExecutionMetadata(uri, stateMachineName, id); // prevents updates to the target from retriggering this stateMachine
   }
 
   return id;
 }
 
 /**
- * Convienence function to create job records for a batch of documents to be
- * processed by a state conductor flow.
+ * Convienence function to create execution records for a batch of documents to be
+ * processed by a state conductor stateMachine.
  *
- * @param {*} flowName
+ * @param {*} stateMachineName
  * @param {*} [uris=[]]
  * @param {*} [context={}]
  * @param {*} [options={}]
  * @returns
  */
-function batchCreateStateConductorJob(flowName, uris = [], context = {}, options = {}) {
-  const ids = uris.map((uri) => createStateConductorJob(flowName, uri, context, options));
+function batchCreateStateConductorExecution(stateMachineName, uris = [], context = {}, options = {}) {
+  const ids = uris.map((uri) => createStateConductorExecution(stateMachineName, uri, context, options));
   return ids;
 }
 
@@ -1398,14 +1398,14 @@ function emitEvent(event, batchSize = 100, save = true) {
     () => {
       declareUpdate();
 
-      //handle job documents
-      let waitingURIJobsForEvent = cts
+      //handle execution documents
+      let waitingURIExecutionsForEvent = cts
         .uris(
           null,
           null,
           cts.andQuery([
-            cts.collectionQuery(JOB_COLLECTION),
-            cts.jsonPropertyValueQuery('flowStatus', FLOW_STATUS_WAITING),
+            cts.collectionQuery(EXECUTION_COLLECTION),
+            cts.jsonPropertyValueQuery('stateMachineStatus', STATE_MACHINE_STATUS_WAITING),
             cts.jsonPropertyScopeQuery(
               'currentlyWaiting',
               cts.jsonPropertyValueQuery('event', event)
@@ -1415,18 +1415,18 @@ function emitEvent(event, batchSize = 100, save = true) {
         .toArray();
       /*
       splits the array into groups of the batchSize
-      this is to handle the the case where there are many waiting jobs
+      this is to handle the the case where there are many waiting executions
       */
-      var arrayOfwaitingURIJobsForEvent = [];
+      var arrayOfwaitingURIExecutionsForEvent = [];
 
-      for (var i = 0; i < waitingURIJobsForEvent.length; i += batchSize) {
-        arrayOfwaitingURIJobsForEvent.push(waitingURIJobsForEvent.slice(i, i + batchSize));
+      for (var i = 0; i < waitingURIExecutionsForEvent.length; i += batchSize) {
+        arrayOfwaitingURIExecutionsForEvent.push(waitingURIExecutionsForEvent.slice(i, i + batchSize));
       }
 
       //loops through all the arrays
       if (save) {
-        arrayOfwaitingURIJobsForEvent.forEach(function (uriArray) {
-          xdmp.spawn('/state-conductor/resumeWaitingJobs.sjs', {
+        arrayOfwaitingURIExecutionsForEvent.forEach(function (uriArray) {
+          xdmp.spawn('/state-conductor/resumeWaitingExecutions.sjs', {
             uriArray: uriArray,
             resumeBy: 'emit event: ' + event,
             save: save,
@@ -1434,63 +1434,63 @@ function emitEvent(event, batchSize = 100, save = true) {
         });
       }
 
-      return waitingURIJobsForEvent;
+      return waitingURIExecutionsForEvent;
     },
     {
-      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
+      database: xdmp.database(STATE_CONDUCTOR_EXECUTIONS_DB),
     }
   );
 
-  // handle flows
-  // grab all state conductor flows with a event context and matching event
-  const flows = cts
+  // handle stateMachines
+  // grab all state conductor stateMachines with a event context and matching event
+  const stateMachines = cts
     .search(
       cts.andQuery([
-        cts.collectionQuery(FLOW_COLLECTION),
+        cts.collectionQuery(STATE_MACHINE_COLLECTION),
         cts.jsonPropertyScopeQuery('mlDomain', cts.jsonPropertyValueQuery('scope', 'event')),
         cts.jsonPropertyScopeQuery('mlDomain', cts.jsonPropertyValueQuery('value', event)),
       ])
     )
     .toArray();
 
-  // determine which flows should run and create state conductor jobs
-  let flowsToTrigger = flows.filter((flow) => {
-    // find the flows where the event and scope are in the same object
-    let eventContext = flow.xpath("mlDomain/context[scope = 'event' and value = '" + event + "' ]");
+  // determine which stateMachines should run and create state conductor executions
+  let stateMachinesToTrigger = stateMachines.filter((stateMachine) => {
+    // find the stateMachines where the event and scope are in the same object
+    let eventContext = stateMachine.xpath("mlDomain/context[scope = 'event' and value = '" + event + "' ]");
 
     return fn.exists(eventContext);
   });
 
-  let flowsToTriggerResp = flowsToTrigger.map((flow) => {
-    // create a state conductor job for the event flows
-    let flowName = getFlowNameFromUri(fn.documentUri(flow));
-    let resp = createStateConductorJob(flowName, null);
-    xdmp.trace(TRACE_EVENT, `created state conductor job for event flow: ${resp}`);
-    return { flowName: flowName, JobId: resp };
+  let stateMachinesToTriggerResp = stateMachinesToTrigger.map((stateMachine) => {
+    // create a state conductor execution for the event stateMachines
+    let stateMachineName = getStateMachineNameFromUri(fn.documentUri(stateMachine));
+    let resp = createStateConductorExecution(stateMachineName, null);
+    xdmp.trace(TRACE_EVENT, `created state conductor execution for event stateMachine: ${resp}`);
+    return { stateMachineName: stateMachineName, ExecutionId: resp };
   });
 
   const output = {
-    jobDocumentsTriggered: fn.head(uris),
-    flowsTriggered: flowsToTriggerResp,
+    executionDocumentsTriggered: fn.head(uris),
+    stateMachinesTriggered: stateMachinesToTriggerResp,
   };
 
   return output;
 }
 
 /**
- * Query for job document uris, matching the given options
+ * Query for execution document uris, matching the given options
  *
  * @param {*} options
  * @returns
  */
-function getJobDocuments(options) {
+function getExecutionDocuments(options) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const start = options.start || 1;
   const count = options.count || 100;
-  const flowStatus = Array.isArray(options.flowStatus)
-    ? options.flowStatus
-    : [FLOW_STATUS_NEW, FLOW_STATUS_WORKING];
-  const flowNames = Array.isArray(options.flowNames) ? options.flowNames : [];
+  const stateMachineStatus = Array.isArray(options.stateMachineStatus)
+    ? options.stateMachineStatus
+    : [STATE_MACHINE_STATUS_NEW, STATE_MACHINE_STATUS_WORKING];
+  const stateMachineNames = Array.isArray(options.stateMachineNames) ? options.stateMachineNames : [];
   const resumeWait = options.resumeWait;
   const forestIds = options.forestIds;
   let uris = [];
@@ -1498,12 +1498,12 @@ function getJobDocuments(options) {
   invokeOrApplyFunction(
     () => {
       const queries = [
-        cts.collectionQuery('stateConductorJob'),
-        cts.jsonPropertyValueQuery('flowStatus', flowStatus),
+        cts.collectionQuery('stateConductorExecution'),
+        cts.jsonPropertyValueQuery('stateMachineStatus', stateMachineStatus),
       ];
 
-      if (flowNames.length > 0) {
-        queries.push(cts.jsonPropertyValueQuery('flowName', flowNames));
+      if (stateMachineNames.length > 0) {
+        queries.push(cts.jsonPropertyValueQuery('stateMachineName', stateMachineNames));
       }
       if (options.startDate) {
         queries.push(
@@ -1516,12 +1516,12 @@ function getJobDocuments(options) {
 
       let ctsQuery = cts.andQuery(queries);
 
-      // add any "waiting" jobs that should be resumed - unless explicitly told not to
+      // add any "waiting" executions that should be resumed - unless explicitly told not to
       if (!fn.exists(resumeWait) || resumeWait) {
         ctsQuery = cts.orQuery([
           ctsQuery,
           cts.andQuery([
-            cts.collectionQuery('stateConductorJob'),
+            cts.collectionQuery('stateConductorExecution'),
             cts.jsonPropertyScopeQuery(
               'currentlyWaiting',
               cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
@@ -1537,7 +1537,7 @@ function getJobDocuments(options) {
       );
     },
     {
-      database: xdmp.database(STATE_CONDUCTOR_JOBS_DB),
+      database: xdmp.database(STATE_CONDUCTOR_EXECUTIONS_DB),
     }
   );
   return uris;
@@ -1545,73 +1545,73 @@ function getJobDocuments(options) {
 
 /**
  * Convienence function to handle error
- * puts the job document in an error state
- * return the job object
+ * puts the execution document in an error state
+ * return the execution object
  * errors out
  *
  * @param {*} name the name of the error
  * @param {*} message the error message
  * @param {*} err the error object if gotten from a catch
- * @param {*} jobObj the job object
- * @param {*} save while to update the job document
+ * @param {*} executionObj the execution object
+ * @param {*} save while to update the execution document
  **/
-function handleError(name, message, err, jobDoc, jobObj, save = true) {
+function handleError(name, message, err, executionDoc, executionObj, save = true) {
   xdmp.trace(TRACE_EVENT, name + ':' + message);
-  const state = jobObj.flowState || FLOW_NEW_STEP;
+  const state = executionObj.stateMachineState || STATE_MACHINE_NEW_STEP;
 
-  // update the job document
-  jobObj.flowStatus = FLOW_STATUS_FAILED;
-  jobObj.errors[state] = err;
+  // update the execution document
+  executionObj.stateMachineStatus = STATE_MACHINE_STATUS_FAILED;
+  executionObj.errors[state] = err;
 
   if (save) {
-    xdmp.nodeReplace(jobDoc.root, jobObj);
+    xdmp.nodeReplace(executionDoc.root, executionObj);
   }
 
   // trigger CPF error state (intentionally commented out)
   //fn.error(null, name, Sequence.from([message, err]));
 
-  return jobObj;
+  return executionObj;
 }
 
 module.exports = {
   TRACE_EVENT,
-  STATE_CONDUCTOR_JOBS_DB,
+  STATE_CONDUCTOR_EXECUTIONS_DB,
   STATE_CONDUCTOR_TRIGGERS_DB,
   STATE_CONDUCTOR_SCHEMAS_DB,
   DEFAULT_MAX_RETRY_ATTEMPTS,
-  FLOW_COLLECTION,
-  FLOW_DIRECTORY,
-  FLOW_ITEM_COLLECTION,
-  FLOW_STATUS_NEW,
-  FLOW_STATUS_WORKING,
-  FLOW_STATUS_WAITING,
-  FLOW_STATUS_COMPLETE,
-  FLOW_STATUS_FAILED,
-  JOB_COLLECTION,
-  JOB_DIRECTORY,
-  addJobMetadata,
-  batchCreateStateConductorJob,
-  checkFlowContext,
-  createStateConductorJob,
+  STATE_MACHINE_COLLECTION,
+  STATE_MACHINE_DIRECTORY,
+  STATE_MACHINE_ITEM_COLLECTION,
+  STATE_MACHINE_STATUS_NEW,
+  STATE_MACHINE_STATUS_WORKING,
+  STATE_MACHINE_STATUS_WAITING,
+  STATE_MACHINE_STATUS_COMPLETE,
+  STATE_MACHINE_STATUS_FAILED,
+  EXECUTION_COLLECTION,
+  EXECUTION_DIRECTORY,
+  addExecutionMetadata,
+  batchCreateStateConductorExecution,
+  checkStateMachineContext,
+  createStateConductorExecution,
   emitEvent,
-  executeStateByJobDoc,
-  getAllFlowsContextQuery,
-  getApplicableFlows,
-  getFlowContextQuery,
-  getFlowCounts,
-  getFlowDocument,
-  getFlowDocumentFromDatabase,
-  getFlowDocuments,
-  getFlowNameFromUri,
-  getFlowNames,
+  executeStateByExecutionDoc,
+  getAllStateMachinesContextQuery,
+  getApplicableStateMachines,
+  getStateMachineContextQuery,
+  getStateMachineCounts,
+  getStateMachineDocument,
+  getStateMachineDocumentFromDatabase,
+  getStateMachineDocuments,
+  getStateMachineNameFromUri,
+  getStateMachineNames,
   getInitialState,
-  getJobDocuments,
-  getJobIds,
+  getExecutionDocuments,
+  getExecutionIds,
   invokeOrApplyFunction,
-  processJob,
-  resumeWaitingJob,
-  resumeWaitingJobByJobDoc,
-  retryJobAtState,
-  retryJobAtStateByJobDoc,
-  startProcessingFlowByJobDoc,
+  processExecution,
+  resumeWaitingExecution,
+  resumeWaitingExecutionByExecutionDoc,
+  retryExecutionAtState,
+  retryExecutionAtStateByExecutionDoc,
+  startProcessingStateMachineByExecutionDoc,
 };

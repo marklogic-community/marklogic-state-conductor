@@ -6,7 +6,7 @@ const test = require('/test/test-helper.xqy');
 const assertions = [];
 let assertion;
 
-//"found waiting job")
+//"found waiting execution")
 assertion = sclib.getConfiguration();
 
 assertions.push(test.assertTrue(assertion.foundCustomConfiguration, 'found Custom Configuration'));

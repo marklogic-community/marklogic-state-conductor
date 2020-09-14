@@ -1,0 +1,34 @@
+{
+  "Comment": "Calls built-in to run a DHF5 flow step",
+  "mlDomain": {
+    "context": []
+  },
+  "StartAt": "runStep1",
+  "States": {
+    "runStep1": {
+      "Type": "Task",
+      "Comment": "runs the dhf 5 flow step",
+      "Resource": "/state-conductor/actions/common/dhf/dhf5RunFlowStepAction.sjs",
+      "Parameters": {
+        "name": "CustomFlow",
+        "step": 1,
+        "flowOptions": {
+          "secret": "find me!"
+        }
+      },
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "FailState"
+        }
+      ]
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "FailState": {
+      "Type": "Fail"
+    }
+  }
+}

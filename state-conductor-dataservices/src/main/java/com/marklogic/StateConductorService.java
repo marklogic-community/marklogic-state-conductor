@@ -34,16 +34,28 @@ public interface StateConductorService {
             }
 
             @Override
-            public Stream<String> getJobs(Integer start, Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds, String startDate, String endDate) {
+            public void deleteStateMachine(String name) {
+              baseProxy
+                .request("deleteStateMachine.sjs", BaseProxy.ParameterValuesKind.SINGLE_ATOMIC)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)))
+                .withMethod("POST")
+                .responseNone();
+            }
+
+
+            @Override
+            public Stream<String> getExecutions(Integer start, Integer count, String names, Stream<String> status, Stream<String> forestIds, String startDate, String endDate) {
               return BaseProxy.StringType.toString(
                 baseProxy
-                .request("getJobs.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+                .request("getExecutions.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
                 .withSession()
                 .withParams(
                     BaseProxy.atomicParam("start", true, BaseProxy.UnsignedIntegerType.fromInteger(start)),
                     BaseProxy.atomicParam("count", true, BaseProxy.UnsignedIntegerType.fromInteger(count)),
-                    BaseProxy.atomicParam("flowNames", true, BaseProxy.StringType.fromString(flowNames)),
-                    BaseProxy.atomicParam("flowStatus", true, BaseProxy.StringType.fromString(flowStatus)),
+                    BaseProxy.atomicParam("names", true, BaseProxy.StringType.fromString(names)),
+                    BaseProxy.atomicParam("status", true, BaseProxy.StringType.fromString(status)),
                     BaseProxy.atomicParam("forestIds", true, BaseProxy.StringType.fromString(forestIds)),
                     BaseProxy.atomicParam("startDate", true, BaseProxy.DateTimeType.fromString(startDate)),
                     BaseProxy.atomicParam("endDate", true, BaseProxy.DateTimeType.fromString(endDate)))
@@ -54,13 +66,13 @@ public interface StateConductorService {
 
 
             @Override
-            public com.fasterxml.jackson.databind.node.ObjectNode getFlow(String flowName) {
+            public com.fasterxml.jackson.databind.node.ObjectNode getStateMachine(String name) {
               return BaseProxy.ObjectType.toObjectNode(
                 baseProxy
-                .request("getFlow.sjs", BaseProxy.ParameterValuesKind.SINGLE_ATOMIC)
+                .request("getStateMachine.sjs", BaseProxy.ParameterValuesKind.SINGLE_ATOMIC)
                 .withSession()
                 .withParams(
-                    BaseProxy.atomicParam("flowName", true, BaseProxy.StringType.fromString(flowName)))
+                    BaseProxy.atomicParam("name", true, BaseProxy.StringType.fromString(name)))
                 .withMethod("POST")
                 .responseSingle(false, Format.JSON)
                 );
@@ -68,37 +80,10 @@ public interface StateConductorService {
 
 
             @Override
-            public void deleteFlow(String flowName) {
-              baseProxy
-                .request("deleteFlow.sjs", BaseProxy.ParameterValuesKind.SINGLE_ATOMIC)
-                .withSession()
-                .withParams(
-                    BaseProxy.atomicParam("flowName", false, BaseProxy.StringType.fromString(flowName)))
-                .withMethod("POST")
-                .responseNone();
-            }
-
-
-            @Override
-            public String createJob(String uri, String flowName) {
-              return BaseProxy.StringType.toString(
-                baseProxy
-                .request("createJob.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
-                .withSession()
-                .withParams(
-                    BaseProxy.atomicParam("uri", false, BaseProxy.StringType.fromString(uri)),
-                    BaseProxy.atomicParam("flowName", false, BaseProxy.StringType.fromString(flowName)))
-                .withMethod("POST")
-                .responseSingle(false, null)
-                );
-            }
-
-
-            @Override
-            public com.fasterxml.jackson.databind.node.ArrayNode processJob(Stream<String> uri) {
+            public com.fasterxml.jackson.databind.node.ArrayNode processExecution(Stream<String> uri) {
               return BaseProxy.ArrayType.toArrayNode(
                 baseProxy
-                .request("processJob.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+                .request("processExecution.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
                 .withSession()
                 .withParams(
                     BaseProxy.atomicParam("uri", false, BaseProxy.StringType.fromString(uri)))
@@ -109,13 +94,26 @@ public interface StateConductorService {
 
 
             @Override
-            public com.fasterxml.jackson.databind.node.ObjectNode getFlowStatus(Stream<String> flowNames, String startDate, String endDate, Boolean detailed) {
-              return BaseProxy.ObjectType.toObjectNode(
-                baseProxy
-                .request("getFlowStatus.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+            public void insertStateMachine(String name, Reader stateMachine) {
+              baseProxy
+                .request("insertStateMachine.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_MIXED)
                 .withSession()
                 .withParams(
-                    BaseProxy.atomicParam("flowNames", true, BaseProxy.StringType.fromString(flowNames)),
+                    BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)),
+                    BaseProxy.documentParam("stateMachine", false, BaseProxy.ObjectType.fromReader(stateMachine)))
+                .withMethod("POST")
+                .responseNone();
+            }
+
+
+            @Override
+            public com.fasterxml.jackson.databind.node.ObjectNode getStateMachineStatus(Stream<String> names, String startDate, String endDate, Boolean detailed) {
+              return BaseProxy.ObjectType.toObjectNode(
+                baseProxy
+                .request("getStateMachineStatus.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("names", true, BaseProxy.StringType.fromString(names)),
                     BaseProxy.atomicParam("startDate", true, BaseProxy.DateTimeType.fromString(startDate)),
                     BaseProxy.atomicParam("endDate", true, BaseProxy.DateTimeType.fromString(endDate)),
                     BaseProxy.atomicParam("detailed", true, BaseProxy.BooleanType.fromBoolean(detailed)))
@@ -126,15 +124,17 @@ public interface StateConductorService {
 
 
             @Override
-            public void insertFlow(String flowName, Reader flow) {
-              baseProxy
-                .request("insertFlow.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_MIXED)
+            public String createExecution(String uri, String name) {
+              return BaseProxy.StringType.toString(
+                baseProxy
+                .request("createExecution.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
                 .withSession()
                 .withParams(
-                    BaseProxy.atomicParam("flowName", false, BaseProxy.StringType.fromString(flowName)),
-                    BaseProxy.documentParam("flow", false, BaseProxy.ObjectType.fromReader(flow)))
+                    BaseProxy.atomicParam("uri", false, BaseProxy.StringType.fromString(uri)),
+                    BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)))
                 .withMethod("POST")
-                .responseNone();
+                .responseSingle(false, null)
+                );
             }
 
         }
@@ -143,70 +143,70 @@ public interface StateConductorService {
     }
 
   /**
-   * Returns a list of MarkLogic State Conductor Job document URIs
+   * Deletes a single state machine.
+   *
+   * @param name	The name of the state machine to be deleted.
+   * 
+   */
+    void deleteStateMachine(String name);
+
+  /**
+   * Returns a list of MarkLogic State Conductor Execution document URIs
    *
    * @param start	Return records starting from this position.
    * @param count	The number of uris to return
-   * @param flowNames	A list of flow names to filter the returned job documents
-   * @param flowStatus	A list of flow status's to filter the returned job documents.  Defaults to 'new' and 'working'.
-   * @param forestIds	The returned list of job documents will be limited to jobs found in this list of forests.
-   * @param startDate	Filter on jobs created after this date and time.
-   * @param endDate	Filter on jobs created prior to this date and time.
+   * @param names	A list of state machine names to filter the returned execution documents
+   * @param status	A list of state machine status's to filter the returned execution documents.  Defaults to 'new' and 'working'.
+   * @param forestIds	The returned list of execution documents will be limited to executions found in this list of forests.
+   * @param startDate	Filter on executions created after this date and time.
+   * @param endDate	Filter on executions created prior to this date and time.
    * @return	as output
    */
-    Stream<String> getJobs(Integer start, Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds, String startDate, String endDate);
+    Stream<String> getExecutions(Integer start, Integer count, String names, Stream<String> status, Stream<String> forestIds, String startDate, String endDate);
 
   /**
-   * Returns a single flow if flowName is specified or all flows otherwise.
+   * Returns a single stateMachine if name is specified or all stateMachines otherwise.
    *
-   * @param flowName	The name of the flow to return. Pass null to return all.
+   * @param name	The name of the stateMachine to return. Pass null to return all.
    * @return	as output
    */
-    com.fasterxml.jackson.databind.node.ObjectNode getFlow(String flowName);
+    com.fasterxml.jackson.databind.node.ObjectNode getStateMachine(String name);
 
   /**
-   * Deletes a single flow.
+   * Invokes the processing of a MarkLogic State Conductor Execution
    *
-   * @param flowName	The name of the flow to be created or updated.
+   * @param uri	The uri of a State Conductor Execution document to be processed
+   * @return	as output
+   */
+    com.fasterxml.jackson.databind.node.ArrayNode processExecution(Stream<String> uri);
+
+  /**
+   * Creates or updates a single state machine.
+   *
+   * @param name	The name of the state machine to be created or updated.
+   * @param stateMachine	The stateMachine to be created or updated.
    * 
    */
-    void deleteFlow(String flowName);
+    void insertStateMachine(String name, Reader stateMachine);
 
   /**
-   * Creates a MarkLogic State Conductor Job document for the given uri and flow.
+   * Returns the status and states of one or more State Conductor state machines.
    *
-   * @param uri	The uri of a document to be processed by the flow
-   * @param flowName	The name of the State Conductor Flow
-   * @return	The Job ID of the State Conductor Job document
-   */
-    String createJob(String uri, String flowName);
-
-  /**
-   * Invokes the processing of a MarkLogic State Conductor Job
-   *
-   * @param uri	The uri of a State Conductor Job document to be processed
+   * @param names	The state machine names for which to report status.
+   * @param startDate	Filter on executions created after this date and time.
+   * @param endDate	Filter on executions created prior to this date and time.
+   * @param detailed	Include detailed breakdown of executions per state per status?
    * @return	as output
    */
-    com.fasterxml.jackson.databind.node.ArrayNode processJob(Stream<String> uri);
+    com.fasterxml.jackson.databind.node.ObjectNode getStateMachineStatus(Stream<String> names, String startDate, String endDate, Boolean detailed);
 
   /**
-   * Returns the status and states of one or more State Conductor flows.
+   * Creates a MarkLogic State Conductor Execution document for the given uri and state machine name.
    *
-   * @param flowNames	The flow names for which to report status.
-   * @param startDate	Filter on jobs created after this date and time.
-   * @param endDate	Filter on jobs created prior to this date and time.
-   * @param detailed	Include detailed breakdown of jobs per state per status?
-   * @return	as output
+   * @param uri	The uri of a document to be processed by the state machine
+   * @param name	The name of the State Machine
+   * @return	The Execution ID of the State Conductor Execution document
    */
-    com.fasterxml.jackson.databind.node.ObjectNode getFlowStatus(Stream<String> flowNames, String startDate, String endDate, Boolean detailed);
-
-  /**
-   * Creates or updates a single flow.
-   *
-   * @param flowName	The name of the flow to be created or updated.
-   * @param flow	The flow to be created or updated.
-   * 
-   */
-    void insertFlow(String flowName, Reader flow);
+    String createExecution(String uri, String name);
 
 }

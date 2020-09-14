@@ -1,8 +1,8 @@
 {
-  "id": "job5",
-  "flowName": "test-flow",
-  "flowStatus": "failed",
-  "flowState": "add-collection-2",
+  "id": "execution5",
+  "name": "test-state-machine",
+  "status": "failed",
+  "state": "add-collection-2",
   "uri": "/test/doc2.json",
   "database": "%DATABASE%",
   "modules": "%MODULES%",

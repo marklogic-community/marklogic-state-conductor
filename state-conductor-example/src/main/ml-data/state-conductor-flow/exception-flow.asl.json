@@ -1,5 +1,5 @@
 {
-  "Comment": "bad flow demonstrating error catching",
+  "Comment": "bad stateMachine demonstrating error catching",
   "mlDomain": {
     "context": [
       {
@@ -13,7 +13,7 @@
     "runDhf5MakeEnvelopeStep": {
       "Type": "Task",
       "End": true,
-      "Comment": "runs a dhf 5 flow",
+      "Comment": "runs a dhf 5 stateMachine",
       "Resource": "/state-conductor/actions/common/dhf/dhf5MakeEnvelopeStep.sjs",
       "Parameters": {
         "collections": ["dhf5MakeEnvelopeStep"]

@@ -18,47 +18,47 @@ function parseArrayParam(input, delim = ',') {
 }
 
 /**
- * Searches for state conductor job documents matching the parameters
+ * Searches for state conductor execution documents matching the parameters
  */
 function get(context, params) {
   let options = {
     count: Math.max(0, parseInt('0' + params.count)),
-    flowStatus: parseArrayParam(params.flowStatus),
-    flowNames: parseArrayParam(params.flowNames),
+    status: parseArrayParam(params.status),
+    names: parseArrayParam(params.names),
     startDate: params.startDate,
     endDate: params.endDate,
   };
 
-  const uris = sc.getJobDocuments(options);
+  const uris = sc.getExecutionDocuments(options);
 
-  xdmp.trace(sc.TRACE_EVENT, `state-conductor-driver found ${uris.length} job documents`);
+  xdmp.trace(sc.TRACE_EVENT, `state-conductor-driver found ${uris.length} execution documents`);
 
   context.outputStatus = [200, 'OK'];
   return uris;
 }
 
 /**
- * Executes the given state conductor job - performing state actions and transitions
+ * Executes the given state conductor execution - performing state actions and transitions
  */
 function put(context, { uri = '' }) {
   if (uri.length === 0) {
     returnError(400, 'Bad Request', 'Missing required parameter "uri"');
   }
 
-  const continueJob = fn.head(
+  const continueExecution = fn.head(
     xdmp.invokeFunction(
       () => {
         declareUpdate();
-        return sc.processJob(uri);
+        return sc.processExecution(uri);
       },
       {
-        database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
+        database: xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
       }
     )
   );
 
   const resp = {
-    reschedule: continueJob,
+    reschedule: continueExecution,
   };
 
   context.outputStatus = [200, 'OK'];

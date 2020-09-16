@@ -28,7 +28,7 @@ executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
   name: 'ref-path-state-machine',
   status: 'working',
-  status: 'test-data',
+  state: 'test-data',
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -48,7 +48,7 @@ assertions.push(
     resp.context.test,
     'context was filtered by OutputPath'
   ),
-  test.assertEqual('add-collections', resp.status),
+  test.assertEqual('add-collections', resp.state),
   test.assertFalse(colls.includes('test-col-1'), 'doc does not yet have collection')
 );
 
@@ -59,7 +59,7 @@ colls = isolate(() => xdmp.documentGetCollections(uri));
 assertions.push(
   test.assertTrue(resp.context !== null, 'context was set'),
   test.assertEqual('testing, testing, 1-2-3', resp.context, 'context was filtered by OutputPath'),
-  test.assertEqual('success', resp.status),
+  test.assertEqual('success', resp.state),
   test.assertTrue(colls.includes('test-col-1'), 'doc had collection applied using params')
 );
 
@@ -68,7 +68,7 @@ executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
   name: 'ref-path-state-machine',
   status: 'working',
-  status: 'test-data2',
+  state: 'test-data2',
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -84,14 +84,14 @@ assertions.push(
     JSON.stringify(resp.context),
     'context was returned at root level'
   ),
-  test.assertEqual('success', resp.status)
+  test.assertEqual('success', resp.state)
 );
 
 executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
   name: 'ref-path-state-machine',
   status: 'working',
-  status: 'test-data3',
+  state: 'test-data3',
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -103,7 +103,7 @@ resp = sc.executeStateByExecutionDoc(executionDoc, false);
 assertions.push(
   test.assertTrue(resp.context !== null, 'context was set'),
   test.assertEqual('foo', resp.context, 'context was returned at root level'),
-  test.assertEqual('success', resp.status)
+  test.assertEqual('success', resp.state)
 );
 
 // test InputPath filtering
@@ -111,7 +111,7 @@ executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
   name: 'ref-path-state-machine',
   status: 'working',
-  status: 'add-collections2',
+  state: 'add-collections2',
   uri: uri,
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -141,7 +141,7 @@ assertions.push(
   test.assertTrue(resp.context !== null, 'context was set'),
   test.assertTrue(colls.includes('test-col-2'), 'doc had collection applied using params'),
   test.assertEqual('hello world', resp.context, 'context was filtered by OutputPath'),
-  test.assertEqual('success', resp.status)
+  test.assertEqual('success', resp.state)
 );
 
 // return

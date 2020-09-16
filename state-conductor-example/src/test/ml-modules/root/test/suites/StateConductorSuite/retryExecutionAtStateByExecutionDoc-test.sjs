@@ -9,7 +9,7 @@ let executionDoc, error, assertion;
 //checks a failed state working
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_WORKING,
   state: 'parameters-check',
   uri: '/data/test-doc1.json',
@@ -31,7 +31,7 @@ assertions.push(test.assertEqual('INVALID-STATE_MACHINE-STATUS', error.name, 'st
 //checks a waiting state new
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_NEW,
   state: 'dialUp',
   uri: '/data/test-doc1.json',
@@ -53,7 +53,7 @@ assertions.push(test.assertEqual('INVALID-STATE_MACHINE-STATUS', error.name, 'st
 //checks a waiting state waitting
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_WATING,
   state: 'dialUp',
   uri: '/data/test-doc1.json',
@@ -75,7 +75,7 @@ assertions.push(test.assertEqual('INVALID-STATE_MACHINE-STATUS', error.name, 'st
 //checks a waiting state complete
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_COMPLETE,
   state: 'dialUp',
   uri: '/data/test-doc1.json',
@@ -97,7 +97,7 @@ assertions.push(test.assertEqual('INVALID-STATE_MACHINE-STATUS', error.name, 'st
 //retry failed status
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_FAILED,
   state: 'dialUp',
   uri: '/data/test-doc1.json',
@@ -114,7 +114,7 @@ assertions.push(test.assertFalse(assertion.hasOwnProperty('parameters-check'), '
 //retry an unknown state
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_FAILED,
   state: 'dialUp',
   uri: '/data/test-doc1.json',
@@ -133,7 +133,7 @@ assertions.push(
 //retry an NEW state
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_FAILED,
   state: 'dialUp',
   uri: '/data/test-doc1.json',
@@ -152,7 +152,7 @@ assertions.push(
 //unKnown database (content)
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_FAILED,
   state: 'dialUp',
   uri: '/data/test-doc1.json',
@@ -171,7 +171,7 @@ assertions.push(
 //unKnown module database
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_FAILED,
   state: 'dialUp',
   uri: '/data/test-doc1.json',
@@ -188,7 +188,7 @@ assertions.push(test.assertFalse(assertion.hasOwnProperty('parameters-check'), '
 //unKnown database both
 executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  name: 'wait-stateMachine',
+  name: 'wait-state-machine',
   status: sc.STATE_MACHINE_STATUS_FAILED,
   state: 'dialUp',
   uri: '/data/test-doc1.json',

@@ -135,7 +135,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       get("/v1/resources/state-conductor-driver").
     then().
       log().body().
@@ -147,7 +147,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3").
+      queryParam("rs:names", "rest-test-state-machine3").
       get("/v1/resources/state-conductor-driver").
     then().
       log().body().
@@ -159,7 +159,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine4").
       get("/v1/resources/state-conductor-driver").
     then().
       log().body().
@@ -174,8 +174,8 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
-      queryParam("rs:stateMachineStatus", "new,working,waiting,complete,failed").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:status", "new,working,waiting,complete,failed").
       get("/v1/resources/state-conductor-driver").
     then().
       log().body().
@@ -187,8 +187,8 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
-      queryParam("rs:stateMachineStatus", "new").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:status", "new").
       get("/v1/resources/state-conductor-driver").
     then().
       log().body().
@@ -203,8 +203,8 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
-      queryParam("rs:stateMachineStatus", "working").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:status", "working").
       get("/v1/resources/state-conductor-driver").
     then().
       log().body().
@@ -219,7 +219,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       queryParam("rs:startDate", now.minusDays(1).format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-driver").
     then().
@@ -231,7 +231,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       queryParam("rs:startDate", now.format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-driver").
     then().
@@ -246,7 +246,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       queryParam("rs:startDate", now.plusDays(1).format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-driver").
     then().
@@ -259,7 +259,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       queryParam("rs:startDate", now.plusDays(2).format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-driver").
     then().
@@ -274,7 +274,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       queryParam("rs:endDate", now.plusDays(2).format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-driver").
     then().
@@ -286,7 +286,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       queryParam("rs:endDate", now.plusDays(1).format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-driver").
     then().
@@ -298,7 +298,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       queryParam("rs:endDate", now.format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-driver").
     then().
@@ -313,7 +313,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       queryParam("rs:endDate", now.minusDays(1).format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-driver").
     then().
@@ -326,7 +326,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineNames", "rest-test-state-machine3,rest-test-state-machine4").
+      queryParam("rs:names", "rest-test-state-machine3,rest-test-state-machine4").
       queryParam("rs:endDate", now.minusDays(2).format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-driver").
     then().

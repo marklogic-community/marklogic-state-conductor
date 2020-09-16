@@ -9,6 +9,10 @@
       {
         "scope": "event",
         "value": "test"
+      },
+      {
+        "scope": "event",
+        "value": "series-of-clicks-and-beeps-connected"
       }
     ]
   },

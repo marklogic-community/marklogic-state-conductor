@@ -82,7 +82,7 @@ function invokeOrApplyFunction(functionIn, optionsIn) {
 }
 
 /**
- * Gets a stateMachine definition by stateMachineName
+ * Gets a stateMachine definition by name
  *
  * @param {*} name
  * @returns the stateMachine document or null if not found
@@ -101,7 +101,7 @@ function getStateMachineDocument(name) {
 }
 
 /**
- * Gets a stateMachine definition by stateMachineName from the given database.
+ * Gets a stateMachine definition by name from the given database.
  * Throws an error if not found
  *
  * @param {*} name
@@ -162,15 +162,15 @@ function getStateMachineNameFromUri(uri) {
 /**
  * Returns the initial state for the given state machine definition
  *
- * @param {*} { stateMachineName, StartAt }
+ * @param {*} { name, StartAt }
  * @returns
  */
-function getInitialState({ stateMachineName, StartAt }) {
+function getInitialState({ name, StartAt }) {
   if (!StartAt || StartAt.length === 0) {
     fn.error(
       null,
       'INVALID-STATE-DEFINITION',
-      `no "StartAt" defined for state machine "${stateMachineName}"`
+      `no "StartAt" defined for state machine "${name}"`
     );
   }
   return StartAt;
@@ -180,16 +180,16 @@ function getInitialState({ stateMachineName, StartAt }) {
  * Gets the value of the property which links a document to a State Conductor execution
  *
  * @param {*} uri
- * @param {*} stateMachineName
+ * @param {*} name
  * @returns
  */
-function getExecutionMetadataProperty(uri, stateMachineName) {
+function getExecutionMetadataProperty(uri, name) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   if (fn.docAvailable(uri)) {
     return xdmp
       .documentGetProperties(uri, fn.QName('', STATE_MACHINE_EXECUTIONID_PROP_NAME))
       .toArray()
-      .filter((prop) => prop.getAttributeNode('stateMachine-name').nodeValue === stateMachineName);
+      .filter((prop) => prop.getAttributeNode('stateMachine-name').nodeValue === name);
   }
 }
 
@@ -197,13 +197,13 @@ function getExecutionMetadataProperty(uri, stateMachineName) {
  * Links the given document to a state conductor execution
  *
  * @param {*} uri
- * @param {*} stateMachineName
+ * @param {*} name
  * @param {*} executionId
  */
-function addExecutionMetadata(uri, stateMachineName, executionId) {
+function addExecutionMetadata(uri, name, executionId) {
   const builder = new NodeBuilder();
   builder.startElement(STATE_MACHINE_EXECUTIONID_PROP_NAME);
-  builder.addAttribute('stateMachine-name', stateMachineName);
+  builder.addAttribute('stateMachine-name', name);
   builder.addAttribute('execution-id', executionId);
   builder.addAttribute('date', new Date().toISOString());
   builder.endElement();
@@ -211,9 +211,9 @@ function addExecutionMetadata(uri, stateMachineName, executionId) {
   xdmp.documentAddProperties(uri, [executionMetaElem]);
 }
 
-function getExecutionIds(uri, stateMachineName) {
+function getExecutionIds(uri, name) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
-  const executionProps = getExecutionMetadataProperty(uri, stateMachineName);
+  const executionProps = getExecutionMetadataProperty(uri, name);
   return executionProps.map((prop) => prop.getAttributeNode('execution-id').nodeValue);
 }
 
@@ -245,9 +245,9 @@ function getApplicableStateMachines(uri) {
   const stateMachines = getStateMachineDocuments()
     .toArray()
     .filter((stateMachine) => {
-      let stateMachineName = getStateMachineNameFromUri(fn.documentUri(stateMachine));
+      let name = getStateMachineNameFromUri(fn.documentUri(stateMachine));
       let stateMachineOjb = stateMachine.toObject();
-      return getExecutionIds(uri, stateMachineName).length === 0 && checkStateMachineContext(uri, stateMachineOjb);
+      return getExecutionIds(uri, name).length === 0 && checkStateMachineContext(uri, stateMachineOjb);
     });
 
   return stateMachines;
@@ -321,7 +321,7 @@ function processExecution(uri) {
   }
   const executionDoc = cts.doc(uri);
   const execution = executionDoc.toObject();
-  const status = execution.stateMachineStatus;
+  const status = execution.status;
 
   // check the stateMachine state
   if (STATE_MACHINE_STATUS_WORKING === status) {
@@ -351,8 +351,8 @@ function processExecution(uri) {
 function startProcessingStateMachineByExecutionDoc(executionDoc, save = true) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const executionObj = scaffoldExecutionDoc(executionDoc.toObject());
-  const currStateMachineName = executionObj.stateMachineName;
-  const status = executionObj.stateMachineStatus;
+  const currStateMachineName = executionObj.name;
+  const status = executionObj.status;
 
   // sanity check
   if (STATE_MACHINE_STATUS_NEW !== status) {
@@ -366,12 +366,12 @@ function startProcessingStateMachineByExecutionDoc(executionDoc, save = true) {
   try {
     // grab the stateMachine definition from the correct db
     const currStateMachine = getStateMachineDocumentFromDatabase(currStateMachineName, executionObj.database).toObject();
-    currStateMachine.stateMachineName = executionObj.stateMachineName;
+    currStateMachine.name = executionObj.name;
     let initialState = getInitialState(currStateMachine);
 
     // update execution state, status, and provenence
-    executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
-    executionObj.stateMachineState = initialState;
+    executionObj.status = STATE_MACHINE_STATUS_WORKING;
+    executionObj.state = initialState;
 
     xdmp.trace(
       TRACE_EVENT,
@@ -422,18 +422,18 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const uri = xdmp.nodeUri(executionDoc);
   const executionObj = scaffoldExecutionDoc(executionDoc.toObject());
-  const stateMachineName = executionObj.stateMachineName;
-  const stateName = executionObj.stateMachineState;
-  const stateMachineStatus = executionObj.stateMachineStatus;
+  const name = executionObj.name;
+  const stateName = executionObj.state;
+  const status = executionObj.status;
   let state;
   let stateMachineObj;
 
   xdmp.trace(TRACE_EVENT, `resumeWaitingExecution uri "${uri}"`);
-  xdmp.trace(TRACE_EVENT, `resumeWaitingExecution stateMachine "${stateMachineName}"`);
+  xdmp.trace(TRACE_EVENT, `resumeWaitingExecution stateMachine "${name}"`);
   xdmp.trace(TRACE_EVENT, `resumeWaitingExecution stateMachine state "${stateName}"`);
 
   // sanity check
-  if (STATE_MACHINE_STATUS_WAITING !== stateMachineStatus) {
+  if (STATE_MACHINE_STATUS_WAITING !== status) {
     xdmp.trace(
       TRACE_EVENT,
       `INVALID-STATE_MACHINE-STATUS: Cannot resume a stateMachine that is not in the ${STATE_MACHINE_STATUS_WAITING} status`
@@ -477,7 +477,7 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
   }
 
   try {
-    stateMachineObj = getStateMachineDocumentFromDatabase(stateMachineName, executionObj.database).toObject();
+    stateMachineObj = getStateMachineDocumentFromDatabase(name, executionObj.database).toObject();
 
     try {
       state = stateMachineObj.States[stateName];
@@ -485,13 +485,13 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
       return fn.error(
         null,
         'INVALID-STATE-DEFINITION',
-        `Can't Find the state "${stateName}" in stateMachine "${stateMachineName}"`
+        `Can't Find the state "${stateName}" in stateMachine "${name}"`
       );
     }
   } catch (err) {
     return handleError(
       err.name,
-      `resumeWaitingExecutionByExecutionDoc error for stateMachine "${stateMachineName}"`,
+      `resumeWaitingExecutionByExecutionDoc error for stateMachine "${name}"`,
       err,
       executionDoc,
       executionObj,
@@ -503,7 +503,7 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
     //removes old waiting data
     delete executionObj.currentlyWaiting;
 
-    executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
+    executionObj.status = STATE_MACHINE_STATUS_WORKING;
     executionObj.provenance.push({
       date: new Date().toISOString(),
       state: stateName,
@@ -513,7 +513,7 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
 
     return transition(executionDoc, executionObj, stateName, state, stateMachineObj, save);
   } catch (err) {
-    return handleStateFailure(uri, stateMachineName, stateMachineObj, stateName, err, save, executionDoc);
+    return handleStateFailure(uri, name, stateMachineObj, stateName, err, save, executionDoc);
   }
 }
 
@@ -535,17 +535,17 @@ function retryExecutionAtState(uri, stateName = STATE_MACHINE_NEW_STEP, retriedB
 function retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy, save = true) {
   const uri = xdmp.nodeUri(executionDoc);
   const executionObj = scaffoldExecutionDoc(executionDoc.toObject());
-  const stateMachineName = executionObj.stateMachineName;
-  const stateMachineStatus = executionObj.stateMachineStatus;
+  const name = executionObj.name;
+  const status = executionObj.status;
   let state;
   let stateMachineObj;
 
   xdmp.trace(TRACE_EVENT, `retryExecutionAtStateByExecutionDoc uri "${uri}"`);
-  xdmp.trace(TRACE_EVENT, `retryExecutionAtStateByExecutionDoc stateMachine "${stateMachineName}"`);
+  xdmp.trace(TRACE_EVENT, `retryExecutionAtStateByExecutionDoc stateMachine "${name}"`);
   xdmp.trace(TRACE_EVENT, `retryExecutionAtStateByExecutionDoc stateMachine state "${stateName}"`);
 
   // sanity check
-  if (STATE_MACHINE_STATUS_FAILED !== stateMachineStatus) {
+  if (STATE_MACHINE_STATUS_FAILED !== status) {
     xdmp.trace(
       TRACE_EVENT,
       `INVALID-STATE_MACHINE-STATUS: Cannot retry a stateMachine that is not in the ${STATE_MACHINE_STATUS_FAILED} status`
@@ -558,19 +558,19 @@ function retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy,
   }
 
   try {
-    stateMachineObj = getStateMachineDocumentFromDatabase(stateMachineName, executionObj.database).toObject();
+    stateMachineObj = getStateMachineDocumentFromDatabase(name, executionObj.database).toObject();
     state = stateMachineObj.States[stateName];
     if (!state) {
       fn.error(
         null,
         'INVALID-STATE-DEFINITION',
-        `Can't Find the state "${stateName}" in stateMachine "${stateMachineName}"`
+        `Can't Find the state "${stateName}" in stateMachine "${name}"`
       );
     }
   } catch (err) {
     return handleError(
       err.name,
-      `retryExecutionAtStateByExecutionDoc error for stateMachine "${stateMachineName}"`,
+      `retryExecutionAtStateByExecutionDoc error for stateMachine "${name}"`,
       err,
       executionDoc,
       executionObj,
@@ -582,7 +582,7 @@ function retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy,
     //removes old waiting data
     delete executionObj.currentlyWaiting;
 
-    executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
+    executionObj.status = STATE_MACHINE_STATUS_WORKING;
     executionObj.provenance.push({
       date: new Date().toISOString(),
       state: stateName,
@@ -592,7 +592,7 @@ function retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy,
 
     return transition(executionDoc, executionObj, stateName, state, stateMachineObj, save);
   } catch (err) {
-    return handleStateFailure(uri, stateMachineName, stateMachineObj, stateName, err, save, executionObj);
+    return handleStateFailure(uri, name, stateMachineObj, stateName, err, save, executionObj);
   }
 }
 
@@ -601,7 +601,7 @@ function retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy,
  *
  * @param {*} executionDoc - the execution document
  * @param {*} executionObj - the execution object
- * @param {*} stateName - the name of the state most like coming from stateMachineState
+ * @param {*} stateName - the name of the state most like coming from state
  * @param {*} state - the state object
  * @param {*} stateMachineObj - the stateMachine object
  */
@@ -614,10 +614,10 @@ function transition(executionDoc, executionObj, stateName, state, stateMachineOb
 
     xdmp.trace(
       TRACE_EVENT,
-      `executing transitions for state: ${stateName} with status of ${executionObj.stateMachineStatus}`
+      `executing transitions for state: ${stateName} with status of ${executionObj.status}`
     );
 
-    if (executionObj.stateMachineStatus === STATE_MACHINE_STATUS_WAITING) {
+    if (executionObj.status === STATE_MACHINE_STATUS_WAITING) {
       xdmp.trace(TRACE_EVENT, `transition wait: ${stateName}`);
 
       let pro = JSON.parse(JSON.stringify(executionObj.currentlyWaiting));
@@ -675,7 +675,7 @@ function transition(executionDoc, executionObj, stateName, state, stateMachineOb
         } catch (err) {
           return handleStateFailure(
             xdmp.nodeUri(executionDoc),
-            stateMachineObj.stateMachineName,
+            stateMachineObj.name,
             stateMachineObj,
             stateName,
             err,
@@ -693,7 +693,7 @@ function transition(executionDoc, executionObj, stateName, state, stateMachineOb
 
       // perform the transition
       if (targetState) {
-        executionObj.stateMachineState = targetState;
+        executionObj.state = targetState;
 
         executionObj.provenance.push({
           date: new Date().toISOString(),
@@ -713,9 +713,9 @@ function transition(executionDoc, executionObj, stateName, state, stateMachineOb
 
       // determine the final status
       if (STATE_FAIL === state.Type.toLowerCase()) {
-        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_FAILED;
+        executionObj.status = STATE_MACHINE_STATUS_FAILED;
       } else {
-        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_COMPLETE;
+        executionObj.status = STATE_MACHINE_STATUS_COMPLETE;
       }
 
       // terminal states have no "Next" target state
@@ -758,16 +758,16 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
 
   const uri = xdmp.nodeUri(executionDoc);
   const executionObj = scaffoldExecutionDoc(executionDoc.toObject());
-  const stateMachineName = executionObj.stateMachineName;
-  const stateName = executionObj.stateMachineState;
+  const name = executionObj.name;
+  const stateName = executionObj.state;
 
   let state;
   let stateMachineObj;
-  xdmp.trace(TRACE_EVENT, `executing stateMachine "${stateMachineName}"`);
+  xdmp.trace(TRACE_EVENT, `executing stateMachine "${name}"`);
   xdmp.trace(TRACE_EVENT, `stateMachine state "${stateName}"`);
 
   // sanity check
-  if (STATE_MACHINE_STATUS_WORKING !== executionObj.stateMachineStatus) {
+  if (STATE_MACHINE_STATUS_WORKING !== executionObj.status) {
     xdmp.trace(
       TRACE_EVENT,
       'INVALID-STATE_MACHINE-STATUS: Cannot execute a stateMachine that is not in the WORKING status'
@@ -780,7 +780,7 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
   }
 
   try {
-    stateMachineObj = getStateMachineDocumentFromDatabase(stateMachineName, executionObj.database).toObject();
+    stateMachineObj = getStateMachineDocumentFromDatabase(name, executionObj.database).toObject();
 
     try {
       state = stateMachineObj.States[stateName];
@@ -788,13 +788,13 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
       fn.error(
         null,
         'INVALID-STATE-DEFINITION',
-        `Can't Find the state "${stateName}" in stateMachine "${stateMachineName}"`
+        `Can't Find the state "${stateName}" in stateMachine "${name}"`
       );
     }
   } catch (err) {
     return handleError(
       err.name,
-      `executeStateByExecutionDoc error for stateMachine "${stateMachineName}"`,
+      `executeStateByExecutionDoc error for stateMachine "${name}"`,
       err,
       executionDoc,
       executionObj,
@@ -882,7 +882,7 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
         executionObj.currentlyWaiting = {
           event: eventToWaitFor,
         };
-        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WAITING;
+        executionObj.status = STATE_MACHINE_STATUS_WAITING;
       } else if (state.Type && state.Type.toLowerCase() === STATE_WAIT && state.Seconds) {
         //updated the execution Doc to have info about why its waiting
         xdmp.trace(TRACE_EVENT, `waiting for state: ${stateName}`);
@@ -899,7 +899,7 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
             seconds: state.Seconds,
             nextTaskTime: nextTaskTime,
           };
-          executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WAITING;
+          executionObj.status = STATE_MACHINE_STATUS_WAITING;
         } else {
           fn.error(
             null,
@@ -934,7 +934,7 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
             );
           }
 
-          executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WAITING;
+          executionObj.status = STATE_MACHINE_STATUS_WAITING;
         } else {
           fn.error(
             null,
@@ -944,7 +944,7 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
         }
       }
     } catch (err) {
-      return handleStateFailure(uri, stateMachineName, stateMachineObj, stateName, err, save, executionObj);
+      return handleStateFailure(uri, name, stateMachineObj, stateName, err, save, executionObj);
     }
     return transition(executionDoc, executionObj, stateName, state, stateMachineObj, save);
   } else {
@@ -1043,7 +1043,7 @@ function executeConditionModule(modulePath, uri, params, context, { database, mo
  * Uses "Choices" to transition to a failure state
  *
  * @param {*} uri
- * @param {*} stateMachineName
+ * @param {*} name
  * @param {*} stateMachine
  * @param {*} stateName
  * @param {*} err
@@ -1051,7 +1051,7 @@ function executeConditionModule(modulePath, uri, params, context, { database, mo
  * @param {*} executionDoc
  * @returns
  */
-function handleStateFailure(uri, stateMachineName, stateMachine, stateName, err, save = true, executionDocIn) {
+function handleStateFailure(uri, name, stateMachine, stateName, err, save = true, executionDocIn) {
   const currState = stateMachine.States[stateName];
   xdmp.trace(TRACE_EVENT, `handling state failures for state: ${stateName}`);
   xdmp.trace(TRACE_EVENT, Sequence.from([err]));
@@ -1107,8 +1107,8 @@ function handleStateFailure(uri, stateMachineName, stateMachine, stateName, err,
         xdmp.trace(TRACE_EVENT, `retrying execution "${uri}"`);
 
         // changes execution doc to retry state
-        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
-        executionObj.stateMachineState = stateName;
+        executionObj.status = STATE_MACHINE_STATUS_WORKING;
+        executionObj.state = stateName;
 
         executionObj.provenance.push({
           date: new Date().toISOString(),
@@ -1148,8 +1148,8 @@ function handleStateFailure(uri, stateMachineName, stateMachine, stateName, err,
       if (target) {
         xdmp.trace(TRACE_EVENT, `transitioning to fallback state "${target}"`);
         // move to the target state
-        executionObj.stateMachineStatus = STATE_MACHINE_STATUS_WORKING;
-        executionObj.stateMachineState = target;
+        executionObj.status = STATE_MACHINE_STATUS_WORKING;
+        executionObj.state = target;
         executionObj.provenance.push({
           date: new Date().toISOString(),
           from: stateName,
@@ -1186,7 +1186,7 @@ function handleStateFailure(uri, stateMachineName, stateMachine, stateName, err,
  * @returns
  */
 function inTerminalState(execution, stateMachine) {
-  const currStateName = execution.stateMachineState;
+  const currStateName = execution.state;
   let currState = stateMachine.States[currStateName];
 
   if (currState && !SUPPORTED_STATE_TYPES.includes(currState.Type.toLowerCase())) {
@@ -1203,11 +1203,11 @@ function inTerminalState(execution, stateMachine) {
 /**
  * Calculates the state of documents being processed by, and completed through this stateMachine
  *
- * @param {*} stateMachineName
+ * @param {*} name
  * @returns
  */
-function getStateMachineCounts(stateMachineName, { startDate, endDate, detailed = false }) {
-  const stateMachine = getStateMachineDocument(stateMachineName).toObject();
+function getStateMachineCounts(name, { startDate, endDate, detailed = false }) {
+  const stateMachine = getStateMachineDocument(name).toObject();
   const states = Object.keys(stateMachine.States);
   const statuses = [
     STATE_MACHINE_STATUS_NEW,
@@ -1233,8 +1233,8 @@ function getStateMachineCounts(stateMachineName, { startDate, endDate, detailed 
         cts.andQuery(
           [].concat(
             baseQuery,
-            cts.jsonPropertyValueQuery('stateMachineName', stateMachineName),
-            cts.jsonPropertyValueQuery('stateMachineStatus', status)
+            cts.jsonPropertyValueQuery('name', name),
+            cts.jsonPropertyValueQuery('status', status)
           )
         )
       )
@@ -1248,16 +1248,16 @@ function getStateMachineCounts(stateMachineName, { startDate, endDate, detailed 
         cts.andQuery(
           [].concat(
             baseQuery,
-            cts.jsonPropertyValueQuery('stateMachineName', stateMachineName),
-            cts.jsonPropertyValueQuery('stateMachineStatus', status),
-            cts.jsonPropertyValueQuery('stateMachineState', state)
+            cts.jsonPropertyValueQuery('name', name),
+            cts.jsonPropertyValueQuery('status', status),
+            cts.jsonPropertyValueQuery('state', state)
           )
         )
       )
     );
 
   const resp = {
-    stateMachineName: stateMachineName,
+    name: name,
     totalPerStatus: {},
     totalPerState: {},
   };
@@ -1297,9 +1297,9 @@ function getStateMachineCounts(stateMachineName, { startDate, endDate, detailed 
 function scaffoldExecutionDoc(executionDoc) {
   const needProps = {
     id: null,
-    stateMachineName: null,
-    stateMachineStatus: null,
-    stateMachineState: null,
+    name: null,
+    status: null,
+    state: null,
     uri: null,
     database: null,
     modules: null,
@@ -1317,12 +1317,12 @@ function scaffoldExecutionDoc(executionDoc) {
  * Convienence function to create a execution record for a document to be
  * processed by a state conductor stateMachine.
  *
- * @param {*} stateMachineName
+ * @param {*} name
  * @param {*} uri
  * @param {*} [context={}]
  * @param {*} [options={}]
  */
-function createStateConductorExecution(stateMachineName, uri, context = {}, options = {}) {
+function createStateConductorExecution(name, uri, context = {}, options = {}) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
   const collections = [EXECUTION_COLLECTION].concat(options.collections || []);
@@ -1335,9 +1335,9 @@ function createStateConductorExecution(stateMachineName, uri, context = {}, opti
 
   const execution = scaffoldExecutionDoc({
     id: id,
-    stateMachineName: stateMachineName,
-    stateMachineStatus: STATE_MACHINE_STATUS_NEW,
-    stateMachineState: null,
+    name: name,
+    status: STATE_MACHINE_STATUS_NEW,
+    state: null,
     uri: uri,
     database: database,
     modules: modules,
@@ -1365,7 +1365,7 @@ function createStateConductorExecution(stateMachineName, uri, context = {}, opti
 
   // add execution metadata to the target document (if one was passed)
   if (uri) {
-    addExecutionMetadata(uri, stateMachineName, id); // prevents updates to the target from retriggering this stateMachine
+    addExecutionMetadata(uri, name, id); // prevents updates to the target from retriggering this stateMachine
   }
 
   return id;
@@ -1375,14 +1375,14 @@ function createStateConductorExecution(stateMachineName, uri, context = {}, opti
  * Convienence function to create execution records for a batch of documents to be
  * processed by a state conductor stateMachine.
  *
- * @param {*} stateMachineName
+ * @param {*} name
  * @param {*} [uris=[]]
  * @param {*} [context={}]
  * @param {*} [options={}]
  * @returns
  */
-function batchCreateStateConductorExecution(stateMachineName, uris = [], context = {}, options = {}) {
-  const ids = uris.map((uri) => createStateConductorExecution(stateMachineName, uri, context, options));
+function batchCreateStateConductorExecution(name, uris = [], context = {}, options = {}) {
+  const ids = uris.map((uri) => createStateConductorExecution(name, uri, context, options));
   return ids;
 }
 
@@ -1405,7 +1405,7 @@ function emitEvent(event, batchSize = 100, save = true) {
           null,
           cts.andQuery([
             cts.collectionQuery(EXECUTION_COLLECTION),
-            cts.jsonPropertyValueQuery('stateMachineStatus', STATE_MACHINE_STATUS_WAITING),
+            cts.jsonPropertyValueQuery('status', STATE_MACHINE_STATUS_WAITING),
             cts.jsonPropertyScopeQuery(
               'currentlyWaiting',
               cts.jsonPropertyValueQuery('event', event)
@@ -1463,10 +1463,10 @@ function emitEvent(event, batchSize = 100, save = true) {
 
   let stateMachinesToTriggerResp = stateMachinesToTrigger.map((stateMachine) => {
     // create a state conductor execution for the event stateMachines
-    let stateMachineName = getStateMachineNameFromUri(fn.documentUri(stateMachine));
-    let resp = createStateConductorExecution(stateMachineName, null);
+    let name = getStateMachineNameFromUri(fn.documentUri(stateMachine));
+    let resp = createStateConductorExecution(name, null);
     xdmp.trace(TRACE_EVENT, `created state conductor execution for event stateMachine: ${resp}`);
-    return { stateMachineName: stateMachineName, ExecutionId: resp };
+    return { stateMachineName: name, executionId: resp };
   });
 
   const output = {
@@ -1487,10 +1487,10 @@ function getExecutionDocuments(options) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const start = options.start || 1;
   const count = options.count || 100;
-  const stateMachineStatus = Array.isArray(options.stateMachineStatus)
-    ? options.stateMachineStatus
+  const status = Array.isArray(options.status)
+    ? options.status
     : [STATE_MACHINE_STATUS_NEW, STATE_MACHINE_STATUS_WORKING];
-  const stateMachineNames = Array.isArray(options.stateMachineNames) ? options.stateMachineNames : [];
+  const names = Array.isArray(options.names) ? options.names : [];
   const resumeWait = options.resumeWait;
   const forestIds = options.forestIds;
   let uris = [];
@@ -1499,11 +1499,11 @@ function getExecutionDocuments(options) {
     () => {
       const queries = [
         cts.collectionQuery('stateConductorExecution'),
-        cts.jsonPropertyValueQuery('stateMachineStatus', stateMachineStatus),
+        cts.jsonPropertyValueQuery('status', status),
       ];
 
-      if (stateMachineNames.length > 0) {
-        queries.push(cts.jsonPropertyValueQuery('stateMachineName', stateMachineNames));
+      if (names.length > 0) {
+        queries.push(cts.jsonPropertyValueQuery('name', names));
       }
       if (options.startDate) {
         queries.push(
@@ -1557,10 +1557,10 @@ function getExecutionDocuments(options) {
  **/
 function handleError(name, message, err, executionDoc, executionObj, save = true) {
   xdmp.trace(TRACE_EVENT, name + ':' + message);
-  const state = executionObj.stateMachineState || STATE_MACHINE_NEW_STEP;
+  const state = executionObj.state || STATE_MACHINE_NEW_STEP;
 
   // update the execution document
-  executionObj.stateMachineStatus = STATE_MACHINE_STATUS_FAILED;
+  executionObj.status = STATE_MACHINE_STATUS_FAILED;
   executionObj.errors[state] = err;
 
   if (save) {

@@ -16,7 +16,7 @@ function returnError(statusCode, statusMsg, body) {
  */
 function get(context, params) {
   if (params.name) {
-    const stateMachine = sc.getStateMachineDocument(params.name);
+    const stateMachine = sc.getStateMachine(params.name);
     if (stateMachine) {
       context.outputStatus = [200, 'Success'];
       return stateMachine;
@@ -28,7 +28,7 @@ function get(context, params) {
       );
     }
   } else {
-    const stateMachines = sc.getStateMachineDocuments();
+    const stateMachines = sc.getStateMachines();
     const resp = stateMachines.toArray().reduce((acc, stateMachine) => {
       let name = sc.getStateMachineNameFromUri(fn.documentUri(stateMachine));
       acc[name] = stateMachine.toObject();
@@ -73,7 +73,7 @@ function deleteFunction(context, params) {
   if (name === '') {
     returnError(400, 'Bad Request', 'Missing parameter "name"');
   } else {
-    const stateMachine = sc.getStateMachineDocument(name);
+    const stateMachine = sc.getStateMachine(name);
     if (!stateMachine) {
       returnError(
         404,

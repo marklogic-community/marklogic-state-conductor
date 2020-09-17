@@ -87,7 +87,7 @@ function invokeOrApplyFunction(functionIn, optionsIn) {
  * @param {*} name
  * @returns the stateMachine document or null if not found
  */
-function getStateMachineDocument(name) {
+function getStateMachine(name) {
   let nameWithExtension = fn.normalizeSpace(name) + STATE_MACHINE_FILE_EXTENSION;
   const uri = fn.head(
     cts.uriMatch(
@@ -108,10 +108,10 @@ function getStateMachineDocument(name) {
  * @param {*} databaseId
  * @returns
  */
-function getStateMachineDocumentFromDatabase(name, databaseId) {
+function getStateMachineFromDatabase(name, databaseId) {
   let resp = invokeOrApplyFunction(
     () => {
-      let stateMachine = getStateMachineDocument(name);
+      let stateMachine = getStateMachine(name);
       if (!stateMachine) {
         fn.error(null, 'MISSING-STATE_MACHINE-FILE', `Cannot find a a stateMachine file with the name: ${name}`);
       }
@@ -129,7 +129,7 @@ function getStateMachineDocumentFromDatabase(name, databaseId) {
  *
  * @returns
  */
-function getStateMachineDocuments() {
+function getStateMachines() {
   return fn.collection(STATE_MACHINE_COLLECTION);
 }
 
@@ -242,7 +242,7 @@ function checkStateMachineContext(uri, stateMachine) {
  * @returns
  */
 function getApplicableStateMachines(uri) {
-  const stateMachines = getStateMachineDocuments()
+  const stateMachines = getStateMachines()
     .toArray()
     .filter((stateMachine) => {
       let name = getStateMachineNameFromUri(fn.documentUri(stateMachine));
@@ -290,7 +290,7 @@ function getStateMachineContextQuery(stateMachine) {
  * @returns
  */
 function getAllStateMachinesContextQuery() {
-  let queries = getStateMachineDocuments()
+  let queries = getStateMachines()
     .toArray()
     .map((stateMachine) => getStateMachineContextQuery(stateMachine.toObject()));
 
@@ -365,7 +365,7 @@ function startProcessingStateMachineByExecutionDoc(executionDoc, save = true) {
 
   try {
     // grab the stateMachine definition from the correct db
-    const currStateMachine = getStateMachineDocumentFromDatabase(currStateMachineName, executionObj.database).toObject();
+    const currStateMachine = getStateMachineFromDatabase(currStateMachineName, executionObj.database).toObject();
     currStateMachine.name = executionObj.name;
     let initialState = getInitialState(currStateMachine);
 
@@ -477,7 +477,7 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
   }
 
   try {
-    stateMachineObj = getStateMachineDocumentFromDatabase(name, executionObj.database).toObject();
+    stateMachineObj = getStateMachineFromDatabase(name, executionObj.database).toObject();
 
     try {
       state = stateMachineObj.States[stateName];
@@ -558,7 +558,7 @@ function retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy,
   }
 
   try {
-    stateMachineObj = getStateMachineDocumentFromDatabase(name, executionObj.database).toObject();
+    stateMachineObj = getStateMachineFromDatabase(name, executionObj.database).toObject();
     state = stateMachineObj.States[stateName];
     if (!state) {
       fn.error(
@@ -780,7 +780,7 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
   }
 
   try {
-    stateMachineObj = getStateMachineDocumentFromDatabase(name, executionObj.database).toObject();
+    stateMachineObj = getStateMachineFromDatabase(name, executionObj.database).toObject();
 
     try {
       state = stateMachineObj.States[stateName];
@@ -1207,7 +1207,7 @@ function inTerminalState(execution, stateMachine) {
  * @returns
  */
 function getStateMachineCounts(name, { startDate, endDate, detailed = false }) {
-  const stateMachine = getStateMachineDocument(name).toObject();
+  const stateMachine = getStateMachine(name).toObject();
   const states = Object.keys(stateMachine.States);
   const statuses = [
     STATE_MACHINE_STATUS_NEW,
@@ -1599,9 +1599,9 @@ module.exports = {
   getApplicableStateMachines,
   getStateMachineContextQuery,
   getStateMachineCounts,
-  getStateMachineDocument,
-  getStateMachineDocumentFromDatabase,
-  getStateMachineDocuments,
+  getStateMachine,
+  getStateMachineFromDatabase,
+  getStateMachines,
   getStateMachineNameFromUri,
   getStateMachineNames,
   getInitialState,

@@ -27,27 +27,27 @@ public class StateConductorExecution {
     this.id = id;
   }
 
-  public String getStateMachineName() {
+  public String getName() {
     return name;
   }
 
-  public void setStateMachineName(String name) {
+  public void setName(String name) {
     this.name = name;
   }
 
-  public String getStateMachineStatus() {
+  public String getStatus() {
     return status;
   }
 
-  public void setStateMachineStatus(String status) {
+  public void setStatus(String status) {
     this.status = status;
   }
 
-  public String getStateMachineState() {
+  public String getState() {
     return state;
   }
 
-  public void setStateMachineState(String state) {
+  public void setState(String state) {
     this.state = state;
   }
 

@@ -24,7 +24,7 @@ function get(context, params) {
   if (!fn.docAvailable(params.uri)) {
     returnError(404, 'NOT FOUND', `Document at uri "${params.uri}" not found.`);
   }
-  if (!sc.getStateMachineDocument(params.name)) {
+  if (!sc.getStateMachine(params.name)) {
     returnError(404, 'NOT FOUND', `StateMachine "${params.name}" not found.`);
   }
 
@@ -46,7 +46,7 @@ function put(context, { uris = [], name = '' }, input) {
   if (name === '') {
     returnError(400, 'Bad Request', 'Missing required parameter "name"');
   }
-  if (!sc.getStateMachineDocument(name)) {
+  if (!sc.getStateMachine(name)) {
     returnError(404, 'NOT FOUND', `StateMachine File "${name}" not found.`);
   }
 

@@ -19,7 +19,7 @@ function isValidTemporal(value) {
  * Lists the status of the given State Conductor StateMachine
  */
 function get(context, params) {
-  if (params.stateMachineName && !sc.getStateMachineDocument(params.stateMachineName)) {
+  if (params.stateMachineName && !sc.getStateMachine(params.stateMachineName)) {
     returnError(404, 'NOT FOUND', `StateMachine File "${params.stateMachineName}" not found.`);
   }
 

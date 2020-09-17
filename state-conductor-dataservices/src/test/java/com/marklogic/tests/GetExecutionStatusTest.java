@@ -74,7 +74,7 @@ public class GetExecutionStatusTest extends AbstractStateConductorTest {
 
     assertNotNull(resp);
     assertEquals(JsonNodeType.OBJECT, resp.get("fake-state-machine").getNodeType());
-    assertEquals("fake-state-machine", resp.get("fake-state-machine").get("stateMachineName").asText());
+    assertEquals("fake-state-machine", resp.get("fake-state-machine").get("name").asText());
     assertEquals("", resp.get("fake-state-machine").get("totalPerStatus").asText());
     assertEquals("", resp.get("fake-state-machine").get("totalPerState").asText());
   }
@@ -88,7 +88,7 @@ public class GetExecutionStatusTest extends AbstractStateConductorTest {
     assertEquals(JsonNodeType.OBJECT, resp.getNodeType());
 
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").getNodeType());
-    assertEquals("test-state-machine", resp.get("test-state-machine").get("stateMachineName").asText());
+    assertEquals("test-state-machine", resp.get("test-state-machine").get("name").asText());
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").get("totalPerStatus").getNodeType());
     assertTrue(2 <= resp.get("test-state-machine").get("totalPerStatus").get("new").asInt());
     assertTrue(1 == resp.get("test-state-machine").get("totalPerStatus").get("working").asInt());
@@ -101,7 +101,7 @@ public class GetExecutionStatusTest extends AbstractStateConductorTest {
     assertTrue(1 == resp.get("test-state-machine").get("totalPerState").get("success").asInt());
 
     assertEquals(JsonNodeType.OBJECT, resp.get("test2-state-machine").getNodeType());
-    assertEquals("test2-state-machine", resp.get("test2-state-machine").get("stateMachineName").asText());
+    assertEquals("test2-state-machine", resp.get("test2-state-machine").get("name").asText());
     assertEquals(JsonNodeType.OBJECT, resp.get("test2-state-machine").get("totalPerStatus").getNodeType());
     assertTrue(0 <= resp.get("test2-state-machine").get("totalPerStatus").get("new").asInt());
     assertTrue(0 == resp.get("test2-state-machine").get("totalPerStatus").get("working").asInt());
@@ -155,7 +155,7 @@ public class GetExecutionStatusTest extends AbstractStateConductorTest {
     assertNotNull(resp);
     assertEquals(JsonNodeType.OBJECT, resp.getNodeType());
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").getNodeType());
-    assertEquals("test-state-machine", resp.get("test-state-machine").get("stateMachineName").asText());
+    assertEquals("test-state-machine", resp.get("test-state-machine").get("name").asText());
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").get("totalPerStatus").getNodeType());
     assertTrue(2 <= resp.get("test-state-machine").get("totalPerStatus").get("new").asInt());
     assertTrue(1 == resp.get("test-state-machine").get("totalPerStatus").get("working").asInt());
@@ -178,7 +178,7 @@ public class GetExecutionStatusTest extends AbstractStateConductorTest {
     assertNotNull(resp);
     assertEquals(JsonNodeType.OBJECT, resp.getNodeType());
     assertEquals(JsonNodeType.OBJECT, resp.get("test2-state-machine").getNodeType());
-    assertEquals("test2-state-machine", resp.get("test2-state-machine").get("stateMachineName").asText());
+    assertEquals("test2-state-machine", resp.get("test2-state-machine").get("name").asText());
     assertEquals(JsonNodeType.OBJECT, resp.get("test2-state-machine").get("totalPerStatus").getNodeType());
     assertTrue(0 <= resp.get("test2-state-machine").get("totalPerStatus").get("new").asInt());
     assertTrue(0 == resp.get("test2-state-machine").get("totalPerStatus").get("working").asInt());
@@ -202,7 +202,7 @@ public class GetExecutionStatusTest extends AbstractStateConductorTest {
     assertNotNull(resp);
     assertEquals(JsonNodeType.OBJECT, resp.getNodeType());
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").getNodeType());
-    assertEquals("test-state-machine", resp.get("test-state-machine").get("stateMachineName").asText());
+    assertEquals("test-state-machine", resp.get("test-state-machine").get("name").asText());
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").get("totalPerStatus").getNodeType());
     assertTrue(1 <= resp.get("test-state-machine").get("totalPerStatus").get("new").asInt());
     assertTrue(1 == resp.get("test-state-machine").get("totalPerStatus").get("working").asInt());
@@ -223,7 +223,7 @@ public class GetExecutionStatusTest extends AbstractStateConductorTest {
     assertNotNull(resp);
     assertEquals(JsonNodeType.OBJECT, resp.getNodeType());
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").getNodeType());
-    assertEquals("test-state-machine", resp.get("test-state-machine").get("stateMachineName").asText());
+    assertEquals("test-state-machine", resp.get("test-state-machine").get("name").asText());
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").get("totalPerStatus").getNodeType());
     assertTrue(1 <= resp.get("test-state-machine").get("totalPerStatus").get("new").asInt());
     assertTrue(0 == resp.get("test-state-machine").get("totalPerStatus").get("working").asInt());
@@ -244,7 +244,7 @@ public class GetExecutionStatusTest extends AbstractStateConductorTest {
     assertNotNull(resp);
     assertEquals(JsonNodeType.OBJECT, resp.getNodeType());
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").getNodeType());
-    assertEquals("test-state-machine", resp.get("test-state-machine").get("stateMachineName").asText());
+    assertEquals("test-state-machine", resp.get("test-state-machine").get("name").asText());
     assertEquals(JsonNodeType.OBJECT, resp.get("test-state-machine").get("totalPerStatus").getNodeType());
     assertTrue(0 == resp.get("test-state-machine").get("totalPerStatus").get("new").asInt());
     assertTrue(1 == resp.get("test-state-machine").get("totalPerStatus").get("working").asInt());

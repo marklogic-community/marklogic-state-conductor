@@ -71,7 +71,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     DocumentMetadataHandle meta = new DocumentMetadataHandle();
     meta.getCollections().add("state-conductor-state-machine");
     batch = getContentManager().newWriteSet();
-    batch.add("/state-conductor-state-machine/test-state-machine.asl.json", meta, loadFileResource("state-machines/test-state-machine.asl.json"));
+    batch.add("/state-conductor-state-machine/test-state-machine.asl.json", meta, loadFileResource("stateMachines/test-state-machine.asl.json"));
     getContentManager().write(batch);
   }
 
@@ -120,15 +120,15 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
   @Test
   public void testDeleteStateMachine() throws IOException {
-    final String newStateMachineName = "new-test-state-machine";
+    final String newName = "new-test-state-machine";
     final String stateMachineName = "test-state-machine";
-    service.insertStateMachine(newStateMachineName, new StringReader(service.getStateMachine(stateMachineName).toString()));
+    service.insertStateMachine(newName, new StringReader(service.getStateMachine(stateMachineName).toString()));
     final ObjectNode updatedTestStateMachine = service.getStateMachine(stateMachineName);
     assertEquals("does things", updatedTestStateMachine.get("Comment").asText());
-    service.deleteStateMachine(newStateMachineName);
+    service.deleteStateMachine(newName);
     try {
-      service.getStateMachine(newStateMachineName);
-      assertTrue(false, "Failed to delete newStateMachineName");
+      service.getStateMachine(newName);
+      assertTrue(false, "Failed to delete newName");
     }
     catch(Exception e) {
       assertTrue(true);
@@ -144,7 +144,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     uris = service.getExecutions(1, 1000, null, null, null, null, null).toArray(String[]::new);
     assertTrue(3 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
-      String stateMachineStatus = getExecutionDocument(uris[i]).getStateMachineStatus();
+      String stateMachineStatus = getExecutionDocument(uris[i]).getStatus();
       assertTrue((stateMachineStatus.equals("new") || stateMachineStatus.equals("working")));
     }
 
@@ -152,45 +152,45 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     uris = service.getExecutions(1, count, null, Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
-      assertEquals("new", getExecutionDocument(uris[i]).getStateMachineStatus());
+      assertEquals("new", getExecutionDocument(uris[i]).getStatus());
     }
 
     status = new String[]{ "new" };
     uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
-      assertEquals("new", getExecutionDocument(uris[i]).getStateMachineStatus());
-      assertEquals("test-state-machine", getExecutionDocument(uris[i]).getStateMachineName());
+      assertEquals("new", getExecutionDocument(uris[i]).getStatus());
+      assertEquals("test-state-machine", getExecutionDocument(uris[i]).getName());
     }
 
     status = new String[]{ "working" };
     uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertEquals(1, uris.length);
-    assertEquals("working", getExecutionDocument(uris[0]).getStateMachineStatus());
-    assertEquals("test-state-machine", getExecutionDocument(uris[0]).getStateMachineName());
+    assertEquals("working", getExecutionDocument(uris[0]).getStatus());
+    assertEquals("test-state-machine", getExecutionDocument(uris[0]).getName());
     assertEquals("execution3", getExecutionDocument(uris[0]).getId());
 
     status = new String[]{ "complete" };
     uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertEquals(1, uris.length);
-    assertEquals("complete", getExecutionDocument(uris[0]).getStateMachineStatus());
-    assertEquals("test-state-machine", getExecutionDocument(uris[0]).getStateMachineName());
+    assertEquals("complete", getExecutionDocument(uris[0]).getStatus());
+    assertEquals("test-state-machine", getExecutionDocument(uris[0]).getName());
     assertEquals("execution4", getExecutionDocument(uris[0]).getId());
 
     status = new String[]{ "failed" };
     uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertEquals(1, uris.length);
-    assertEquals("failed", getExecutionDocument(uris[0]).getStateMachineStatus());
-    assertEquals("test-state-machine", getExecutionDocument(uris[0]).getStateMachineName());
+    assertEquals("failed", getExecutionDocument(uris[0]).getStatus());
+    assertEquals("test-state-machine", getExecutionDocument(uris[0]).getName());
     assertEquals("execution5", getExecutionDocument(uris[0]).getId());
 
     status = new String[]{ "complete", "failed" };
     uris = service.getExecutions(1, count, "test-state-machine", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
-      String stateMachineStatus = getExecutionDocument(uris[i]).getStateMachineStatus();
+      String stateMachineStatus = getExecutionDocument(uris[i]).getStatus();
       assertTrue((stateMachineStatus.equals("complete") || stateMachineStatus.equals("failed")));
-      assertEquals("test-state-machine", getExecutionDocument(uris[i]).getStateMachineName());
+      assertEquals("test-state-machine", getExecutionDocument(uris[i]).getName());
     }
 
     uris = service.getExecutions(1, count, "fake-state-machine", null, null, null, null).toArray(String[]::new);
@@ -212,7 +212,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertTrue(executionDoc != null);
     assertEquals(resp, executionDoc.getId());
     assertEquals(data2Uri, executionDoc.getUri());
-    assertEquals("test-state-machine", executionDoc.getStateMachineName());
+    assertEquals("test-state-machine", executionDoc.getName());
 
     assertThrows(FailedRequestException.class, () -> {
       service.createExecution("/my/fake/document.json", "test-state-machine");
@@ -244,9 +244,9 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(false, meta.getCollections().contains("testcol1"));
     assertEquals(false, meta.getCollections().contains("testcol2"));
-    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
-    assertEquals("working", execution1Doc.getStateMachineStatus());
-    assertEquals("add-collection-1", execution1Doc.getStateMachineState());
+    assertEquals("test-state-machine", execution1Doc.getName());
+    assertEquals("working", execution1Doc.getStatus());
+    assertEquals("add-collection-1", execution1Doc.getState());
     // continue execution 1
     resp = service.processExecution(Arrays.stream(new String[]{execution1Uri}));
     execution1Doc = getExecutionDocument(execution1Uri);
@@ -255,9 +255,9 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(true, meta.getCollections().contains("testcol1"));
     assertEquals(false, meta.getCollections().contains("testcol2"));
-    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
-    assertEquals("working", execution1Doc.getStateMachineStatus());
-    assertEquals("add-collection-2", execution1Doc.getStateMachineState());
+    assertEquals("test-state-machine", execution1Doc.getName());
+    assertEquals("working", execution1Doc.getStatus());
+    assertEquals("add-collection-2", execution1Doc.getState());
     // continue execution 1
     resp = service.processExecution(Arrays.stream(new String[]{execution1Uri}));
     execution1Doc = getExecutionDocument(execution1Uri);
@@ -266,25 +266,25 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertEquals(true, resp.get(0).get("result").asBoolean());
     assertEquals(true, meta.getCollections().contains("testcol1"));
     assertEquals(true, meta.getCollections().contains("testcol2"));
-    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
-    assertEquals("working", execution1Doc.getStateMachineStatus());
-    assertEquals("success", execution1Doc.getStateMachineState());
+    assertEquals("test-state-machine", execution1Doc.getName());
+    assertEquals("working", execution1Doc.getStatus());
+    assertEquals("success", execution1Doc.getState());
     // continue execution 1
     resp = service.processExecution(Arrays.stream(new String[]{execution1Uri}));
     execution1Doc = getExecutionDocument(execution1Uri);
     assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
-    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
-    assertEquals("complete", execution1Doc.getStateMachineStatus());
-    assertEquals("success", execution1Doc.getStateMachineState());
+    assertEquals("test-state-machine", execution1Doc.getName());
+    assertEquals("complete", execution1Doc.getStatus());
+    assertEquals("success", execution1Doc.getState());
     // end execution 1
     resp = service.processExecution(Arrays.stream(new String[]{execution1Uri}));
     execution1Doc = getExecutionDocument(execution1Uri);
     assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(false, resp.get(0).get("result").asBoolean());
-    assertEquals("test-state-machine", execution1Doc.getStateMachineName());
-    assertEquals("complete", execution1Doc.getStateMachineStatus());
-    assertEquals("success", execution1Doc.getStateMachineState());
+    assertEquals("test-state-machine", execution1Doc.getName());
+    assertEquals("complete", execution1Doc.getStatus());
+    assertEquals("success", execution1Doc.getState());
   }
 
   @Test
@@ -324,8 +324,8 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
     assertEquals(null, errorResp);
     assertNotNull(resp);
-    assertEquals("missing-state-machine", badExecution1Doc.getStateMachineName());
-    assertEquals("failed", badExecution1Doc.getStateMachineStatus());
+    assertEquals("missing-state-machine", badExecution1Doc.getName());
+    assertEquals("failed", badExecution1Doc.getStatus());
   }
 
   @Test
@@ -349,28 +349,28 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
     executionDoc = getExecutionDocument(execution1Uri);
     logger.info(executionDoc.toString());
-    assertEquals("test-state-machine", executionDoc.getStateMachineName());
-    assertEquals("working", executionDoc.getStateMachineStatus());
-    assertEquals("add-collection-1", executionDoc.getStateMachineState());
+    assertEquals("test-state-machine", executionDoc.getName());
+    assertEquals("working", executionDoc.getStatus());
+    assertEquals("add-collection-1", executionDoc.getState());
 
     executionDoc = getExecutionDocument(execution2Uri);
     logger.info(executionDoc.toString());
-    assertEquals("test-state-machine", executionDoc.getStateMachineName());
-    assertEquals("working", executionDoc.getStateMachineStatus());
-    assertEquals("add-collection-1", executionDoc.getStateMachineState());
+    assertEquals("test-state-machine", executionDoc.getName());
+    assertEquals("working", executionDoc.getStatus());
+    assertEquals("add-collection-1", executionDoc.getState());
 
     executionDoc = getExecutionDocument(execution3Uri);
     logger.info(executionDoc.toString());
     getContentManager().readMetadata(data2Uri, meta);
-    assertEquals("test-state-machine", executionDoc.getStateMachineName());
-    assertEquals("working", executionDoc.getStateMachineStatus());
-    assertEquals("add-collection-2", executionDoc.getStateMachineState());
+    assertEquals("test-state-machine", executionDoc.getName());
+    assertEquals("working", executionDoc.getStatus());
+    assertEquals("add-collection-2", executionDoc.getState());
     assertEquals(true, meta.getCollections().contains("testcol1"));
 
     executionDoc = getExecutionDocument(badExecution1Uri);
     logger.info(executionDoc.toString());
-    assertEquals("missing-state-machine", executionDoc.getStateMachineName());
-    assertEquals("failed", executionDoc.getStateMachineStatus());
+    assertEquals("missing-state-machine", executionDoc.getName());
+    assertEquals("failed", executionDoc.getStatus());
 
     assertEquals(execution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
@@ -404,8 +404,8 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertNotNull(resp);
     assertEquals(badExecution1Uri, resp.get(0).get("execution").asText());
     assertEquals(true, resp.get(0).get("result").asBoolean());
-    assertEquals("missing-state-machine", badExecution1Doc.getStateMachineName());
-    assertEquals("failed", badExecution1Doc.getStateMachineStatus());
+    assertEquals("missing-state-machine", badExecution1Doc.getName());
+    assertEquals("failed", badExecution1Doc.getStatus());
 
     try {
       resp = service.processExecution(Arrays.stream(new String[]{badExecution1Uri}));

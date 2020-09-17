@@ -50,7 +50,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uris", "/test/doc1.json").
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       put("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -72,7 +72,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uris", "/test/doc1.json,/test/doc2.json").
-      queryParam("rs:stateMachineName", "rest-test-state-machine2").
+      queryParam("rs:name", "rest-test-state-machine2").
       put("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -93,7 +93,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       put("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -106,7 +106,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uris", "/test/doc99999.json").
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       put("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -131,7 +131,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uris", "/test/doc1.json").
-      queryParam("rs:stateMachineName", "non-existent-state-machine").
+      queryParam("rs:name", "non-existent-state-machine").
       put("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -145,7 +145,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uri", "/test/doc2.json").
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       get("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -158,7 +158,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uris", "/test/doc1.json").
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       put("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -177,7 +177,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uri", "/test/doc1.json").
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       get("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -192,7 +192,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       get("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -205,7 +205,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uri", "/test/doc999999.json").
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       get("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -230,7 +230,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uri", "/test/doc1.json").
-      queryParam("rs:stateMachineName", "non-existent-state-machine").
+      queryParam("rs:name", "non-existent-state-machine").
       get("/v1/resources/state-conductor-executions").
     then().
       log().body().

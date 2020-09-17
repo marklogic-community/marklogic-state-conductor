@@ -5,9 +5,9 @@ const test = require('/test/test-helper.xqy');
 
 const assertions = [];
 
-const testStateMachine = sc.getStateMachineDocument('test-state-machine').toObject();
-const branchingStateMachine = sc.getStateMachineDocument('branching-state-machine').toObject();
-const noContextStateMachine = sc.getStateMachineDocument('no-context-state-machine').toObject();
+const testStateMachine = sc.getStateMachine('test-state-machine').toObject();
+const branchingStateMachine = sc.getStateMachine('branching-state-machine').toObject();
+const noContextStateMachine = sc.getStateMachine('no-context-state-machine').toObject();
 
 const doc1 = '/data/test-doc1.json';
 const doc2 = '/data/test-doc2.json';

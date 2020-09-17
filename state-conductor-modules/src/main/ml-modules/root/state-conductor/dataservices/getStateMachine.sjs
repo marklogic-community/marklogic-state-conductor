@@ -19,7 +19,7 @@ result
  * @param {string} name The name of the state machine to be returned
  */
 function getStateMachineDetail(name) {
-  const stateMachine = sc.getStateMachineDocument(name);
+  const stateMachine = sc.getStateMachine(name);
   if (stateMachine) {
     return stateMachine;
   }
@@ -32,7 +32,7 @@ function getStateMachineDetail(name) {
  * Get all available state machines
  */
 function getAllStateMachines() {
-  const stateMachines = sc.getStateMachineDocuments();
+  const stateMachines = sc.getStateMachines();
   return stateMachines.toArray().reduce((acc, stateMachine) => {
       let name = sc.getStateMachineNameFromUri(fn.documentUri(stateMachine));
       acc[name] = stateMachine.toObject();

@@ -5,7 +5,7 @@ const test = require('/test/test-helper.xqy');
 
 const assertions = [];
 
-const stateMachineDocuments = sc.getStateMachineDocuments().toArray();
+const stateMachineDocuments = sc.getStateMachines().toArray();
 assertions.push(test.assertEqual(12, stateMachineDocuments.length, 'StateMachine files are present'));
 
 const names = sc.getStateMachineNames().sort();
@@ -25,13 +25,13 @@ assertions.push(
   test.assertEqual('wait-state-machine', names[11])
 );
 
-const branchingStateMachine = sc.getStateMachineDocument('branching-state-machine');
+const branchingStateMachine = sc.getStateMachine('branching-state-machine');
 assertions.push(
   test.assertTrue(!!branchingStateMachine),
   test.assertEqual('find-gender', branchingStateMachine.toObject().StartAt)
 );
 
-const testStateMachine = sc.getStateMachineDocument('test-state-machine');
+const testStateMachine = sc.getStateMachine('test-state-machine');
 assertions.push(
   test.assertTrue(!!testStateMachine),
   test.assertEqual('set-prop1', testStateMachine.toObject().StartAt),

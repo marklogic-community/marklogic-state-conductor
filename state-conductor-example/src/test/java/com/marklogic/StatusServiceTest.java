@@ -91,7 +91,7 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       statusCode(200).
       contentType(ContentType.JSON).
       body("rest-test-state-machine", notNullValue()).
-      body("rest-test-state-machine.stateMachineName", equalTo("rest-test-state-machine")).
+      body("rest-test-state-machine.name", equalTo("rest-test-state-machine")).
       body("rest-test-state-machine.totalPerStatus", notNullValue()).
       body("rest-test-state-machine.totalPerStatus.new", greaterThanOrEqualTo(0)).
       body("rest-test-state-machine.totalPerStatus.working", greaterThanOrEqualTo(0)).
@@ -103,7 +103,7 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       body("rest-test-state-machine.totalPerState.add-collection-2", greaterThanOrEqualTo(0)).
       body("rest-test-state-machine.totalPerState.success", greaterThanOrEqualTo(0)).
       body("rest-test-state-machine2", notNullValue()).
-      body("rest-test-state-machine2.stateMachineName", equalTo("rest-test-state-machine2")).
+      body("rest-test-state-machine2.name", equalTo("rest-test-state-machine2")).
       body("rest-test-state-machine2.totalPerStatus", notNullValue()).
       body("rest-test-state-machine2.totalPerStatus.new", greaterThanOrEqualTo(0)).
       body("rest-test-state-machine2.totalPerStatus.working", greaterThanOrEqualTo(0)).
@@ -120,14 +120,14 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       get("/v1/resources/state-conductor-status").
     then().
       log().body().
       statusCode(200).
       contentType(ContentType.JSON).
       body("rest-test-state-machine", notNullValue()).
-      body("rest-test-state-machine.stateMachineName", equalTo("rest-test-state-machine")).
+      body("rest-test-state-machine.name", equalTo("rest-test-state-machine")).
       body("rest-test-state-machine.totalPerStatus", notNullValue()).
       body("rest-test-state-machine.totalPerStatus.new", greaterThanOrEqualTo(0)).
       body("rest-test-state-machine.totalPerStatus.working", greaterThanOrEqualTo(0)).
@@ -145,14 +145,14 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine2").
+      queryParam("rs:name", "rest-test-state-machine2").
       get("/v1/resources/state-conductor-status").
     then().
       log().body().
       statusCode(200).
       contentType(ContentType.JSON).
       body("rest-test-state-machine2", notNullValue()).
-      body("rest-test-state-machine2.stateMachineName", equalTo("rest-test-state-machine2")).
+      body("rest-test-state-machine2.name", equalTo("rest-test-state-machine2")).
       body("rest-test-state-machine2.totalPerStatus", notNullValue()).
       body("rest-test-state-machine2.totalPerStatus.new", greaterThanOrEqualTo(0)).
       body("rest-test-state-machine2.totalPerStatus.working", greaterThanOrEqualTo(0)).
@@ -169,7 +169,7 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       queryParam("rs:startDate", now.minusHours(1).format(DateTimeFormatter.ISO_DATE_TIME)).
       queryParam("rs:endDate", now.plusHours(1).format(DateTimeFormatter.ISO_DATE_TIME)).
       get("/v1/resources/state-conductor-status").
@@ -178,7 +178,7 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       statusCode(200).
       contentType(ContentType.JSON).
       body("rest-test-state-machine", notNullValue()).
-      body("rest-test-state-machine.stateMachineName", equalTo("rest-test-state-machine")).
+      body("rest-test-state-machine.name", equalTo("rest-test-state-machine")).
       body("rest-test-state-machine.totalPerStatus", notNullValue()).
       body("rest-test-state-machine.totalPerStatus.complete", equalTo(0)).
       body("rest-test-state-machine.totalPerStatus.working", equalTo(1)).
@@ -195,7 +195,7 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine2").
+      queryParam("rs:name", "rest-test-state-machine2").
       queryParam("rs:detailed", true).
       get("/v1/resources/state-conductor-status").
     then().
@@ -203,7 +203,7 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
       statusCode(200).
       contentType(ContentType.JSON).
       body("rest-test-state-machine2", notNullValue()).
-      body("rest-test-state-machine2.stateMachineName", equalTo("rest-test-state-machine2")).
+      body("rest-test-state-machine2.name", equalTo("rest-test-state-machine2")).
       body("rest-test-state-machine2.totalPerStatus", notNullValue()).
       body("rest-test-state-machine2.totalPerStatus.complete", greaterThanOrEqualTo(0)).
       body("rest-test-state-machine2.totalPerStatus.working", greaterThanOrEqualTo(0)).
@@ -235,7 +235,7 @@ public class StatusServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "non-existent-state-machine").
+      queryParam("rs:name", "non-existent-state-machine").
       get("/v1/resources/state-conductor-status").
     then().
       log().body().

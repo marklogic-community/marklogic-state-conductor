@@ -72,15 +72,17 @@ context = {
   period: 2,
   minute: 30,
 };
-dt = new Date('2000-01-01T00:00:00');
+dt = new Date('2000-01-01T00:00:00-05:00');
+
 assertions.push(
   test.assertFalse(scLib.hasScheduleElapsed(context, dt)),
   test.assertFalse(scLib.hasScheduleElapsed(context, addMinutes(dt, 30))),
   test.assertTrue(scLib.hasScheduleElapsed(context, addMinutes(dt, 90))),
   test.assertFalse(scLib.hasScheduleElapsed(context, addMinutes(dt, 91))),
   test.assertFalse(scLib.hasScheduleElapsed(context, addMinutes(dt, 150))),
-  test.assertTrue(scLib.hasScheduleElapsed(context, new Date('2020-01-05T11:30:43')))
+  test.assertTrue(scLib.hasScheduleElapsed(context, new Date('2020-01-05T11:30:43-05:00')))
 );
+
 
 // daily tests
 context = {
@@ -95,8 +97,8 @@ assertions.push(
   test.assertTrue(scLib.hasScheduleElapsed(context, new Date('2000-01-01T12:00:00Z'))),
   test.assertTrue(scLib.hasScheduleElapsed(context, addMinutes(dt, 60 * 12))),
   test.assertTrue(scLib.hasScheduleElapsed(context, new Date('2020-12-12T12:00:59Z'))),
-  test.assertFalse(scLib.hasScheduleElapsed(context, new Date('2020-12-12T12:01:00'))),
-  test.assertFalse(scLib.hasScheduleElapsed(context, new Date('2020-12-12T11:59:00')))
+  test.assertFalse(scLib.hasScheduleElapsed(context, new Date('2020-12-12T12:01:00Z'))),
+  test.assertFalse(scLib.hasScheduleElapsed(context, new Date('2020-12-12T11:59:00Z')))
 );
 context = {
   scope: 'scheduled',

@@ -1,0 +1,20 @@
+{
+    "functionName": "insertFlow",
+    "desc": "Creates or updates a single flow.",
+    "params": [
+        {
+            "name": "flowName",
+            "datatype": "string",
+            "desc": "The name of the flow to be created or updated.",
+            "nullable": false,
+            "multiple": false
+        },
+        {
+            "name": "flow",
+            "datatype": "object",
+            "desc": "The flow to be created or updated.",
+            "nullable": false,
+            "multiple": false
+        }
+    ]
+}

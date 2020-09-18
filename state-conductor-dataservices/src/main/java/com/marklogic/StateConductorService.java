@@ -5,6 +5,7 @@ package com.marklogic;
 import java.util.stream.Stream;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
+import java.io.Reader;
 
 
 import com.marklogic.client.DatabaseClient;
@@ -53,6 +54,32 @@ public interface StateConductorService {
 
 
             @Override
+            public com.fasterxml.jackson.databind.node.ObjectNode getFlow(String flowName) {
+              return BaseProxy.ObjectType.toObjectNode(
+                baseProxy
+                .request("getFlow.sjs", BaseProxy.ParameterValuesKind.SINGLE_ATOMIC)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("flowName", true, BaseProxy.StringType.fromString(flowName)))
+                .withMethod("POST")
+                .responseSingle(false, Format.JSON)
+                );
+            }
+
+
+            @Override
+            public void deleteFlow(String flowName) {
+              baseProxy
+                .request("deleteFlow.sjs", BaseProxy.ParameterValuesKind.SINGLE_ATOMIC)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("flowName", false, BaseProxy.StringType.fromString(flowName)))
+                .withMethod("POST")
+                .responseNone();
+            }
+
+
+            @Override
             public String createJob(String uri, String flowName) {
               return BaseProxy.StringType.toString(
                 baseProxy
@@ -97,6 +124,19 @@ public interface StateConductorService {
                 );
             }
 
+
+            @Override
+            public void insertFlow(String flowName, Reader flow) {
+              baseProxy
+                .request("insertFlow.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_MIXED)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("flowName", false, BaseProxy.StringType.fromString(flowName)),
+                    BaseProxy.documentParam("flow", false, BaseProxy.ObjectType.fromReader(flow)))
+                .withMethod("POST")
+                .responseNone();
+            }
+
         }
 
         return new StateConductorServiceImpl(db);
@@ -115,6 +155,22 @@ public interface StateConductorService {
    * @return	as output
    */
     Stream<String> getJobs(Integer start, Integer count, String flowNames, Stream<String> flowStatus, Stream<String> forestIds, String startDate, String endDate);
+
+  /**
+   * Returns a single flow if flowName is specified or all flows otherwise.
+   *
+   * @param flowName	The name of the flow to return. Pass null to return all.
+   * @return	as output
+   */
+    com.fasterxml.jackson.databind.node.ObjectNode getFlow(String flowName);
+
+  /**
+   * Deletes a single flow.
+   *
+   * @param flowName	The name of the flow to be created or updated.
+   * 
+   */
+    void deleteFlow(String flowName);
 
   /**
    * Creates a MarkLogic State Conductor Job document for the given uri and flow.
@@ -143,5 +199,14 @@ public interface StateConductorService {
    * @return	as output
    */
     com.fasterxml.jackson.databind.node.ObjectNode getFlowStatus(Stream<String> flowNames, String startDate, String endDate, Boolean detailed);
+
+  /**
+   * Creates or updates a single flow.
+   *
+   * @param flowName	The name of the flow to be created or updated.
+   * @param flow	The flow to be created or updated.
+   * 
+   */
+    void insertFlow(String flowName, Reader flow);
 
 }

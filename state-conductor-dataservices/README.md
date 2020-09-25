@@ -24,9 +24,9 @@ From the root of the State Conductor project, execute the `jar` task.
 The `generateStateConductorProxy` gradle task is used to generate the Java service proxy for the State Conductor.
 
 The proxy service provides the follow functions:
-* `createJob` - creates a State Conductor Job
-* `getJobs` - returns a list of Job documents to be processed
-* `processJob` - invokes the State Conductor processing of a job
+* `createExecution` - creates a State Conductor Execution
+* `getExecution` - returns a list of Execution documents to be processed
+* `processExecution` - invokes the State Conductor processing of a exection
 
 ## Testing
 From the root of the State Conductor project, execute the `mlDeploy` and `test` gradle tasks.
@@ -50,14 +50,14 @@ From the root of the State Conductor project, execute the `mlDeploy` and `test` 
 | externalName | (empty) | The external name to use to connect to MarkLogic |
 | certFile | (empty) | The external name to use to connect to MarkLogic |
 | certPassword | (empty) | The external name to use to connect to MarkLogic |
-| jobsDatabase | state-conductor-jobs | The database where State Conductor jobs are stored |
-| flowNames | (empty) | A list of flows names for which to process State Conductor jobs.  Leave empty to process jobs from all installed flows. |
-| flowStatus | (empty) | A list of flow statuses for which to process State Conductor jobs.  If left empty, new jobs, working jobs, and waiting jobs will be processed. |
-| pollSize | 1000 | How many jobs to fetch per poll |
-| pollInterval | 1000 | (Milliseconds) How often to poll for new jobs |
-| cooldownMillis | 5000 | (Milliseconds) If no valid jobs are found for processing, poll using this interval. |
-| queueThreshold | 20000 | The upper limit for how many jobs the driver will cache for processing.  After this limit is reached, polling for new jobs will fall back to the cooldownMillis interval, and jobs will not be added until the queue size falls below this threshold.  |
-| batchSize | 5 | How many jobs will be submitted for processing simultaneously |
-| threadCount | 10 | The number of executor threads used to process jobs on the queue.  Scale based on the number of available App Server threads for optimal performance. |
+| executionDatabase | state-conductor-executions | The database where State Conductor executions are stored |
+| names | (empty) | A list of state machine names for which to process State Conductor executions.  Leave empty to process executions from all installed state machines. |
+| status | (empty) | A list of state machine statuses for which to process State Conductor executions.  If left empty, new executions, working executions, and waiting executions will be processed. |
+| pollSize | 1000 | How many executions to fetch per poll |
+| pollInterval | 1000 | (Milliseconds) How often to poll for new executions |
+| cooldownMillis | 5000 | (Milliseconds) If no valid executions are found for processing, poll using this interval. |
+| queueThreshold | 20000 | The upper limit for how many executions the driver will cache for processing.  After this limit is reached, polling for new executions will fall back to the cooldownMillis interval, and executions will not be added until the queue size falls below this threshold.  |
+| batchSize | 5 | How many executions will be submitted for processing simultaneously |
+| threadCount | 10 | The number of executor threads used to process executions on the queue.  Scale based on the number of available App Server threads for optimal performance. |
 | metricsInterval | 5000 | (Milliseconds) How often metrics should be logged |
 

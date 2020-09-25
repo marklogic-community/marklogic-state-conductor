@@ -1,0 +1,34 @@
+{
+  "Comment": "does things",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "directory",
+        "value": "/test/"
+      },
+      {
+        "scope": "collection",
+        "value": "test"
+      }
+    ]
+  },
+  "StartAt": "set-prop1",
+  "States": {
+    "set-prop1": {
+      "Type": "Task",
+      "Comment": "initial state of the stateMachine",
+      "Resource": "/state-conductor/actions/custom/set-prop1.sjs",
+      "Next": "set-prop2"
+    },
+    "set-prop2": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "updates a property",
+      "Resource": "/state-conductor/actions/custom/set-prop2.sjs"
+    },
+    "failed": {
+      "Type": "Fail",
+      "Comment": "used to test application of failure status"
+    }
+  }
+}

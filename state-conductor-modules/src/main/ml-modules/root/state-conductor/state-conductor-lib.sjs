@@ -10,18 +10,18 @@ const TRACE_EVENT = 'state-conductor';
 function getConfiguration() {
   const defaultconfigurationDefaults = {
     databases: {
-      jobs: 'state-conductor-jobs',
+      executions: 'state-conductor-executions',
       triggers: 'state-conductor-triggers',
       schemas: 'state-conductor-schemas',
     },
     collections: {
       item: 'state-conductor-item',
-      job: 'stateConductorJob',
-      flow: 'state-conductor-flow',
+      execution: 'stateConductorExecution',
+      stateMachine: 'state-conductor-state-machine',
     },
     URIPrefixes: {
-      flow: '/state-conductor-flow/',
-      job: '/stateConductorJob/',
+      stateMachine: '/state-conductor-state-machine/',
+      execution: '/stateConductorExecution/',
     },
   };
 
@@ -169,7 +169,7 @@ function evaluateChoiceRule(rule = {}, context = {}) {
 }
 
 /**
- * Given a flow context with the "scheduled" scope, determines
+ * Given a stateMachine context with the "scheduled" scope, determines
  * if the scheduled period has elapsed.
  *
  * @param {*} context

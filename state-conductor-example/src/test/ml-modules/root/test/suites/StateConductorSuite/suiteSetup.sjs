@@ -5,110 +5,110 @@ declareUpdate();
 const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
-// insert the test flows
+// insert the test stateMachines
 test.loadTestFile(
-  'flows/test-flow.asl.json',
+  'stateMachines/test-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'test-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'test-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/branching-flow.asl.json',
+  'stateMachines/branching-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'branching-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'branching-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/no-context-flow.asl.json',
+  'stateMachines/no-context-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'no-context-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'no-context-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/noStates-flow.asl.json',
+  'stateMachines/noStates-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'noStates-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'noStates-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/task-flow.asl.json',
+  'stateMachines/task-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'task-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'task-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/wait-flow.asl.json',
+  'stateMachines/wait-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'wait-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'wait-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/bad-flow.asl.json',
+  'stateMachines/bad-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'bad-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'bad-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/contextual-flow.asl.json',
+  'stateMachines/contextual-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'contextual-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'contextual-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/test-time-wait.asl.json',
+  'stateMachines/test-time-wait.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'test-time-wait.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'test-time-wait.asl.json',
   xdmp.defaultPermissions(),
-  [sc.FLOW_COLLECTION, 'waitStateTest']
+  [sc.STATE_MACHINE_COLLECTION, 'waitStateTest']
 );
 
 test.loadTestFile(
-  'flows/ref-path-flow.asl.json',
+  'stateMachines/ref-path-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'ref-path-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'ref-path-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/choice-flow.asl.json',
+  'stateMachines/choice-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'choice-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'choice-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.loadTestFile(
-  'flows/retry-flow.asl.json',
+  'stateMachines/retry-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'retry-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'retry-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
-// insert the test jobs
+// insert the test executions
 test.loadTestFile(
-  'test-wait-job.json',
-  xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
-  '/stateConductorJob/test-wait-job.json',
+  'test-wait-execution.json',
+  xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
+  '/stateConductorExecution/test-wait-execution.json',
   xdmp.defaultPermissions(),
-  [sc.JOB_COLLECTION, 'unitTest']
+  [sc.EXECUTION_COLLECTION, 'unitTest']
 );
 
 test.log('StateConductorSuite Suite Setup COMPLETE....');

@@ -5,13 +5,13 @@ const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 const assertions = [];
-let jobDoc, error, resp;
+let executionDoc, error, resp;
 
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
-  flowName: 'choice-flow',
-  flowStatus: sc.FLOW_STATUS_WORKING,
-  flowState: 'find-gender',
+  name: 'choice-state-machine',
+  status: sc.STATE_MACHINE_STATUS_WORKING,
+  state: 'find-gender',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -23,19 +23,19 @@ jobDoc = xdmp.toJSON({
   },
 });
 
-resp = sc.executeStateByJobDoc(jobDoc, false);
+resp = sc.executeStateByExecutionDoc(executionDoc, false);
 
 // tests that the correct choice state was applied
 assertions.push(
-  test.assertEqual(sc.FLOW_STATUS_WORKING, resp.flowStatus),
-  test.assertEqual('enroll-in-mens-health', resp.flowState)
+  test.assertEqual(sc.STATE_MACHINE_STATUS_WORKING, resp.status),
+  test.assertEqual('enroll-in-mens-health', resp.state)
 );
 
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
-  flowName: 'choice-flow',
-  flowStatus: sc.FLOW_STATUS_WORKING,
-  flowState: 'find-gender',
+  name: 'choice-state-machine',
+  status: sc.STATE_MACHINE_STATUS_WORKING,
+  state: 'find-gender',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -47,19 +47,19 @@ jobDoc = xdmp.toJSON({
   },
 });
 
-resp = sc.executeStateByJobDoc(jobDoc, false);
+resp = sc.executeStateByExecutionDoc(executionDoc, false);
 
 // tests that the correct choice state was applied
 assertions.push(
-  test.assertEqual(sc.FLOW_STATUS_WORKING, resp.flowStatus),
-  test.assertEqual('enroll-in-mens-health', resp.flowState)
+  test.assertEqual(sc.STATE_MACHINE_STATUS_WORKING, resp.status),
+  test.assertEqual('enroll-in-mens-health', resp.state)
 );
 
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
-  flowName: 'choice-flow',
-  flowStatus: sc.FLOW_STATUS_WORKING,
-  flowState: 'find-gender',
+  name: 'choice-state-machine',
+  status: sc.STATE_MACHINE_STATUS_WORKING,
+  state: 'find-gender',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -71,19 +71,19 @@ jobDoc = xdmp.toJSON({
   },
 });
 
-resp = sc.executeStateByJobDoc(jobDoc, false);
+resp = sc.executeStateByExecutionDoc(executionDoc, false);
 
 // tests that the correct choice state was applied
 assertions.push(
-  test.assertEqual(sc.FLOW_STATUS_WORKING, resp.flowStatus),
-  test.assertEqual('enroll-in-womens-health', resp.flowState)
+  test.assertEqual(sc.STATE_MACHINE_STATUS_WORKING, resp.status),
+  test.assertEqual('enroll-in-womens-health', resp.state)
 );
 
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: sem.uuidString(),
-  flowName: 'choice-flow',
-  flowStatus: sc.FLOW_STATUS_WORKING,
-  flowState: 'find-gender',
+  name: 'choice-state-machine',
+  status: sc.STATE_MACHINE_STATUS_WORKING,
+  state: 'find-gender',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -95,12 +95,12 @@ jobDoc = xdmp.toJSON({
   },
 });
 
-resp = sc.executeStateByJobDoc(jobDoc, false);
+resp = sc.executeStateByExecutionDoc(executionDoc, false);
 
 // tests that the correct choice state was applied
 assertions.push(
-  test.assertEqual(sc.FLOW_STATUS_WORKING, resp.flowStatus),
-  test.assertEqual('enroll-in-womens-health', resp.flowState)
+  test.assertEqual(sc.STATE_MACHINE_STATUS_WORKING, resp.status),
+  test.assertEqual('enroll-in-womens-health', resp.state)
 );
 
 // return

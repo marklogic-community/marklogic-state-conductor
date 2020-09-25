@@ -48,14 +48,14 @@ public class ForestSplitsStateConductorDriver implements Runnable, Destroyable {
     pass.setRequired(true);
     Option num = new Option("n", "number", true, "Batch size");
     num.setOptionalArg(true);
-    Option jobsDb = new Option("db", "jobs-database", true, "Jobs Database Name");
+    Option executionsDb = new Option("db", "executions-database", true, "Executions Database Name");
 
     opts.addOption(host);
     opts.addOption(port);
     opts.addOption(user);
     opts.addOption(pass);
     opts.addOption(num);
-    opts.addOption(jobsDb);
+    opts.addOption(executionsDb);
 
     return opts;
   }
@@ -97,14 +97,14 @@ public class ForestSplitsStateConductorDriver implements Runnable, Destroyable {
       batchSize = Integer.parseInt(cmd.getOptionValue("n"));
     }
 
-    String jobsDbName = "state-conductor-jobs";
+    String executionsDbName = "state-conductor-executions";
     if (cmd.hasOption("db")) {
-      jobsDbName = cmd.getOptionValue("db");
+      executionsDbName = cmd.getOptionValue("db");
     }
 
-    String[] forestIds = getForestIds(appServicesClient, jobsDbName);
-    logger.info("Making splits for {} State Conductor Jobs forests", forestIds.length);
-    logger.trace("Jobs forests: {}", String.join(",", forestIds));
+    String[] forestIds = getForestIds(appServicesClient, executionsDbName);
+    logger.info("Making splits for {} State Conductor Executions forests", forestIds.length);
+    logger.trace("Executions forests: {}", String.join(",", forestIds));
 
     ExecutorService pool = Executors.newFixedThreadPool(forestIds.length);
     for (String id : forestIds) {
@@ -135,22 +135,22 @@ public class ForestSplitsStateConductorDriver implements Runnable, Destroyable {
       AtomicLong count = new AtomicLong();
       AtomicLong failed = new AtomicLong();
 
-      // grab any "new" and "working" jobs
-      Stream<String> jobUris = service.getJobs(1, batchSize, null, null, forestIds.stream(), null, null);
+      // grab any "new" and "working" executions
+      Stream<String> executionUris = service.getExecutions(1, batchSize, null, null, forestIds.stream(), null, null);
 
-      // process each of the jobs
-      jobUris.forEach(uri -> {
-        logger.info("processing job: {}", uri);
+      // process each of the executions
+      executionUris.forEach(uri -> {
+        logger.info("processing execution: {}", uri);
         count.getAndIncrement();
         try {
-          service.processJob(Arrays.stream(new String[]{uri}));
+          service.processExecution(Arrays.stream(new String[]{uri}));
         } catch (FailedRequestException ex) {
           failed.getAndIncrement();
-          logger.error("error processing job:", ex);
+          logger.error("error processing execution:", ex);
         }
       });
 
-      logger.info("[Forest {}] Processed {} Jobs, with {} Failures.", forestId, count.get(), failed.get());
+      logger.info("[Forest {}] Processed {} Executions, with {} Failures.", forestId, count.get(), failed.get());
 
       try {
         if (0 == count.get())

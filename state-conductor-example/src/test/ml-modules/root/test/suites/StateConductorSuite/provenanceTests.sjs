@@ -4,7 +4,7 @@ const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 const assertions = [];
-let jobDoc, error, assertion;
+let executionDoc, error, assertion;
 
 function isolate(func) {
   return fn.head(
@@ -22,18 +22,18 @@ function isolate(func) {
 }
 
 //new check
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  flowName: 'branching-flow',
-  flowStatus: 'new',
-  flowState: 'find-gender',
+  name: 'branching-state-machine',
+  status: 'new',
+  state: 'find-gender',
   uri: '/data/test-doc3.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
   provenance: [],
 });
 
-assertion = sc.startProcessingFlowByJobDoc(jobDoc, false);
+assertion = sc.startProcessingStateMachineByExecutionDoc(executionDoc, false);
 
 assertions.push(
   test.assertTrue(
@@ -55,17 +55,17 @@ assertions.push(
 );
 
 //choice check
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  flowName: 'branching-flow',
-  flowStatus: 'working',
-  flowState: 'find-gender',
+  name: 'branching-state-machine',
+  status: 'working',
+  state: 'find-gender',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
 });
 
-assertion = sc.executeStateByJobDoc(jobDoc, false);
+assertion = sc.executeStateByExecutionDoc(executionDoc, false);
 
 assertions.push(
   test.assertTrue(
@@ -87,17 +87,17 @@ assertions.push(
 );
 
 //COMPLETED check
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  flowName: 'branching-flow',
-  flowStatus: 'working',
-  flowState: 'enroll-in-mens-health',
+  name: 'branching-state-machine',
+  status: 'working',
+  state: 'enroll-in-mens-health',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
 });
 
-assertion = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
+assertion = isolate(() => sc.executeStateByExecutionDoc(executionDoc, false));
 
 assertions.push(
   test.assertTrue(
@@ -121,17 +121,17 @@ assertions.push(
 );
 
 //task
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  flowName: 'task-flow',
-  flowStatus: 'working',
-  flowState: 'update-context',
+  name: 'task-state-machine',
+  status: 'working',
+  state: 'update-context',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
 });
 
-assertion = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
+assertion = isolate(() => sc.executeStateByExecutionDoc(executionDoc, false));
 
 assertions.push(
   test.assertTrue(
@@ -152,12 +152,12 @@ assertions.push(
   )
 );
 
-//resumeWaitingJobByJobDoc
-jobDoc = xdmp.toJSON({
+//resumeWaitingExecutionByExecutionDoc
+executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  flowName: 'wait-flow',
-  flowStatus: 'waiting',
-  flowState: 'dialUp',
+  name: 'wait-state-machine',
+  status: 'waiting',
+  state: 'dialUp',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -166,19 +166,19 @@ jobDoc = xdmp.toJSON({
   },
 });
 
-assertion = sc.resumeWaitingJobByJobDoc(jobDoc, 'testing', false);
+assertion = sc.resumeWaitingExecutionByExecutionDoc(executionDoc, 'testing', false);
 
 assertions.push(
   test.assertTrue(
     xdmp.castableAs('http://www.w3.org/2001/XMLSchema', 'dateTime', assertion.provenance[0].date),
-    'resumeWaitingJobByJobDoc-date'
+    'resumeWaitingExecutionByExecutionDoc-date'
   )
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[0].state, 'dialUp', 'resumeWaitingJobByJobDoc-state')
+  test.assertEqual(assertion.provenance[0].state, 'dialUp', 'resumeWaitingExecutionByExecutionDoc-state')
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[0].resumeBy, 'testing', 'resumeWaitingJobByJobDoc-testing')
+  test.assertEqual(assertion.provenance[0].resumeBy, 'testing', 'resumeWaitingExecutionByExecutionDoc-testing')
 );
 assertions.push(
   test.assertTrue(
@@ -187,21 +187,21 @@ assertions.push(
       'duration',
       assertion.provenance[0].executionTime
     ),
-    'resumeWaitingJobByJobDoc-executionTime'
+    'resumeWaitingExecutionByExecutionDoc-executionTime'
   )
 );
 
 assertions.push(
   test.assertTrue(
     xdmp.castableAs('http://www.w3.org/2001/XMLSchema', 'dateTime', assertion.provenance[1].date),
-    'resumeWaitingJobByJobDoc-date2'
+    'resumeWaitingExecutionByExecutionDoc-date2'
   )
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[1].from, 'dialUp', 'resumeWaitingJobByJobDoc-from')
+  test.assertEqual(assertion.provenance[1].from, 'dialUp', 'resumeWaitingExecutionByExecutionDoc-from')
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[1].to, 'parameters-check', 'resumeWaitingJobByJobDoc-to')
+  test.assertEqual(assertion.provenance[1].to, 'parameters-check', 'resumeWaitingExecutionByExecutionDoc-to')
 );
 assertions.push(
   test.assertTrue(
@@ -210,35 +210,35 @@ assertions.push(
       'duration',
       assertion.provenance[1].executionTime
     ),
-    'resumeWaitingJobByJobDoc-executionTime2'
+    'resumeWaitingExecutionByExecutionDoc-executionTime2'
   )
 );
 
-//retryJobAtStateByJobDoc
-jobDoc = xdmp.toJSON({
+//retryExecutionAtStateByExecutionDoc
+executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  flowName: 'wait-flow',
-  flowStatus: sc.FLOW_STATUS_FAILED,
-  flowState: 'dialUp',
+  name: 'wait-state-machine',
+  status: sc.STATE_MACHINE_STATUS_FAILED,
+  state: 'dialUp',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
   provenance: [],
 });
 
-assertion = sc.retryJobAtStateByJobDoc(jobDoc, 'dialUp', 'testing', false);
+assertion = sc.retryExecutionAtStateByExecutionDoc(executionDoc, 'dialUp', 'testing', false);
 
 assertions.push(
   test.assertTrue(
     xdmp.castableAs('http://www.w3.org/2001/XMLSchema', 'dateTime', assertion.provenance[0].date),
-    'retryJobAtStateByJobDoc-date'
+    'retryExecutionAtStateByExecutionDoc-date'
   )
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[0].state, 'dialUp', 'retryJobAtStateByJobDoc-state')
+  test.assertEqual(assertion.provenance[0].state, 'dialUp', 'retryExecutionAtStateByExecutionDoc-state')
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[0].retriedBy, 'testing', 'retryJobAtStateByJobDoc-testing')
+  test.assertEqual(assertion.provenance[0].retriedBy, 'testing', 'retryExecutionAtStateByExecutionDoc-testing')
 );
 assertions.push(
   test.assertTrue(
@@ -247,21 +247,21 @@ assertions.push(
       'duration',
       assertion.provenance[0].executionTime
     ),
-    'retryJobAtStateByJobDoc-executionTime'
+    'retryExecutionAtStateByExecutionDoc-executionTime'
   )
 );
 
 assertions.push(
   test.assertTrue(
     xdmp.castableAs('http://www.w3.org/2001/XMLSchema', 'dateTime', assertion.provenance[1].date),
-    'retryJobAtStateByJobDoc-date2'
+    'retryExecutionAtStateByExecutionDoc-date2'
   )
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[1].from, 'dialUp', 'retryJobAtStateByJobDoc-from')
+  test.assertEqual(assertion.provenance[1].from, 'dialUp', 'retryExecutionAtStateByExecutionDoc-from')
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[1].to, 'parameters-check', 'retryJobAtStateByJobDoc-to')
+  test.assertEqual(assertion.provenance[1].to, 'parameters-check', 'retryExecutionAtStateByExecutionDoc-to')
 );
 assertions.push(
   test.assertTrue(
@@ -270,16 +270,16 @@ assertions.push(
       'duration',
       assertion.provenance[1].executionTime
     ),
-    'retryJobAtStateByJobDoc-executionTime2'
+    'retryExecutionAtStateByExecutionDoc-executionTime2'
   )
 );
 
 // retry
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  flowName: 'retry-flow',
-  flowStatus: sc.FLOW_STATUS_WORKING,
-  flowState: 'errorOut',
+  name: 'retry-state-machine',
+  status: sc.STATE_MACHINE_STATUS_WORKING,
+  state: 'errorOut',
   uri: '/data/johndoe.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -287,7 +287,7 @@ jobDoc = xdmp.toJSON({
   context: {},
 });
 
-assertion = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
+assertion = isolate(() => sc.executeStateByExecutionDoc(executionDoc, false));
 
 assertions.push(
   test.assertTrue(

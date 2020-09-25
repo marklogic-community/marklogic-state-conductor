@@ -1,0 +1,37 @@
+{
+  "Comment": "is used in the executeStateByJobDoc",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "directory",
+        "value": "/test/"
+      },
+      {
+        "scope": "collection",
+        "value": "test"
+      }
+    ]
+  },
+  "StartAt": "dialUp",
+  "States": {
+    "dialUp": {
+      "Type": "Wait",
+      "Event": "series-of-clicks-and-beeps-connected",
+      "Next": "parameters-check"
+    },
+    "dialUpPath": {
+      "Type": "Wait",
+      "EventPath": "$.eventName",
+      "Next": "parameters-check"
+    },
+    "parameters-check": {
+      "Type": "Task",
+      "Comment": "initial state of the stateMachine",
+      "Resource": "/state-conductor/actions/custom/parameters-check.sjs",
+      "Parameters": {
+        "name": ["David"]
+      },
+      "End": true
+    }
+  }
+}

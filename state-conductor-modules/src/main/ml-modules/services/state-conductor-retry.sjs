@@ -11,11 +11,11 @@ function returnError(statusCode, statusMsg, body) {
 }
 
 /**
- * resumes the jobs with the URIS sent
+ * resumes the executions with the URIS sent
  */
 function put(
   context,
-  { uris = [], stateName = sc.FLOW_NEW_STEP, retriedBy = 'unspecified' },
+  { uris = [], stateName = sc.STATE_MACHINE_NEW_STEP, retriedBy = 'unspecified' },
   input
 ) {
   if (typeof uris === 'string') {
@@ -30,10 +30,10 @@ function put(
 
   const resp = {
     uris: [],
-    jobs: {},
+    executions: {},
   };
 
-  //runs the update in the jobs database
+  //runs the update in the executions database
   sc.invokeOrApplyFunction(
     () => {
       declareUpdate();
@@ -41,11 +41,11 @@ function put(
       uris.forEach(function (uri) {
         resp.uris.push(uri);
 
-        resp.jobs[uri] = sc.retryJobAtState(uri, stateName, retriedBy);
+        resp.executions[uri] = sc.retryExecutionAtState(uri, stateName, retriedBy);
       });
     },
     {
-      database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
+      database: xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
     }
   );
 

@@ -5,41 +5,41 @@ declareUpdate();
 const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
-// insert the test flows
+// insert the test stateMachines
 test.loadTestFile(
-  'flows/person-flow.asl.json',
+  'stateMachines/person-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'person-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'person-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 test.loadTestFile(
-  'flows/person-steps-flow.asl.json',
+  'stateMachines/person-steps-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'person-steps-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'person-steps-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 test.loadTestFile(
-  'flows/person-envelope-flow.asl.json',
+  'stateMachines/person-envelope-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'person-envelope-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'person-envelope-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 test.loadTestFile(
-  'flows/custom-steps-flow.asl.json',
+  'stateMachines/custom-steps-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'custom-steps-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'custom-steps-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 test.loadTestFile(
-  'flows/missing-dhf-flow.asl.json',
+  'stateMachines/missing-dhf-state-machine.asl.json',
   xdmp.database(),
-  sc.FLOW_DIRECTORY + 'missing-dhf-flow.asl.json',
+  sc.STATE_MACHINE_DIRECTORY + 'missing-dhf-state-machine.asl.json',
   xdmp.defaultPermissions(),
-  sc.FLOW_COLLECTION
+  sc.STATE_MACHINE_COLLECTION
 );
 
 test.log('StateConductorDHF5Suite Suite Setup COMPLETE....');

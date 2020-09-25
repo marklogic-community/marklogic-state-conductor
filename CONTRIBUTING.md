@@ -13,7 +13,7 @@ There are two sub-projects.
 
 State-conductor-modules which contains the core library that gets built into the mlBundle redistributable.
 
-State-conductor-example which has unit tests, as well as example flows and actions.
+State-conductor-example which has unit tests, as well as example state machines and actions.
 
 ## Found an Issue?
 If you find a bug in the source code or a mistake in the documentation, you can help us by submitting an issue to our [GitHub Issue Tracker][issue tracker]. Even better, you can submit a Pull Request with a fix for the issue you filed.
@@ -254,10 +254,10 @@ Use `git rebase` (not `git merge`) to sync your work from time to time.
   $ ./gradlew -Dtest.single=TestName test
   ```
 
-- For best results, do not include the final word test. For example, suppose you want to run FlowRunnerTest:
+- For best results, do not include the final word test. For example, suppose you want to run StateMachineRunnerTest:
 
   ```sh
-  $ ./gradlew -Dtest.single=FlowRunner test
+  $ ./gradlew -Dtest.single=StateMachineRunner test
   ```
 
 You can run the e2e tests from Visual Studio Code or another IDE to perform fullstack debugging. To do so, add a run/debug

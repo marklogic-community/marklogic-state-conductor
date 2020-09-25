@@ -1,0 +1,20 @@
+{
+  "role-name": "state-conductor-execution-writer-role",
+  "description": "Permits reading stateMachine documents and knowing stateMachine status",
+  "role": [
+    "state-conductor-reader-role"
+  ],
+  "privilege": [
+    {
+      "privilege-name": "state-conductor-execute",
+      "action": "http://marklogic.com/state-conductor/privilege/execute",
+      "kind": "execute"
+    },
+    {
+      "privilege-name": "state-conductor-execution",
+      "action": "/state-conductor/",
+      "kind": "uri"
+    }
+  ]
+}
+

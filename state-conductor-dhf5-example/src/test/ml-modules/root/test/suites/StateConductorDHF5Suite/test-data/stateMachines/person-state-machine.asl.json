@@ -1,0 +1,31 @@
+{
+  "Comment": "Calls built-in to run a DHF5 flow",
+  "mlDomain": {
+    "context": []
+  },
+  "StartAt": "runFlow",
+  "States": {
+    "runFlow": {
+      "Type": "Task",
+      "Comment": "runs the dhf 5 flow",
+      "Resource": "/state-conductor/actions/common/dhf/dhf5RunFlowAction.sjs",
+      "Parameters": {
+        "name": "PersonFlow",
+        "flowOptions": {}
+      },
+      "Next": "Success",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Next": "FailState"
+        }
+      ]
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "FailState": {
+      "Type": "Fail"
+    }
+  }
+}

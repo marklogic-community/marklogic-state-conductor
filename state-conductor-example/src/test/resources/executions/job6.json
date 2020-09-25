@@ -1,0 +1,13 @@
+{
+  "id": "execution6",
+  "name": "rest-test-state-machine3",
+  "status": "working",
+  "state": "add-collection-1",
+  "uri": "/test/doc1.json",
+  "database": "%DATABASE%",
+  "modules": "%MODULES%",
+  "createdDate": "%DATE-TOMORROW%",
+  "context": {},
+  "provenance": [],
+  "errors": {}
+}

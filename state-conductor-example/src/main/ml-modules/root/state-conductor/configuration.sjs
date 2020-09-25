@@ -1,17 +1,17 @@
 const configuration = {
   databases: {
-    jobs: 'state-conductor-jobs',
+    executions: 'state-conductor-executions',
     triggers: 'state-conductor-triggers',
     schemas: 'state-conductor-schemas',
   },
   collections: {
     item: 'state-conductor-item',
-    job: 'stateConductorJob',
-    flow: 'state-conductor-flow',
+    execution: 'stateConductorExecution',
+    stateMachine: 'state-conductor-state-machine',
   },
   URIPrefixes: {
-    flow: '/state-conductor-flow/',
-    job: '/stateConductorJob/',
+    stateMachine: '/state-conductor-state-machine/',
+    execution: '/stateConductorExecution/',
   },
 };
 

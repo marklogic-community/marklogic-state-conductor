@@ -1,12 +1,18 @@
 'use strict';
 
 function performAction(uri, options, context) {
-  //wait 30 seconds
-  //sleep is in milliseconds
-  xdmp.sleep(1000 * 30);
+  declareUpdate();
+  xdmp.log('performing action "make-envelope.sjs"');
+  const doc = cts.doc(uri);
+  const obj = doc.toObject();
 
-  context.waitIsOver = true;
+  const envelope = {
+    headers: {},
+    triples: [],
+    instance: obj,
+  };
 
+  xdmp.nodeReplace(doc.root, envelope);
   return context;
 }
 

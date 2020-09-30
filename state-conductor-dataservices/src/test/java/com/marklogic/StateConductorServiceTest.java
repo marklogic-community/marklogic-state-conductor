@@ -2,16 +2,25 @@ package com.marklogic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.FailedRequestException;
+import com.marklogic.client.datamovement.DataMovementManager;
+import com.marklogic.client.datamovement.DeleteListener;
+import com.marklogic.client.datamovement.QueryBatcher;
 import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.query.StructuredQueryBuilder;
+import com.marklogic.client.query.StructuredQueryDefinition;
 import com.marklogic.ext.AbstractStateConductorTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +57,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     // add job docs
     DocumentWriteSet batch = getJobsManager().newWriteSet();
     DocumentMetadataHandle jobMeta = new DocumentMetadataHandle();
-    jobMeta.getCollections().add("stateConductorJob");
+    jobMeta.getCollections().addAll("stateConductorJob", "test");
     jobMeta.getPermissions().add("state-conductor-reader-role", DocumentMetadataHandle.Capability.READ);
     jobMeta.getPermissions().add("state-conductor-job-writer-role", DocumentMetadataHandle.Capability.UPDATE);
     batch.add("/test/stateConductorJob/job1.json", jobMeta, loadTokenizedResource("jobs/job1.json", tokens));
@@ -73,14 +82,63 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     getContentManager().write(batch);
   }
 
+  @AfterEach
+  public void teardown() {
+    deleteCollections(getJobsDatabaseClient(), "test");
+  }
+
   @Test
   public void testGetJobsMock() {
     int count = 10;
-    Object[] uris = mockService.getJobs(count, null, null, null).toArray();
+    Object[] uris = mockService.getJobs(1, count, null, null, null, null, null).toArray();
     assertEquals(count, uris.length);
     assertEquals("/test/test1.json", uris[0].toString());
     assertEquals("/test/test2.json", uris[1].toString());
     assertEquals("/test/test10.json", uris[9].toString());
+  }
+
+  @Test
+  public void testGetFlow() throws IOException {
+    final String flowName = "test-flow";
+    final ObjectNode allFlows = service.getFlow(null);
+    assertEquals("does things", allFlows.get(flowName).get("Comment").asText());
+    final ObjectNode testFlow = service.getFlow(flowName);
+    assertEquals("does things", testFlow.get("Comment").asText());
+    try {
+      service.getFlow("test-flow-that-does-not-exist");
+      assertTrue(false, "Failed to throw exception for bad flowName");
+    }
+    catch(Exception e) {
+      assertTrue(true);
+    }
+  }
+
+  @Test
+  public void testInsertFlow() throws IOException {
+    final String flowName = "test-flow";
+    final ObjectNode testFlow = service.getFlow(flowName);
+    assertEquals("does things", testFlow.get("Comment").asText());
+    testFlow.put("Comment", "Also Does Other Things");
+    service.insertFlow(flowName, new StringReader(testFlow.toString()));
+    final ObjectNode updatedTestFlow = service.getFlow(flowName);
+    assertEquals("Also Does Other Things", testFlow.get("Comment").asText());
+  }
+
+  @Test
+  public void testDeleteFlow() throws IOException {
+    final String newFlowName = "new-test-flow";
+    final String flowName = "test-flow";
+    service.insertFlow(newFlowName, new StringReader(service.getFlow(flowName).toString()));
+    final ObjectNode updatedTestFlow = service.getFlow(flowName);
+    assertEquals("does things", updatedTestFlow.get("Comment").asText());
+    service.deleteFlow(newFlowName);
+    try {
+      service.getFlow(newFlowName);
+      assertTrue(false, "Failed to delete newFlowName");
+    }
+    catch(Exception e) {
+      assertTrue(true);
+    }
   }
 
   @Test
@@ -90,7 +148,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     String[] uris;
     StateConductorJob jobDoc;
 
-    uris = service.getJobs(1000, null, null, null).toArray(String[]::new);
+    uris = service.getJobs(1, 1000, null, null, null, null, null).toArray(String[]::new);
     assertTrue(3 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
       String flowStatus = getJobDocument(uris[i]).getFlowStatus();
@@ -98,14 +156,14 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     }
 
     status = new String[]{ "new" };
-    uris = service.getJobs(count, null, Arrays.stream(status), null).toArray(String[]::new);
+    uris = service.getJobs(1, count, null, Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
       assertEquals("new", getJobDocument(uris[i]).getFlowStatus());
     }
 
     status = new String[]{ "new" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
+    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
       assertEquals("new", getJobDocument(uris[i]).getFlowStatus());
@@ -113,28 +171,28 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     }
 
     status = new String[]{ "working" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
+    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertEquals(1, uris.length);
     assertEquals("working", getJobDocument(uris[0]).getFlowStatus());
     assertEquals("test-flow", getJobDocument(uris[0]).getFlowName());
     assertEquals("job3", getJobDocument(uris[0]).getId());
 
     status = new String[]{ "complete" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
+    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertEquals(1, uris.length);
     assertEquals("complete", getJobDocument(uris[0]).getFlowStatus());
     assertEquals("test-flow", getJobDocument(uris[0]).getFlowName());
     assertEquals("job4", getJobDocument(uris[0]).getId());
 
     status = new String[]{ "failed" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
+    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertEquals(1, uris.length);
     assertEquals("failed", getJobDocument(uris[0]).getFlowStatus());
     assertEquals("test-flow", getJobDocument(uris[0]).getFlowName());
     assertEquals("job5", getJobDocument(uris[0]).getId());
 
     status = new String[]{ "complete", "failed" };
-    uris = service.getJobs(count, "test-flow", Arrays.stream(status), null).toArray(String[]::new);
+    uris = service.getJobs(1, count, "test-flow", Arrays.stream(status), null, null, null).toArray(String[]::new);
     assertTrue(2 <= uris.length);
     for (int i = 0; i < uris.length; i++) {
       String flowStatus = getJobDocument(uris[i]).getFlowStatus();
@@ -142,7 +200,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
       assertEquals("test-flow", getJobDocument(uris[i]).getFlowName());
     }
 
-    uris = service.getJobs(count, "fake-flow", null, null).toArray(String[]::new);
+    uris = service.getJobs(1, count, "fake-flow", null, null, null, null).toArray(String[]::new);
     assertEquals(0, uris.length);
   }
 

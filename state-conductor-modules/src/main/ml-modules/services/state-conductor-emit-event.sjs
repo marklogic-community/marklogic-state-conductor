@@ -20,7 +20,7 @@ function put(context, params, input) {
     returnError(400, 'Bad Request', 'Missing required parameter "event"');
   }
 
-  const resp = sc.emmitEvent(event);
+  const resp = sc.emitEvent(event);
 
   context.outputStatus = [200, 'OK'];
   return resp;

@@ -1,5 +1,5 @@
 {
-  "Comment": "emmits an Event",
+  "Comment": "emits an Event",
   "mlDomain": {
     "context": [
       {
@@ -8,12 +8,12 @@
       }
     ]
   },
-  "StartAt": "emmitEvent",
+  "StartAt": "emitEvent",
   "States": {
-    "emmitEvent": {
+    "emitEvent": {
         "Type": "Task",
-        "Comment": "emmits an Event",
-        "Resource": "/state-conductor/actions/common/emmit-event.sjs",
+        "Comment": "emits an Event",
+        "Resource": "/state-conductor/actions/common/emit-event.sjs",
         "Parameters": {
             "event": ["waitForEvent:123"]
         },

@@ -7,18 +7,19 @@ The _State Conductor_ can be used to perform an arbitrary number of context-base
 
 The _State Conductor_ requires a "Driver" to process documents and move them through the installed Flows' states. The _State Conductor_ supports a [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver, a [CoRB2](https://github.com/marklogic-community/corb2) driver, and a [CPF](https://docs.marklogic.com/guide/cpf) driver.
 
-1. [Installation](#installation)
-2. [Usage](#usage)
-3. [Flow Files](#flow-files)
-4. [Flow File Scope](#flow-file-scope)
-5. [Flow File Actions](#flow-file-actions)
-6. [Job Documents](#job-documents)
-7. [Provenance](#provenance)
-8. [Services](#services)
-9. [Jobs Service](#jobs-service)
-10. [Flows Service](#flows-service)
-11. [Status Service](#status-service)
-12. [Roadmap](#roadmap)
+1. [Quick Start Guide](https://github.com/aclavio/marklogic-state-conductor/wiki/QUICKSTART)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Flow Files](#flow-files)
+5. [Flow File Scope](#flow-file-scope)
+6. [Flow File Actions](#flow-file-actions)
+7. [Job Documents](#job-documents)
+8. [Provenance](#provenance)
+9. [Services](#services)
+10. [Jobs Service](#jobs-service)
+11. [Flows Service](#flows-service)
+12. [Status Service](#status-service)
+13. [Roadmap](#roadmap)
 
 ## Installation <a name="installation"></a>
 
@@ -36,8 +37,7 @@ repositories {
   }
 }
 dependencies {
-  mlBundle "com.marklogic:marklogic-state-conductor:0.6.1"
-  mlBundle "com.marklogic:marklogic-state-conductor-cpf:0.6.1" // if using the cpf driver
+  mlBundle "com.marklogic:marklogic-state-conductor:0.7.0"
 }
 ```
 

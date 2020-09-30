@@ -3,10 +3,15 @@ package com.marklogic.ext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.StateConductorJob;
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.datamovement.DataMovementManager;
+import com.marklogic.client.datamovement.DeleteListener;
+import com.marklogic.client.datamovement.QueryBatcher;
 import com.marklogic.client.document.JSONDocumentManager;
 import com.marklogic.client.ext.helper.DatabaseClientProvider;
 import com.marklogic.client.io.FileHandle;
 import com.marklogic.client.io.StringHandle;
+import com.marklogic.client.query.StructuredQueryBuilder;
+import com.marklogic.client.query.StructuredQueryDefinition;
 import com.marklogic.junit5.AbstractMarkLogicTest;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,12 +140,15 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
     return mapper.readValue(content, StateConductorJob.class);
   }
 
-}
+  protected void deleteCollections(DatabaseClient client, String... collections) {
+    DataMovementManager dmm = client.newDataMovementManager();
+    StructuredQueryBuilder sqb = client.newQueryManager().newStructuredQueryBuilder();
+    StructuredQueryDefinition query = sqb.collection(collections);
+    QueryBatcher batcher = dmm.newQueryBatcher(query);
+    batcher.withConsistentSnapshot().onUrisReady(new DeleteListener());
+    dmm.startJob(batcher);
+    batcher.awaitCompletion();
+    dmm.stopJob(batcher);
+  }
 
-// cpf:restart
-// cpf:any-property state-conductor-domain
-// cpf:create state-conductor-domain
-// cpf:delete state-conductor-domain
-// cpf:state state-conductor-domain
-// cpf:status state-conductor-domain
-// cpf:update state-conductor-domain
+}

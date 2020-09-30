@@ -155,7 +155,6 @@ public class StateConductorDriver implements Runnable, Destroyable {
     List<ProcessJobTask> jobBuckets = new ArrayList<>();
 
     // set up the thread pool
-    //ExecutorService pool = Executors.newFixedThreadPool(config.getThreadCount());
     int initialThreads = config.getThreadsPerHost();
     if (config.useFixedThreadCount())
       initialThreads = config.getFixedThreadCount();

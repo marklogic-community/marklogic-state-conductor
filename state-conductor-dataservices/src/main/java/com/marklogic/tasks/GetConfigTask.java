@@ -1,6 +1,7 @@
 package com.marklogic.tasks;
 
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.eval.EvalResultIterator;
 import com.marklogic.config.StateConductorDriverConfig;
 import org.slf4j.Logger;
@@ -44,22 +45,26 @@ public class GetConfigTask implements Runnable {
 
     while (true) {
 
-      EvalResultIterator result = client.newServerEval().javascript(ACTIVE_HOSTS_QUERY).eval();
-      AtomicInteger hostCount = new AtomicInteger(0);
+      try {
+        EvalResultIterator result = client.newServerEval().javascript(ACTIVE_HOSTS_QUERY).eval();
+        AtomicInteger hostCount = new AtomicInteger(0);
 
-      result.forEach(evalResult -> {
-        hostCount.incrementAndGet();
-      });
+        result.forEach(evalResult -> {
+          hostCount.incrementAndGet();
+        });
 
-      logger.info("DETECTED {} ACTIVE HOST(S)", hostCount.get());
-      if (currHosts != hostCount.get()) {
-        currHosts = hostCount.get();
+        logger.info("DETECTED {} ACTIVE HOST(S)", hostCount.get());
+        if (currHosts != hostCount.get()) {
+          currHosts = hostCount.get();
 
-        if (!config.useFixedThreadCount()) {
-          maxPoolSize = Math.min(config.getMaxThreadCount(), currHosts * config.getThreadsPerHost());
-          logger.info("Scaling to {} threads!", maxPoolSize);
-          setMaximumPoolSize(maxPoolSize);
+          if (!config.useFixedThreadCount()) {
+            maxPoolSize = Math.min(config.getMaxThreadCount(), currHosts * config.getThreadsPerHost());
+            logger.info("Scaling to {} threads!", maxPoolSize);
+            setMaximumPoolSize(maxPoolSize);
+          }
         }
+      } catch (FailedRequestException e) {
+        logger.error("Error requesting host count.", e);
       }
 
       if (config.useFixedThreadCount()) {

@@ -22,6 +22,7 @@ public class StateConductorDriverConfig {
   private String username;
   private String password;
   private String jobsDatabase = "state-conductor-jobs";
+  private Integer appServicesPort = 8000;
 
   private SecurityContextType securityContextType = SecurityContextType.DIGEST;
   private boolean simpleSsl = false;
@@ -51,7 +52,7 @@ public class StateConductorDriverConfig {
   public DatabaseClientConfig getAppServicesDatabaseClientConfig() {
     DatabaseClientConfig clientConfig = new DatabaseClientConfig();
     clientConfig.setHost(host);
-    clientConfig.setPort(8000);
+    clientConfig.setPort(appServicesPort);
     clientConfig.setUsername(username);
     clientConfig.setPassword(password);
     clientConfig.setSecurityContextType(securityContextType);
@@ -115,6 +116,7 @@ public class StateConductorDriverConfig {
     config.username = getPropertyValue(props, "username", null);
     config.password = getPropertyValue(props, "password", null);
     config.jobsDatabase = getPropertyValue(props, "jobsDatabase", "state-conductor-jobs");
+    config.appServicesPort = Integer.parseInt(getPropertyValue(props, "appServicesPort", "8000"));
     config.securityContextType = SecurityContextType.valueOf(getPropertyValue(props, "securityContextType", "basic").toUpperCase());
     config.simpleSsl = Boolean.parseBoolean(getPropertyValue(props, "simpleSsl", "false"));
     config.externalName = getPropertyValue(props, "externalName", null);
@@ -231,6 +233,10 @@ public class StateConductorDriverConfig {
   public void setJobsDatabase(String jobsDatabase) {
     this.jobsDatabase = jobsDatabase;
   }
+
+  public Integer getAppServicesPort() { return appServicesPort; }
+
+  public void setAppServicesPort(Integer appServicesPort) { this.appServicesPort = appServicesPort; }
 
   public Integer getQueueThreshold() {
     return queueThreshold;

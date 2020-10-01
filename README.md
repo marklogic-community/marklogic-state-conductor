@@ -1,7 +1,7 @@
 # MarkLogic State Conductor
 
 The _MarkLogic State Conductor_ is an event-based orchestrator for manipulating MarkLogic database documents.
-State Conductor flows are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html). State actions are defined using server-side modules. The included driver utilizes MarkLogic's CPF and Triggers to move documents through the defined State flows.
+State Conductor flows are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html). State actions are defined using server-side modules.
 
 The _State Conductor_ can be used to perform an arbitrary number of context-based processing actions on a subset of documents. Actions could include: invoking a [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) flow, transforming a document, applying metadata, or calling an external process.
 

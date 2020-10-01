@@ -37,14 +37,8 @@ repositories {
   }
 }
 dependencies {
-  mlBundle "com.marklogic:marklogic-state-conductor:0.7.0"
+  mlBundle "com.marklogic:marklogic-state-conductor:0.8.0"
 }
-```
-
-The _State Conductor_ utilizes MarkLogic's Content Processing Framework. Add the following to your gradle project's properties file to ensure that the CPF configurations are installed in the required location:
-
-```
-mlCpfDatabaseName=state-conductor-triggers
 ```
 
 ---

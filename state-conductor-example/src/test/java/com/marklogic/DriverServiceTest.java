@@ -61,7 +61,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     batch.add("/test/stateConductorJob/job5.json", jobMeta, loadTokenizedResource("jobs/job5.json", tokens));
     batch.add("/test/stateConductorJob/job6.json", jobMeta, loadTokenizedResource("jobs/job6.json", tokens));
     batch.add("/test/stateConductorJob/job7.json", jobMeta, loadTokenizedResource("jobs/job7.json", tokens));
-    atch.add("/test/stateConductorJob/jobTimeOut.json", jobMeta, loadTokenizedResource("jobs/jobTimeOut.json", tokens));
+    batch.add("/test/stateConductorJob/jobTimeOut.json", jobMeta, loadTokenizedResource("jobs/jobTimeOut.json", tokens));
     getJobsManager().write(batch);
   }
 

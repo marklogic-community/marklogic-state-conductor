@@ -9,7 +9,7 @@ The `com.marklogic.StateConductorDriver` main class provides an implementation o
 
 Run the stand-alone jar file:
 ```
-java -jar state-conductor-dataservices-0.6.1.jar --config driver.properties
+java -jar state-conductor-dataservices-0.8.0.jar --config driver.properties
 ```
 
 ## Generating the Driver Jar

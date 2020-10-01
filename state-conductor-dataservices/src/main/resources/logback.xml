@@ -16,5 +16,9 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
+  <logger name="com.marklogic.tasks.GetJobsTask" level="INFO" additivity="false">
+    <appender-ref ref="STDOUT" />
+  </logger>
+
 </configuration>
 

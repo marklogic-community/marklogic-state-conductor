@@ -1,12 +1,12 @@
 {
-  "id": "job3",
-  "flowName": "test-flow",
+  "id": "TimeLimit",
+  "flowName": "timeLimit",
   "flowStatus": "working",
-  "flowState": "add-collection-1",
+  "flowState": "waitFunction",
   "uri": "/test/doc2.json",
   "database": "%DATABASE%",
   "modules": "%MODULES%",
-  "createdDate": "2020-03-30T15:20:00.362Z",
+  "createdDate": "%DATE-NOW%",
   "context": {},
   "provenance": [],
   "errors": {}

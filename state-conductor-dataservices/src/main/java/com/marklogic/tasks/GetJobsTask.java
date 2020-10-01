@@ -28,7 +28,7 @@ public class GetJobsTask implements Runnable {
     this.inProgressSet = inProgressSet;
   }
 
-  private Stream<String> FetchJobDocuments() {
+  private Stream<String> FetchJobDocuments(int start) {
     Stream<String> jobUris = null;
     Stream<String> flowStatus = null;
 
@@ -39,7 +39,7 @@ public class GetJobsTask implements Runnable {
 
     try {
       logger.info("Fetching Jobs Batch...");
-      jobUris = service.getJobs(config.getPollSize(), config.getFlowNames(), flowStatus, null);
+      jobUris = service.getJobs(start, config.getPollSize(), config.getFlowNames(), flowStatus, null, null, null);
     } catch (Exception ex) {
       logger.error("An error occurred fetching job documents: {}", ex.getMessage());
       ex.printStackTrace();
@@ -51,42 +51,64 @@ public class GetJobsTask implements Runnable {
 
   @Override
   public void run() {
-    AtomicLong total = new AtomicLong();
+    int start = 1;
+    long emptyCount = 0;
+    AtomicLong totalNew = new AtomicLong();
+    AtomicLong totalFetched = new AtomicLong();
 
     while(true) {
-      total.set(0);
+      totalNew.set(0);
+      totalFetched.set(0);
 
       if (inProgressSet.size() < config.getQueueThreshold()) {
         // grab job documents if we're below the queue threshold
-        Stream<String> jobUris = FetchJobDocuments();
+        Stream<String> jobUris = FetchJobDocuments(start);
         Iterator<String> jobs = jobUris.iterator();
 
         synchronized (urisBuffer) {
           while(jobs.hasNext()) {
             String jobUri = jobs.next();
+            totalFetched.getAndIncrement();
             if (!inProgressSet.contains(jobUri)) {
-              total.getAndIncrement();
+              totalNew.getAndIncrement();
               urisBuffer.add(jobUri);
               inProgressSet.add(jobUri);
             } else {
-              logger.debug("got already in-progress job {}", jobUri);
+              logger.trace("got already in-progress job {}", jobUri);
             }
           }
         }
 
-        logger.info("GetJobsTask got {} jobs", total.get());
+        if (totalFetched.get() != totalNew.get()) {
+          logger.info("GetJobsTask got {} new jobs, out of {} total", totalNew.get(), totalFetched.get());
+        } else {
+          logger.info("GetJobsTask got {} new jobs", totalNew.get());
+        }
+
+        if (logger.isDebugEnabled())
+          logger.debug("in progress queue size: {}", inProgressSet.size());
 
       } else {
         logger.info("Queued jobs limit reached!");
       }
 
       try {
-        // cooldown period
-        if (total.get() < config.getPollSize()) {
-          logger.debug("GetJobsTask cooldown...");
-          Thread.sleep(config.getCooldownMillis());
+        if (totalFetched.get() == config.getPollSize()) {
+          // request next page
+          start += config.getPollSize();
+          emptyCount = 0;
+          logger.debug("GetJobsTask requesting next page...");
+          Thread.sleep(10L);
         } else {
-          Thread.sleep(config.getPollInterval());
+          start = 1;
+          emptyCount = (totalNew.get() == 0) ? emptyCount + 1 : 0;
+
+          if (emptyCount > 3) {
+            logger.debug("GetJobsTask cooldown...");
+            Thread.sleep(config.getCooldownMillis());
+          } else {
+            Thread.sleep(config.getPollInterval());
+          }
         }
       } catch (InterruptedException e) {
         logger.info("Stopping GetJobsTask Thread...");

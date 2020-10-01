@@ -633,6 +633,15 @@ function transition(jobDoc, jobObj, stateName, state, flowObj, save = true) {
     } else if (!inTerminalState(jobObj, flowObj)) {
       xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
 
+      //checks if the state has TimeoutSeconds and sets the timeout
+      if (state.hasOwnProperty('TimeLimit')) {
+        xdmp.trace(
+          TRACE_EVENT,
+          `TransactionTimeLimit set to: ${state.TimeLimit} for: ${stateName}`
+        );
+        xdmp.setTransactionTimeLimit(state.TimeLimit);
+      }
+
       if (STATE_TASK === state.Type.toLowerCase()) {
         targetState = state.Next;
       } else if (STATE_PASS === state.Type.toLowerCase()) {
@@ -817,6 +826,15 @@ function executeStateByJobDoc(jobDoc, save = true) {
           // filter the context through the InputPath if set
           if (state.InputPath && state.InputPath !== '$') {
             context = lib.materializeReferencePath(state.InputPath, context);
+          }
+
+          //checks if the state has TimeoutSeconds and sets the timeout
+          if (state.hasOwnProperty('TimeLimit')) {
+            xdmp.trace(
+              TRACE_EVENT,
+              `TransactionTimeLimit set to: ${state.TimeLimit} for: ${stateName}`
+            );
+            xdmp.setTransactionTimeLimit(state.TimeLimit);
           }
 
           // execute the resource modules
@@ -1387,13 +1405,13 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
 }
 
 /**
- * Convienence function to emmitEvents
+ * Convienence function to emitEvents
  *
  * @param {*} event
  * @param {*} batchSize the size of the batch of uris that gets spawn off
  * @returns
  */
-function emmitEvent(event, batchSize = 100, save = true) {
+function emitEvent(event, batchSize = 100, save = true) {
   let uris = invokeOrApplyFunction(
     () => {
       declareUpdate();
@@ -1428,7 +1446,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
         arrayOfwaitingURIJobsForEvent.forEach(function (uriArray) {
           xdmp.spawn('/state-conductor/resumeWaitingJobs.sjs', {
             uriArray: uriArray,
-            resumeBy: 'emmit event: ' + event,
+            resumeBy: 'emit event: ' + event,
             save: save,
           });
         });
@@ -1485,6 +1503,7 @@ function emmitEvent(event, batchSize = 100, save = true) {
  */
 function getJobDocuments(options) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
+  const start = options.start || 1;
   const count = options.count || 100;
   const flowStatus = Array.isArray(options.flowStatus)
     ? options.flowStatus
@@ -1530,7 +1549,9 @@ function getJobDocuments(options) {
       }
 
       uris = uris.concat(
-        cts.uris('', ['document', `limit=${count}`], ctsQuery, null, forestIds).toArray()
+        fn
+          .subsequence(cts.uris('', ['document'], ctsQuery, null, forestIds), start, count)
+          .toArray()
       );
     },
     {
@@ -1590,7 +1611,7 @@ module.exports = {
   batchCreateStateConductorJob,
   checkFlowContext,
   createStateConductorJob,
-  emmitEvent,
+  emitEvent,
   executeStateByJobDoc,
   getAllFlowsContextQuery,
   getApplicableFlows,

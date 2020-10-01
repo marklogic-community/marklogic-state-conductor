@@ -13,16 +13,14 @@ There are two sub-projects.
 
 State-conductor-modules which contains the core library that gets built into the mlBundle redistributable.
 
-State-conductor-example which had unit tests, as well as example flows and actions.
+State-conductor-example which has unit tests, as well as example flows and actions.
 
 ## Found an Issue?
 If you find a bug in the source code or a mistake in the documentation, you can help us by submitting an issue to our [GitHub Issue Tracker][issue tracker]. Even better, you can submit a Pull Request with a fix for the issue you filed.
 
 
 ## Want a Feature?
-You can request a new feature by submitting an issue to our [GitHub Issue Tracker][issue tracker].  If you
-would like to implement a new feature then first create a new issue and discuss it with one of our
-project maintainers.
+You can request a new feature by submitting an issue to our [GitHub Issue Tracker][issue tracker].  If you would like to implement a new feature then first create a new issue and discuss it with one of our project maintainers.
 
 ## Building MarkLogic State Conductor from Source
 Looking to build the code from source? 

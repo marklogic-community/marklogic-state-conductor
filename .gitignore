@@ -1,3 +1,4 @@
+.project
 .gradle
 .idea
 .tmp
@@ -5,3 +6,4 @@ build
 gradle-local.properties
 *.settings*
 *.classpath
+state-conductor-example/bin/

@@ -1,7 +1,9 @@
 package com.marklogic;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.ext.AbstractStateConductorRestTest;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.AfterEach;
@@ -18,6 +20,7 @@ import java.util.Map;
 
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DriverServiceTest extends AbstractStateConductorRestTest {
 
@@ -35,6 +38,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     DocumentWriteSet batch = getContentManager().newWriteSet();
     batch.add("/state-conductor-flow/rest-test-flow3.asl.json", flowMeta, loadFileResource("flows/rest-test-flow3.asl.json"));
     batch.add("/state-conductor-flow/rest-test-flow4.asl.json", flowMeta, loadFileResource("flows/rest-test-flow4.asl.json"));
+    batch.add("/state-conductor-flow/timeLimit.asl.json", flowMeta, loadFileResource("flows/timeLimit.asl.json"));
     getContentManager().write(batch);
 
     // add data docs
@@ -61,6 +65,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     batch.add("/test/stateConductorJob/job5.json", jobMeta, loadTokenizedResource("jobs/job5.json", tokens));
     batch.add("/test/stateConductorJob/job6.json", jobMeta, loadTokenizedResource("jobs/job6.json", tokens));
     batch.add("/test/stateConductorJob/job7.json", jobMeta, loadTokenizedResource("jobs/job7.json", tokens));
+    batch.add("/test/stateConductorJob/jobTimeOut.json", jobMeta, loadTokenizedResource("jobs/TimeLimit.json", tokens));
     getJobsManager().write(batch);
   }
 
@@ -442,6 +447,27 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
       contentType(ContentType.JSON).
       body("reschedule", equalTo(false));
   }
+
+
+@Test
+  public void testProcessJobTimeOut() {
+    // start flow
+    given().
+      log().uri().
+    when().
+      queryParam("rs:uri", "/test/stateConductorJob/jobTimeOut.json").
+      put("/v1/resources/state-conductor-driver").
+    then().
+      log().body().
+      statusCode(200).
+      contentType(ContentType.JSON);
+
+    JsonNode content = getJobsManager().read("/test/stateConductorJob/jobTimeOut.json", new JacksonHandle()).get();
+    assertEquals("failed", content.get("flowStatus").asText());
+    assertTrue(content.get("errors").hasNonNull("waitFunction"));
+    assertEquals("XDMP-EXTIME", content.get("errors").get("waitFunction").get("name").asText());
+  }
+
 
   public void testProcessBadUri() {
     // TODO

@@ -136,7 +136,7 @@ public class ForestSplitsStateConductorDriver implements Runnable, Destroyable {
       AtomicLong failed = new AtomicLong();
 
       // grab any "new" and "working" jobs
-      Stream<String> jobUris = service.getJobs(batchSize, null, null, forestIds.stream());
+      Stream<String> jobUris = service.getJobs(1, batchSize, null, null, forestIds.stream(), null, null);
 
       // process each of the jobs
       jobUris.forEach(uri -> {

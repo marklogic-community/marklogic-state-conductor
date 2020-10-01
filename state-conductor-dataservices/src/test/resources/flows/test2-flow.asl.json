@@ -1,0 +1,35 @@
+{
+  "Comment": "does things",
+  "mlDomain": {
+    "context": []
+  },
+  "StartAt": "add-collection",
+  "States": {
+    "add-collection": {
+      "Type": "Task",
+      "Comment": "adds a collection",
+      "Resource": "/state-conductor/actions/common/add-collections.sjs",
+      "Parameters": {
+        "collections": ["testcol1"]
+      },
+      "Next": "choose-wisely"
+    },
+    "choose-wisely": {
+      "Type": "Choice",
+      "Comment": "",
+      "Choices": [
+        {
+          "Resource": "/ext/state-conductor/non-existent-choice.sjs",
+          "Next": "failure"
+        }
+      ],
+      "Default": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    },
+    "failure": {
+      "Type": "Fail"
+    }
+  }
+}

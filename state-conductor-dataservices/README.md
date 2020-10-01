@@ -58,6 +58,8 @@ From the root of the State Conductor project, execute the `mlDeploy` and `test` 
 | cooldownMillis | 5000 | (Milliseconds) If no valid jobs are found for processing, poll using this interval. |
 | queueThreshold | 20000 | The upper limit for how many jobs the driver will cache for processing.  After this limit is reached, polling for new jobs will fall back to the cooldownMillis interval, and jobs will not be added until the queue size falls below this threshold.  |
 | batchSize | 5 | How many jobs will be submitted for processing simultaneously |
-| threadCount | 10 | The number of executor threads used to process jobs on the queue.  Scale based on the number of available App Server threads for optimal performance. |
 | metricsInterval | 5000 | (Milliseconds) How often metrics should be logged |
+| fixedThreadCount | -1 | Use a fixed number of executor threads to process jobs on the queue if set. Overrides "threadsPerHost" and "maxThreadCount" when set. |
+| threadsPerHost | 16 | The number of executor threads used to process jobs on the queue.  Scales based on the number of available MarkLogic hosts.  Capped by "maxThreadCount". |
+| maxThreadCount | 128 | The maximum total number of executor threads to use when processing jobs.  The number of threads used will be MIN(maxThreadCount, threadsPerHost x host count). |
 

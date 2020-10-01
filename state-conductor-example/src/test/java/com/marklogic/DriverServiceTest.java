@@ -61,6 +61,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     batch.add("/test/stateConductorJob/job5.json", jobMeta, loadTokenizedResource("jobs/job5.json", tokens));
     batch.add("/test/stateConductorJob/job6.json", jobMeta, loadTokenizedResource("jobs/job6.json", tokens));
     batch.add("/test/stateConductorJob/job7.json", jobMeta, loadTokenizedResource("jobs/job7.json", tokens));
+    batch.add("/test/stateConductorJob/jobTimeOut.json", jobMeta, loadTokenizedResource("jobs/jobTimeOut.json", tokens));
     getJobsManager().write(batch);
   }
 
@@ -442,6 +443,24 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
       contentType(ContentType.JSON).
       body("reschedule", equalTo(false));
   }
+
+
+@Test
+  public void testProcessJobTimeOut() {
+    // start flow
+    given().
+      log().uri().
+    when().
+      queryParam("rs:uri", "/test/stateConductorJob/jobTimeOut.json").
+      put("/v1/resources/state-conductor-driver").
+    then().
+      log().body().
+      statusCode(500).
+      contentType(ContentType.JSON).
+      body("reschedule", equalTo(true));
+
+  }
+
 
   public void testProcessBadUri() {
     // TODO

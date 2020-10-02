@@ -113,7 +113,11 @@ function getStateMachineFromDatabase(name, databaseId) {
     () => {
       let stateMachine = getStateMachine(name);
       if (!stateMachine) {
-        fn.error(null, 'MISSING-STATE_MACHINE-FILE', `Cannot find a a stateMachine file with the name: ${name}`);
+        fn.error(
+          null,
+          'MISSING-STATE_MACHINE-FILE',
+          `Cannot find a stateMachine file with the name: ${name}`
+        );
       }
       return stateMachine;
     },
@@ -167,11 +171,7 @@ function getStateMachineNameFromUri(uri) {
  */
 function getInitialState({ name, StartAt }) {
   if (!StartAt || StartAt.length === 0) {
-    fn.error(
-      null,
-      'INVALID-STATE-DEFINITION',
-      `no "StartAt" defined for state machine "${name}"`
-    );
+    fn.error(null, 'INVALID-STATE-DEFINITION', `no "StartAt" defined for state machine "${name}"`);
   }
   return StartAt;
 }
@@ -247,7 +247,9 @@ function getApplicableStateMachines(uri) {
     .filter((stateMachine) => {
       let name = getStateMachineNameFromUri(fn.documentUri(stateMachine));
       let stateMachineOjb = stateMachine.toObject();
-      return getExecutionIds(uri, name).length === 0 && checkStateMachineContext(uri, stateMachineOjb);
+      return (
+        getExecutionIds(uri, name).length === 0 && checkStateMachineContext(uri, stateMachineOjb)
+      );
     });
 
   return stateMachines;
@@ -317,7 +319,11 @@ function processExecution(uri) {
 
   // sanity check
   if (!fn.docAvailable(uri)) {
-    fn.error(null, 'INVALID-EXECUTION-DOCUMENT', `State Conductor execution document "${uri}" not found!`);
+    fn.error(
+      null,
+      'INVALID-EXECUTION-DOCUMENT',
+      `State Conductor execution document "${uri}" not found!`
+    );
   }
   const executionDoc = cts.doc(uri);
   const execution = executionDoc.toObject();
@@ -342,7 +348,10 @@ function processExecution(uri) {
     return true;
   } else {
     // we're done processing the stateMachine
-    xdmp.trace(TRACE_EVENT, `state-conductor stateMachine completed for execution document "${uri}"`);
+    xdmp.trace(
+      TRACE_EVENT,
+      `state-conductor stateMachine completed for execution document "${uri}"`
+    );
     // end processing
     return false;
   }
@@ -360,12 +369,19 @@ function startProcessingStateMachineByExecutionDoc(executionDoc, save = true) {
       TRACE_EVENT,
       `INVALID-STATE_MACHINE-STATUS: Cannot start a stateMachine that is not in the ${STATE_MACHINE_STATUS_NEW} status`
     );
-    fn.error(null, 'INVALID-STATE_MACHINE-STATUS', 'Cannot start a stateMachine not in the NEW status');
+    fn.error(
+      null,
+      'INVALID-STATE_MACHINE-STATUS',
+      'Cannot start a stateMachine not in the NEW status'
+    );
   }
 
   try {
     // grab the stateMachine definition from the correct db
-    const currStateMachine = getStateMachineFromDatabase(currStateMachineName, executionObj.database).toObject();
+    const currStateMachine = getStateMachineFromDatabase(
+      currStateMachineName,
+      executionObj.database
+    ).toObject();
     currStateMachine.name = executionObj.name;
     let initialState = getInitialState(currStateMachine);
 
@@ -462,7 +478,8 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
   // check if current time is greater than nextTaskTime
   if (
     executionObj.currentlyWaiting.hasOwnProperty('nextTaskTime') &&
-    xs.dateTime(executionObj.currentlyWaiting.nextTaskTime) > fn.currentDateTime() + xdmp.elapsedTime()
+    xs.dateTime(executionObj.currentlyWaiting.nextTaskTime) >
+      fn.currentDateTime() + xdmp.elapsedTime()
   ) {
     xdmp.trace(
       TRACE_EVENT,
@@ -522,7 +539,12 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
  *
  * @param {*} uri - the execution document's uri
  */
-function retryExecutionAtState(uri, stateName = STATE_MACHINE_NEW_STEP, retriedBy = 'unspecified', save = true) {
+function retryExecutionAtState(
+  uri,
+  stateName = STATE_MACHINE_NEW_STEP,
+  retriedBy = 'unspecified',
+  save = true
+) {
   // checks if document is there
   if (!fn.docAvailable(uri)) {
     fn.error(null, 'INVALID-EXECUTION-DOCUMENT', `Document Execution "${uri}" not found."`);
@@ -820,10 +842,16 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
           }
 
           // execute the resource modules
-          let resp = executeActionModule(state.Resource, executionObj.uri, state.Parameters, context, {
-            database: executionObj.database,
-            modules: executionObj.modules,
-          });
+          let resp = executeActionModule(
+            state.Resource,
+            executionObj.uri,
+            state.Parameters,
+            context,
+            {
+              database: executionObj.database,
+              modules: executionObj.modules,
+            }
+          );
 
           // add the data from the result to the execution's context
           if (state.OutputPath && state.OutputPath !== '$') {
@@ -1346,7 +1374,10 @@ function createStateConductorExecution(name, uri, context = {}, options = {}) {
   });
 
   // insert the execution document
-  xdmp.trace(TRACE_EVENT, `inserting execution document: ${executionUri} into db ${STATE_CONDUCTOR_EXECUTIONS_DB}`);
+  xdmp.trace(
+    TRACE_EVENT,
+    `inserting execution document: ${executionUri} into db ${STATE_CONDUCTOR_EXECUTIONS_DB}`
+  );
   invokeOrApplyFunction(
     () => {
       declareUpdate();
@@ -1420,7 +1451,9 @@ function emitEvent(event, batchSize = 100, save = true) {
       var arrayOfwaitingURIExecutionsForEvent = [];
 
       for (var i = 0; i < waitingURIExecutionsForEvent.length; i += batchSize) {
-        arrayOfwaitingURIExecutionsForEvent.push(waitingURIExecutionsForEvent.slice(i, i + batchSize));
+        arrayOfwaitingURIExecutionsForEvent.push(
+          waitingURIExecutionsForEvent.slice(i, i + batchSize)
+        );
       }
 
       //loops through all the arrays
@@ -1456,7 +1489,9 @@ function emitEvent(event, batchSize = 100, save = true) {
   // determine which stateMachines should run and create state conductor executions
   let stateMachinesToTrigger = stateMachines.filter((stateMachine) => {
     // find the stateMachines where the event and scope are in the same object
-    let eventContext = stateMachine.xpath("mlDomain/context[scope = 'event' and value = '" + event + "' ]");
+    let eventContext = stateMachine.xpath(
+      "mlDomain/context[scope = 'event' and value = '" + event + "' ]"
+    );
 
     return fn.exists(eventContext);
   });

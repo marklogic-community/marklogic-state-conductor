@@ -1,11 +1,11 @@
 # MarkLogic State Conductor
 
 The _MarkLogic State Conductor_ is an event-based orchestrator for manipulating MarkLogic database documents.
-State Conductor state machines are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html). Actions are defined using server-side modules. The included driver utilizes MarkLogic's CPF and Triggers to move documents through the defined State Machines.
+State Conductor state machines are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html). Actions are defined using server-side modules. There project includes drivers and Triggers to move documents through the defined State Machines.
 
-The _State Conductor_ can be used to perform an arbitrary number of context-based processing actions on a subset of documents. Actions could include: invoking a [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) flow, transforming a document, applying metadata, or calling an external process.
+The _State Conductor_ can be used to perform an arbitrary number of context-based processing actions on a subset of documents. Actions could include: invoking a [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) flow or step, transforming a document, applying metadata, or calling an external process.
 
-The _State Conductor_ requires a "Driver" to process documents and move them through the installed state machine states. The _State Conductor_ supports a [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver, a [CoRB2](https://github.com/marklogic-community/corb2) driver, and a [CPF](https://docs.marklogic.com/guide/cpf) driver.
+The _State Conductor_ requires a "Driver" to process documents and move them through the installed state machine states. The _State Conductor_ supports a [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver and a [CoRB2](https://github.com/marklogic-community/corb2) driver.
 
 1. [Quick Start Guide](https://github.com/aclavio/marklogic-state-conductor/wiki/QUICKSTART)
 2. [Installation](#installation)
@@ -40,14 +40,6 @@ dependencies {
   mlBundle "com.marklogic:marklogic-state-conductor:0.7.0"
 }
 ```
-
-The _State Conductor_ utilizes MarkLogic's Content Processing Framework. Add the following to your gradle project's properties file to ensure that the CPF configurations are installed in the required location:
-
-```
-mlCpfDatabaseName=state-conductor-triggers
-```
-
----
 
 ## Usage <a name="usage"></a>
 
@@ -146,7 +138,7 @@ Where `uri` is the document being processed by the state machine; `parameters` i
 
 ### Execution Documents <a name="execution-documents"></a>
 
-For every document processed by a _State Conductor_ state machine there is a corresponding `Execution` document. Execution documents are stored in the `state-conductor-executions` database (new in v0.3.0), in the `/execution/` folder. These documents track the in-process document, and state machine; they also store the context and provenance information.
+For every document processed by a _State Conductor_ state machine there is a corresponding `Execution` document. Execution documents are stored in the `state-conductor-executions` database, in the `/execution/` folder. These documents track the in-process document, and state machine; they also store the context and provenance information.
 
 ### Provenance <a name="provenance"></a>
 

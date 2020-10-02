@@ -10,7 +10,7 @@
       "Comment": "runs the dhf 5 flow step",
       "Resource": "/state-conductor/actions/common/dhf/dhf5RunFlowStepAction.sjs",
       "Parameters": {
-        "name": "MissingFlow",
+        "flowName": "MissingFlow",
         "step": 1,
         "flowOptions": {}
       },

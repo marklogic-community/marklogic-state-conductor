@@ -1,12 +1,9 @@
 /*
   Copyright 2012-2019 MarkLogic Corporation
-
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
-
      http://www.apache.org/licenses/LICENSE-2.0
-
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,17 +13,15 @@
 
 /* Custom steps for data hub 5 are 'on rails' code execution within a single transaction, after which the output
    from these steps will create in-memory objects that will then be written in one single, isolated transaction.
-
    This is designed to run in QUERY (read-only) mode by default. If you need transactionally consistent updates or
    serializable read locking on documents, then you must upgrade to an UPDATE transaction either through an update
    (such as declareUpdate()) or by setting the value of 'stepUpdate' as true in the options and it will be
    executed in update mode.
  */
-const DataHub = require("/data-hub/5/datahub.sjs");
+const DataHub = require('/data-hub/5/datahub.sjs');
 const datahub = new DataHub();
 
 function main(content, options) {
-
   //changes the stateConductorContext
   //is used for a unit test
   options.stateConductorContext.hasChanged = true;
@@ -38,23 +33,39 @@ function main(content, options) {
   let context = content.context;
 
   //let's set our output format, so we know what we're exporting
-  let outputFormat = options.outputFormat ? options.outputFormat.toLowerCase() : datahub.stateMachine.consts.DEFAULT_FORMAT;
+  let outputFormat = options.outputFormat
+    ? options.outputFormat.toLowerCase()
+    : datahub.flow.consts.DEFAULT_FORMAT;
 
   //here we check to make sure we're not trying to push out a binary or text document, just xml or json
-  if (outputFormat !== datahub.stateMachine.consts.JSON && outputFormat !== datahub.stateMachine.consts.XML) {
+  if (outputFormat !== datahub.flow.consts.JSON && outputFormat !== datahub.flow.consts.XML) {
     datahub.debug.log({
-      message: 'The output format of type ' + outputFormat + ' is invalid. Valid options are ' + datahub.stateMachine.consts.XML + ' or ' + datahub.stateMachine.consts.JSON + '.',
-      type: 'error'
+      message:
+        'The output format of type ' +
+        outputFormat +
+        ' is invalid. Valid options are ' +
+        datahub.flow.consts.XML +
+        ' or ' +
+        datahub.flow.consts.JSON +
+        '.',
+      type: 'error',
     });
-    throw Error('The output format of type ' + outputFormat + ' is invalid. Valid options are ' + datahub.stateMachine.consts.XML + ' or ' + datahub.stateMachine.consts.JSON + '.');
+    throw Error(
+      'The output format of type ' +
+        outputFormat +
+        ' is invalid. Valid options are ' +
+        datahub.flow.consts.XML +
+        ' or ' +
+        datahub.flow.consts.JSON +
+        '.'
+    );
   }
 
   /*
   This scaffolding assumes we obtained the document from the database. If you are inserting information, you will
   have to map data from the content.value appropriately and create an instance (object), headers (object), and triples
-  (array) instead of using the stateMachineUtils functions to grab them from a document that was pulled from MarkLogic.
+  (array) instead of using the flowUtils functions to grab them from a document that was pulled from MarkLogic.
   Also you do not have to check if the document exists as in the code below.
-
   Example code for using data that was sent to MarkLogic server for the document
   let instance = content.value;
   let triples = [];
@@ -77,13 +88,13 @@ function main(content, options) {
   }
 
   //get our instance, default shape of envelope is envelope/instance, else it'll return an empty object/array
-  let instance = datahub.stateMachine.stateMachineUtils.getInstanceAsObject(doc) || {};
+  let instance = datahub.flow.flowUtils.getInstanceAsObject(doc) || {};
 
   // get triples, return null if empty or cannot be found
-  let triples = datahub.stateMachine.stateMachineUtils.getTriplesAsObject(doc) || [];
+  let triples = datahub.flow.flowUtils.getTriplesAsObject(doc) || [];
 
   //gets headers, return null if cannot be found
-  let headers = datahub.stateMachine.stateMachineUtils.getHeadersAsObject(doc) || {};
+  let headers = datahub.flow.flowUtils.getHeadersAsObject(doc) || {};
 
   //If you want to set attachments, uncomment here
   // instance['$attachments'] = doc;
@@ -91,7 +102,6 @@ function main(content, options) {
   //for ES models, you will want to specify entity/version if they are not already part of your instance
   //instance['$title'] = 'myEntity';
   //instance['$version'] = '0.0.1'
-
 
   //insert code to manipulate the instance, triples, headers, uri, context metadata, etc.
 
@@ -101,13 +111,12 @@ function main(content, options) {
 
   instance = content.value;
 
-
   //form our envelope here now, specifying our output format
-  let envelope = datahub.stateMachine.stateMachineUtils.makeEnvelope(instance, headers, triples, outputFormat);
+  let envelope = datahub.flow.flowUtils.makeEnvelope(instance, headers, triples, outputFormat);
 
   //create our return content object, we have a handy helper function for creating a json scaffolding, but you
   //can also do a node-based one by using nodebuilder, especially if you're dealing with xml!
-  let newContent = datahub.stateMachine.stateMachineUtils.createContentAsObject();
+  let newContent = datahub.flow.flowUtils.createContentAsObject();
 
   //assign our envelope value
   newContent.value = envelope;
@@ -123,5 +132,5 @@ function main(content, options) {
 }
 
 module.exports = {
-  main: main
+  main: main,
 };

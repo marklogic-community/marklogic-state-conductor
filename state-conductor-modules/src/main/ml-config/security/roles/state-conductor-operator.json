@@ -1,11 +1,7 @@
 {
   "role-name": "state-conductor-operator",
   "description": "Permits operating a state conductor, such as running stateMachines and viewing execution data.",
-  "role": [
-    "rest-extension-user",
-    "rest-reader",
-    "state-conductor-execution-writer-role"
-  ],
+  "role": ["rest-extension-user", "rest-reader", "state-conductor-execution-writer-role"],
   "privilege": [
     {
       "privilege-name": "any-uri",

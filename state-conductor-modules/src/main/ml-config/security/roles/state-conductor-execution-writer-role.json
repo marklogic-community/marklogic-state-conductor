@@ -1,9 +1,7 @@
 {
   "role-name": "state-conductor-execution-writer-role",
   "description": "Permits reading stateMachine documents and knowing stateMachine status",
-  "role": [
-    "state-conductor-reader-role"
-  ],
+  "role": ["state-conductor-reader-role"],
   "privilege": [
     {
       "privilege-name": "state-conductor-execute",
@@ -17,4 +15,3 @@
     }
   ]
 }
-

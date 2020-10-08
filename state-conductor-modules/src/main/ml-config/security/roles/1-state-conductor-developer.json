@@ -1,7 +1,7 @@
 {
   "role-name": "state-conductor-developer",
   "description": "Permits developing and operating Marklogic State onductor",
-  "role": ["state-conductor-execute-role", "rest-reader", "rest-extension-user"],
+  "role": ["state-conductor-execution-writer-role", "rest-reader", "rest-extension-user"],
   "privilege": [
     {
       "privilege-name": "any-uri",

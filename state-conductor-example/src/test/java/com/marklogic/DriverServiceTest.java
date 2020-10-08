@@ -39,7 +39,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
 
     batch.add("/state-conductor-state-machine/rest-test-state-machine3.asl.json", stateMachineMeta, loadFileResource("stateMachines/rest-test-state-machine3.asl.json"));
     batch.add("/state-conductor-state-machine/rest-test-state-machine4.asl.json", stateMachineMeta, loadFileResource("stateMachines/rest-test-state-machine4.asl.json"));
-    batch.add("/state-conductor-state-machine/timeLimit.asl.json", flowMeta, loadFileResource("stateMachines/timeLimit.asl.json"));
+    batch.add("/state-conductor-state-machine/timeLimit.asl.json", stateMachineMeta, loadFileResource("stateMachines/timeLimit.asl.json"));
 
     getContentManager().write(batch);
 
@@ -67,7 +67,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
     batch.add("/test/stateConductorExecution/execution5.json", executionMeta, loadTokenizedResource("executions/execution5.json", tokens));
     batch.add("/test/stateConductorExecution/execution6.json", executionMeta, loadTokenizedResource("executions/execution6.json", tokens));
     batch.add("/test/stateConductorExecution/execution7.json", executionMeta, loadTokenizedResource("executions/execution7.json", tokens));
-    batch.add("/test/stateConductorExecution/executionTimeOut.json", jobMeta, loadTokenizedResource("executions/TimeLimit.json", tokens));
+    batch.add("/test/stateConductorExecution/executionTimeOut.json", executionMeta, loadTokenizedResource("executions/TimeLimit.json", tokens));
     getExecutionsManager().write(batch);
 
   }
@@ -453,7 +453,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
 
 
 @Test
-  public void testProcessJobTimeOut() {
+  public void testProcessExecutionTimeOut() {
     // start flow
     given().
       log().uri().
@@ -465,7 +465,7 @@ public class DriverServiceTest extends AbstractStateConductorRestTest {
       statusCode(200).
       contentType(ContentType.JSON);
 
-    JsonNode content = getJobsManager().read("/test/stateConductorExecution/executionTimeOut.json", new JacksonHandle()).get();
+    JsonNode content = getExecutionsManager().read("/test/stateConductorExecution/executionTimeOut.json", new JacksonHandle()).get();
     assertEquals("failed", content.get("status").asText());
     assertTrue(content.get("errors").hasNonNull("waitFunction"));
     assertEquals("XDMP-EXTIME", content.get("errors").get("waitFunction").get("name").asText());

@@ -1,0 +1,28 @@
+{
+  "Comment": "contains no context, therefore can only be invoked via api",
+  "mlDomain": {
+    "context": []
+  },
+  "StartAt": "waitFunction",
+  "States": {
+    "waitFunction": {
+      "Type": "Task",
+      "Comment": "initial state of the flow",
+      "Resource": "/state-conductor/actions/custom/waitFunction.sjs",
+      "Next": "set-prop1",
+      "TimeLimit": 10
+    },
+    "set-prop1": {
+      "Type": "Task",
+      "Comment": "initial state of the flow",
+      "Resource": "/state-conductor/actions/custom/set-prop1.sjs",
+      "Next": "set-prop2"
+    },
+    "set-prop2": {
+      "Type": "Task",
+      "End": true,
+      "Comment": "updates a property",
+      "Resource": "/state-conductor/actions/custom/set-prop2.sjs"
+    }
+  }
+}

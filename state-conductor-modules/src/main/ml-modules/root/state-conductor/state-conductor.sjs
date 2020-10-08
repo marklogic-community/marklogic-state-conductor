@@ -655,6 +655,15 @@ function transition(executionDoc, executionObj, stateName, state, stateMachineOb
     } else if (!inTerminalState(executionObj, stateMachineObj)) {
       xdmp.trace(TRACE_EVENT, `transition from non-terminal state: ${stateName}`);
 
+      //checks if the state has TimeoutSeconds and sets the timeout
+      if (state.hasOwnProperty('TimeLimit')) {
+        xdmp.trace(
+          TRACE_EVENT,
+          `TransactionTimeLimit set to: ${state.TimeLimit} for: ${stateName}`
+        );
+        xdmp.setTransactionTimeLimit(state.TimeLimit);
+      }
+
       if (STATE_TASK === state.Type.toLowerCase()) {
         targetState = state.Next;
       } else if (STATE_PASS === state.Type.toLowerCase()) {
@@ -839,6 +848,15 @@ function executeStateByExecutionDoc(executionDoc, save = true) {
           // filter the context through the InputPath if set
           if (state.InputPath && state.InputPath !== '$') {
             context = lib.materializeReferencePath(state.InputPath, context);
+          }
+
+          //checks if the state has TimeoutSeconds and sets the timeout
+          if (state.hasOwnProperty('TimeLimit')) {
+            xdmp.trace(
+              TRACE_EVENT,
+              `TransactionTimeLimit set to: ${state.TimeLimit} for: ${stateName}`
+            );
+            xdmp.setTransactionTimeLimit(state.TimeLimit);
           }
 
           // execute the resource modules

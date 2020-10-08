@@ -209,8 +209,8 @@ public class StateConductorDriver implements Runnable, Destroyable {
       }
 
 
-      if (jobBuckets.size() > 0) {
-        logger.info("Populated thread pool with {} batches", jobBuckets.size());
+      if (executionBuckets.size() > 0) {
+        logger.info("Populated thread pool with {} batches", executionBuckets.size());
       }
 
       // process any results that have come in

@@ -54,7 +54,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine").
+      queryParam("rs:name", "rest-test-state-machine").
       get("/v1/resources/state-conductor-state-machines").
     then().
       log().body().
@@ -69,7 +69,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine2").
+      queryParam("rs:name", "rest-test-state-machine2").
       get("/v1/resources/state-conductor-state-machines").
     then().
       log().body().
@@ -86,7 +86,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "non-existent-state-machine").
+      queryParam("rs:name", "non-existent-state-machine").
       get("/v1/resources/state-conductor-state-machines").
     then().
       log().body().
@@ -101,7 +101,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine3").
+      queryParam("rs:name", "rest-test-state-machine3").
       contentType(ContentType.JSON).
       body(fileHandle.get()).
       put("/v1/resources/state-conductor-state-machines").
@@ -112,7 +112,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine3").
+      queryParam("rs:name", "rest-test-state-machine3").
       get("/v1/resources/state-conductor-state-machines").
     then().
       log().body().
@@ -132,7 +132,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "").
+      queryParam("rs:name", "").
       contentType(ContentType.JSON).
       body(fileHandle.get()).
       put("/v1/resources/state-conductor-state-machines").
@@ -156,7 +156,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine3").
+      queryParam("rs:name", "rest-test-state-machine3").
       contentType(ContentType.JSON).
       put("/v1/resources/state-conductor-state-machines").
     then().
@@ -171,7 +171,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine3").
+      queryParam("rs:name", "rest-test-state-machine3").
       contentType(ContentType.TEXT).
       body(fileHandle.get()).
       put("/v1/resources/state-conductor-state-machines").
@@ -187,7 +187,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine3").
+      queryParam("rs:name", "rest-test-state-machine3").
       contentType(ContentType.JSON).
       body(fileHandle.get()).
     put("/v1/resources/state-conductor-state-machines").
@@ -203,7 +203,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine3").
+      queryParam("rs:name", "rest-test-state-machine3").
       contentType(ContentType.JSON).
       body(fileHandle.get()).
     put("/v1/resources/state-conductor-state-machines").
@@ -214,7 +214,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine3").
+      queryParam("rs:name", "rest-test-state-machine3").
       get("/v1/resources/state-conductor-state-machines").
     then().
       log().body().
@@ -226,7 +226,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine3").
+      queryParam("rs:name", "rest-test-state-machine3").
       contentType(ContentType.JSON).
       delete("/v1/resources/state-conductor-state-machines").
     then().
@@ -236,7 +236,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "rest-test-state-machine3").
+      queryParam("rs:name", "rest-test-state-machine3").
       get("/v1/resources/state-conductor-state-machines").
     then().
       log().body().
@@ -248,7 +248,7 @@ public class StateMachineServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:stateMachineName", "").
+      queryParam("rs:name", "").
       contentType(ContentType.JSON).
       delete("/v1/resources/state-conductor-state-machines").
     then().

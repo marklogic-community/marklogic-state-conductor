@@ -1,8 +1,8 @@
 {
   "id": "TimeLimit",
-  "flowName": "timeLimit",
-  "flowStatus": "working",
-  "flowState": "waitFunction",
+  "name": "timeLimit",
+  "status": "working",
+  "state": "waitFunction",
   "uri": "/test/doc2.json",
   "database": "%DATABASE%",
   "modules": "%MODULES%",

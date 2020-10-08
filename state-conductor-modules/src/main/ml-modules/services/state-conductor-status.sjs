@@ -19,8 +19,8 @@ function isValidTemporal(value) {
  * Lists the status of the given State Conductor StateMachine
  */
 function get(context, params) {
-  if (params.stateMachineName && !sc.getStateMachine(params.stateMachineName)) {
-    returnError(404, 'NOT FOUND', `StateMachine File "${params.stateMachineName}" not found.`);
+  if (params.name && !sc.getStateMachine(params.name)) {
+    returnError(404, 'NOT FOUND', `StateMachine File "${params.name}" not found.`);
   }
 
   if (params.startDate && !isValidTemporal(params.startDate)) {
@@ -31,7 +31,7 @@ function get(context, params) {
     returnError(400, 'BAD REQUEST', `Invalid endDate: "${params.endDate}".`);
   }
 
-  const stateMachineNames = params.stateMachineName ? [params.stateMachineName] : sc.getStateMachineNames();
+  const stateMachineNames = params.name ? [params.name] : sc.getStateMachineNames();
   const startDate = params.startDate;
   const endDate = params.endDate;
   const detailed = params.detailed === 'true';

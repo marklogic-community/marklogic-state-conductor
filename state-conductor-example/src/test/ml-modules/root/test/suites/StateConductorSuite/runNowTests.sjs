@@ -150,5 +150,13 @@ assertions.push(
   test.assertTrue(props.includes(id))
 );
 
+try {
+  resp = sc.gatherAndCreateJobsForFlow('fake-flow', true, 1).toArray();
+} catch (e) {
+  err = e;
+}
+
+assertions.push(test.assertTrue(!!err), test.assertEqual('MISSING-FLOW-FILE', err.name));
+
 // return
 assertions;

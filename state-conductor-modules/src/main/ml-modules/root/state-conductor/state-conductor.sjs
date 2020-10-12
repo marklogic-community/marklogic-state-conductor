@@ -306,6 +306,38 @@ function getAllFlowsContextQuery() {
 }
 
 /**
+ * Given a flowName, find the documents matching it's defined context.
+ * Optionally exclude documents have already be processed by this flow as
+ * indicated by the property metadata.
+ *
+ * @param {*} flowName - the name of the flow
+ * @param {boolean} [includeAlreadyProcessed=false] - should we include already processed docs
+ * @param {number} [limit=1000] - the number of documents to find
+ * @returns a sequence of matching document URIs
+ */
+function findFlowTargets(flowName, includeAlreadyProcessed = false, limit = 1000) {
+  const flow = getFlowDocument(flowName);
+  const ctxquery = getFlowContextQuery(flow.toObject());
+
+  // find documents matching the flow's context query,
+  const queries = [ctxquery];
+
+  // optionally eliminate documents already processed by this flow
+  if (!includeAlreadyProcessed) {
+    queries.push(
+      cts.notQuery(
+        cts.propertiesFragmentQuery(
+          cts.elementAttributeValueQuery(FLOW_JOBID_PROP_NAME, 'flow-name', flowName)
+        )
+      )
+    );
+  }
+
+  const uris = fn.subsequence(cts.uris(null, null, cts.andQuery(queries)), 1, limit);
+  return uris;
+}
+
+/**
  * Main unit of processing for a job document.  Performs state actions and transitions to next state.
  *
  * @param {*} uri - the uri of the job document
@@ -1405,6 +1437,27 @@ function batchCreateStateConductorJob(flowName, uris = [], context = {}, options
 }
 
 /**
+ * Given a flow name, find an process document's beloning to the named flow's context.
+ *
+ * @param {*} flowName - the name of the flow
+ * @param {boolean} [includeAlreadyProcessed=false] - should we include documents which have already been processed by this flow
+ * @param {number} [limit=1000] - the number of documents to process
+ * @returns an object describing the documents found and jobs created
+ */
+function gatherAndCreateJobsForFlow(flowName, includeAlreadyProcessed = false, limit = 1000) {
+  const targets = findFlowTargets(flowName, includeAlreadyProcessed, limit).toArray();
+  const jobs = targets.reduce((acc, uri) => {
+    acc[uri] = createStateConductorJob(flowName, uri);
+    return acc;
+  }, {});
+  return {
+    flowName: flowName,
+    total: targets.length,
+    jobs: jobs,
+  };
+}
+
+/**
  * Convienence function to emitEvents
  *
  * @param {*} event
@@ -1613,6 +1666,8 @@ module.exports = {
   createStateConductorJob,
   emitEvent,
   executeStateByJobDoc,
+  findFlowTargets,
+  gatherAndCreateJobsForFlow,
   getAllFlowsContextQuery,
   getApplicableFlows,
   getFlowContextQuery,

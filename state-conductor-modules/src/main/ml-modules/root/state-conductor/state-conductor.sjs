@@ -316,10 +316,10 @@ function getAllFlowsContextQuery() {
  * @returns a sequence of matching document URIs
  */
 function findFlowTargets(flowName, includeAlreadyProcessed = false, limit = 1000) {
-  const flow = getFlowDocument(flowName);
-  const ctxquery = getFlowContextQuery(flow.toObject());
+  const flow = getFlowDocumentFromDatabase(flowName, xdmp.database());
 
   // find documents matching the flow's context query,
+  const ctxquery = getFlowContextQuery(flow.toObject());
   const queries = [ctxquery];
 
   // optionally eliminate documents already processed by this flow

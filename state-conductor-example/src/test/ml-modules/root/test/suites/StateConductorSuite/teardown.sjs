@@ -6,7 +6,7 @@ const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 xdmp.directoryDelete('/data/');
-xdmp.directoryDelete('/stateConductorJob/');
+xdmp.directoryDelete('/stateConductorExecution/');
 
 xdmp.invokeFunction(
   () => {
@@ -14,7 +14,7 @@ xdmp.invokeFunction(
     xdmp.collectionDelete('test');
   },
   {
-    database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
+    database: xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
   }
 );
 

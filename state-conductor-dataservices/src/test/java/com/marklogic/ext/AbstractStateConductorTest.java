@@ -1,7 +1,7 @@
 package com.marklogic.ext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.marklogic.StateConductorJob;
+import com.marklogic.StateConductorExecution;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.DeleteListener;
@@ -55,11 +55,11 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
 	}
 
 	@Autowired
-  @Qualifier("jobsDatabaseClientProvider")
-	protected DatabaseClientProvider jobsDatabaseClientProvider;
+  @Qualifier("executionsDatabaseClientProvider")
+	protected DatabaseClientProvider executionsDatabaseClientProvider;
 
-	protected DatabaseClient getJobsDatabaseClient() {
-	  return jobsDatabaseClientProvider.getDatabaseClient();
+	protected DatabaseClient getExecutionsDatabaseClient() {
+	  return executionsDatabaseClientProvider.getDatabaseClient();
   }
 
   private JSONDocumentManager contentManager;
@@ -70,12 +70,12 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
     return contentManager;
   }
 
-  private JSONDocumentManager jobsManager;
-  protected JSONDocumentManager getJobsManager() {
-    if (jobsManager == null) {
-      jobsManager = getJobsDatabaseClient().newJSONDocumentManager();
+  private JSONDocumentManager executionsManager;
+  protected JSONDocumentManager getExecutionsManager() {
+    if (executionsManager == null) {
+      executionsManager = getExecutionsDatabaseClient().newJSONDocumentManager();
     }
-    return jobsManager;
+    return executionsManager;
   }
 
   private String contentDatabaseId;
@@ -103,8 +103,8 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
   /*
   @AfterAll
   public static void suiteTeardown() {
-    if (jobsClient != null) {
-      jobsClient.release();
+    if (executionsClient != null) {
+      executionsClient.release();
     }
   }
   */
@@ -135,9 +135,9 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
     return new StringHandle(content);
   }
 
-  protected StateConductorJob getJobDocument(String uri) throws IOException {
-    String content = getJobsManager().readAs(uri, String.class);
-    return mapper.readValue(content, StateConductorJob.class);
+  protected StateConductorExecution getExecutionDocument(String uri) throws IOException {
+    String content = getExecutionsManager().readAs(uri, String.class);
+    return mapper.readValue(content, StateConductorExecution.class);
   }
 
   protected void deleteCollections(DatabaseClient client, String... collections) {

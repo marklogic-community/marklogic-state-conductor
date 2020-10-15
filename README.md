@@ -37,7 +37,7 @@ repositories {
   }
 }
 dependencies {
-  mlBundle "com.marklogic:marklogic-state-conductor:0.8.0"
+  mlBundle "com.marklogic:marklogic-state-conductor:1.0.0"
 }
 ```
 

@@ -8,13 +8,12 @@ import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.config.StateConductorDriverConfig;
 import com.marklogic.tasks.GetConfigTask;
-import com.marklogic.tasks.GetJobsTask;
+import com.marklogic.tasks.GetExecutionsTask;
 import com.marklogic.tasks.MetricsTask;
-import com.marklogic.tasks.ProcessJobTask;
+import com.marklogic.tasks.ProcessExecutionTask;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
 import java.io.FileInputStream;
@@ -61,8 +60,8 @@ public class StateConductorDriver implements Runnable, Destroyable {
     num.setOptionalArg(true);
     Option threads = new Option("t", "threads", true, "Thread count");
     threads.setOptionalArg(true);
-    Option jobsDb = new Option("db", "jobs-database", true, "Jobs Database Name");
-    jobsDb.setOptionalArg(true);
+    Option executionsDb = new Option("db", "executions-database", true, "Executions Database Name");
+    executionsDb.setOptionalArg(true);
     Option batch = new Option("b", "batch", true, "Batch Size");
     batch.setOptionalArg(true);
     Option config = new Option("c", "config", true, "Configuration File");
@@ -75,7 +74,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     opts.addOption(pass);
     opts.addOption(num);
     opts.addOption(threads);
-    opts.addOption(jobsDb);
+    opts.addOption(executionsDb);
     opts.addOption(batch);
     opts.addOption(config);
     opts.addOption(help);
@@ -113,7 +112,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
       if (cmd.hasOption("p")) props.put("mlPort", cmd.getOptionValue("p"));
       if (cmd.hasOption("u")) props.put("username", cmd.getOptionValue("u"));
       if (cmd.hasOption("x")) props.put("password", cmd.getOptionValue("x"));
-      if (cmd.hasOption("db")) props.put("jobsDatabase", cmd.getOptionValue("db"));
+      if (cmd.hasOption("db")) props.put("executionsDatabase", cmd.getOptionValue("db"));
       if (cmd.hasOption("n")) props.put("pollSize", cmd.getOptionValue("n"));
       if (cmd.hasOption("t")) props.put("threadCount", cmd.getOptionValue("t"));
       if (cmd.hasOption("b")) props.put("batchSize", cmd.getOptionValue("b"));
@@ -155,7 +154,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     List<Future<JsonNode>> errored = new ArrayList<>();
 
     List<String> batch = new ArrayList<>();
-    List<ProcessJobTask> jobBuckets = new ArrayList<>();
+    List<ProcessExecutionTask> executionBuckets = new ArrayList<>();
 
     // set up the thread pool
     int initialThreads = config.getThreadsPerHost();
@@ -173,12 +172,12 @@ public class StateConductorDriver implements Runnable, Destroyable {
     Thread metricsThread = new Thread(metricsTask);
     metricsThread.start();
 
-    // start the thread for getting jobs
-    Thread getJobsTask = new Thread(new GetJobsTask(service, config, urisBuffer, inProgressSet));
-    getJobsTask.start();
+    // start the thread for getting executions
+    Thread getExecutionsTask = new Thread(new GetExecutionsTask(service, config, urisBuffer, inProgressSet));
+    getExecutionsTask.start();
 
     while (keepRunning) {
-      jobBuckets.clear();
+      executionBuckets.clear();
 
       // create batches from any new buffered tasks
       synchronized (urisBuffer) {
@@ -188,14 +187,14 @@ public class StateConductorDriver implements Runnable, Destroyable {
           String uri = uris.next();
           batch.add(uri);
           if (batch.size() >= config.getBatchSize()) {
-            jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
+            executionBuckets.add(new ProcessExecutionTask(batchCount.getAndIncrement(), service, batch));
             batch = new ArrayList<>();
           }
         }
 
         // cleanup batch
         if (batch.size() > 0) {
-          jobBuckets.add(new ProcessJobTask(batchCount.getAndIncrement(), service, batch));
+          executionBuckets.add(new ProcessExecutionTask(batchCount.getAndIncrement(), service, batch));
           batch = new ArrayList<>();
         }
 
@@ -203,14 +202,15 @@ public class StateConductorDriver implements Runnable, Destroyable {
         urisBuffer.clear();
       }
 
-      // submit the jobs to the executor pool
-      for (ProcessJobTask bucket : jobBuckets) {
+      // submit the executions to the executor pool
+      for (ProcessExecutionTask bucket : executionBuckets) {
         Future<JsonNode> future = pool.submit(bucket);
         results.add(future);
       }
 
-      if (jobBuckets.size() > 0) {
-        logger.info("Populated thread pool with {} batches", jobBuckets.size());
+
+      if (executionBuckets.size() > 0) {
+        logger.info("Populated thread pool with {} batches", executionBuckets.size());
       }
 
       // process any results that have come in
@@ -221,13 +221,13 @@ public class StateConductorDriver implements Runnable, Destroyable {
             ArrayNode arr = (ArrayNode) jsonNodeFuture.get();
             arr.forEach(jsonNode -> {
               total.getAndIncrement();
-              String jobUri = jsonNode.get("job").asText();
-              inProgressSet.remove(jobUri);
+              String executionUri = jsonNode.get("execution").asText();
+              inProgressSet.remove(executionUri);
               boolean hasError = jsonNode.get("error") != null;
               if (hasError)
                 errorCount.incrementAndGet();
             });
-            logger.info("batch result: {} jobs complete - with {} errors", arr.size(), errorCount.get());
+            logger.info("batch result: {} executions complete - with {} errors", arr.size(), errorCount.get());
             totalErrors.addAndGet(errorCount.get());
             completed.add(jsonNodeFuture);
           } catch (Exception e) {
@@ -251,8 +251,8 @@ public class StateConductorDriver implements Runnable, Destroyable {
         // initiate a thread shutdown
         pool.shutdown();
         // stop fetching tasks
-        logger.info("Stopping GetJobsTask thread...");
-        getJobsTask.interrupt();
+        logger.info("Stopping GetExecutionsTask thread...");
+        getExecutionsTask.interrupt();
         metricsThread.interrupt();
         configThread.interrupt();
         // stop main loop

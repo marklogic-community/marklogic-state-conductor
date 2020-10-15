@@ -1,0 +1,17 @@
+{
+    "functionName": "getStateMachine",
+    "desc": "Returns a single stateMachine if name is specified or all stateMachines otherwise.",
+    "params": [
+        {
+            "name": "name",
+            "datatype": "string",
+            "desc": "The name of the stateMachine to return. Pass null to return all.",
+            "nullable": true,
+            "multiple": false
+        }
+    ],
+    "return": {
+        "datatype": "object",
+        "$javaClass": "com.fasterxml.jackson.databind.node.ObjectNode"
+    }
+}

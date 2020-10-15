@@ -43,6 +43,16 @@
       <search:element ns="http://marklogic.com/entity-services" name="title"/>
     </search:value>
   </search:constraint>
+  <search:constraint name="Person">
+    <search:container>
+      <search:json-property>Person</search:json-property>
+    </search:container>
+  </search:constraint>
+  <search:constraint name="Person-xml">
+    <search:container>
+      <search:element ns="" name="Person"/>
+    </search:container>
+  </search:constraint>
   <!--Uncomment to return no results for a blank search, rather than the default of all results
  <search:term xmlns:search="http://marklogic.com/appservices/search">
   <search:empty apply="no-results"/>

@@ -4,13 +4,13 @@ const sc = require('/state-conductor/state-conductor.sjs');
 const test = require('/test/test-helper.xqy');
 
 const assertions = [];
-let jobDoc, assertion;
+let executionDoc, assertion;
 
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: '4164b17b-06a5-499b-8870-539add9f69c2',
-  flowName: 'test-time-wait',
-  flowStatus: 'working',
-  flowState: 'run-in-the-future',
+  name: 'test-time-wait',
+  status: 'working',
+  state: 'run-in-the-future',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -20,11 +20,11 @@ jobDoc = xdmp.toJSON({
   errors: {},
 });
 
-//"test excute job")
-//"test excute job")
-assertion = sc.executeStateByJobDoc(jobDoc, false);
+//"test excute execution")
+//"test excute execution")
+assertion = sc.executeStateByExecutionDoc(executionDoc, false);
 assertions.push(
-  test.assertEqual('waiting', assertion.flowStatus, 'waiting flowStatus'));
+  test.assertEqual('waiting', assertion.status, 'waiting status'));
 assertions.push(
   test.assertTrue(assertion.hasOwnProperty('currentlyWaiting'))
 );
@@ -35,11 +35,11 @@ assertions.push(
   test.assertTrue(assertion.provenance[0].waiting.hasOwnProperty("doneNextTaskTime"))
 );
 
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: '4164b17b-06a5-499b-8870-539add9f69c2',
-  flowName: 'test-time-wait',
-  flowStatus: 'waiting',
-  flowState: 'run-in-the-future',
+  name: 'test-time-wait',
+  status: 'waiting',
+  state: 'run-in-the-future',
   uri: '/data/test-doc1.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -67,14 +67,14 @@ jobDoc = xdmp.toJSON({
   },
 });
 
-//"found waiting job")
-assertion = sc.resumeWaitingJobByJobDoc(jobDoc, 'waitTask', false);
-assertions.push(test.assertEqual('working', assertion.flowStatus, 'working flowStatus'));
+//"found waiting execution")
+assertion = sc.resumeWaitingExecutionByExecutionDoc(executionDoc, 'waitTask', false);
+assertions.push(test.assertEqual('working', assertion.status, 'working status'));
 assertions.push(
   test.assertEqual('needs-envelope', assertion.provenance[3].to, 'went to next state')
 );
 assertions.push(
   test.assertFalse(assertion.hasOwnProperty('currentlyWaiting'), 'waiting currentlyWaiting')
 );
-assertions.push(test.assertEqual('needs-envelope', assertion.flowState, 'working flowStatus'));
+assertions.push(test.assertEqual('needs-envelope', assertion.state, 'working status'));
 assertions;

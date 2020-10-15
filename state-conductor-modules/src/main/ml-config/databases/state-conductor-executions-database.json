@@ -1,0 +1,32 @@
+{
+  "database-name": "state-conductor-executions",
+  "maintain-last-modified": true,
+  "range-element-index": [
+    {
+      "invalid-values": "reject",
+      "collation": "http://marklogic.com/collation/codepoint",
+      "localname": "id",
+      "namespace-uri": "",
+      "range-value-positions": false,
+      "scalar-type": "string"
+    },
+    {
+      "invalid-values": "reject",
+      "collation": "",
+      "localname": "createdDate",
+      "namespace-uri": "",
+      "range-value-positions": false,
+      "scalar-type": "dateTime"
+    },
+    {
+      "invalid-values": "reject",
+      "collation": "",
+      "localname": "nextTaskTime",
+      "namespace-uri": "",
+      "range-value-positions": true,
+      "scalar-type": "dateTime"
+    }
+  ],
+  "schema-database": "state-conductor-schemas",
+  "triggers-database": "state-conductor-triggers"
+}

@@ -1,0 +1,55 @@
+{
+  "functionName": "getExecutions",
+  "desc": "Returns a list of MarkLogic State Conductor Execution document URIs",
+  "params": [
+    {
+      "name": "start",
+      "datatype": "unsignedInt",
+      "desc": "Return records starting from this position.",
+      "nullable": true
+    },
+    {
+      "name": "count",
+      "datatype": "unsignedInt",
+      "desc": "The number of uris to return",
+      "nullable": true
+    },
+    {
+      "name": "names",
+      "datatype": "string",
+      "desc": "A list of state machine names to filter the returned execution documents",
+      "nullable": true
+    },
+    {
+      "name": "status",
+      "datatype": "string",
+      "desc": "A list of state machine status's to filter the returned execution documents.  Defaults to 'new' and 'working'.",
+      "nullable": true,
+      "multiple": true
+    },
+    {
+      "name": "forestIds",
+      "datatype": "string",
+      "desc": "The returned list of execution documents will be limited to executions found in this list of forests.",
+      "nullable": true,
+      "multiple": true
+    },
+    {
+      "name": "startDate",
+      "datatype": "dateTime",
+      "desc": "Filter on executions created after this date and time.",
+      "nullable": true
+    },
+    {
+      "name": "endDate",
+      "datatype": "dateTime",
+      "desc": "Filter on executions created prior to this date and time.",
+      "nullable": true
+    }
+  ],
+  "return": {
+    "datatype": "string",
+    "multiple": true,
+    "nullable": true
+  }
+}

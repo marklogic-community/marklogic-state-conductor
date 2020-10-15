@@ -1,6 +1,6 @@
 {
   "name": "state-conductor-item-update-trigger",
-  "description": "creates a batch file pointing the triggering document and applicable flows for state condutor to operate on",
+  "description": "creates a batch file pointing the triggering document and applicable stateMachines for state condutor to operate on",
   "event": {
     "data-event": {
       "collection-scope": {

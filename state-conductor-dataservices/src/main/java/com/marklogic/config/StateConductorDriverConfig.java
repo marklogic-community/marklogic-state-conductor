@@ -21,16 +21,14 @@ public class StateConductorDriverConfig {
   private Integer port = 8000;
   private String username;
   private String password;
-  private String jobsDatabase = "state-conductor-jobs";
+  private String executionsDatabase = "state-conductor-executions";
   private Integer appServicesPort = 8000;
-
   private SecurityContextType securityContextType = SecurityContextType.DIGEST;
   private boolean simpleSsl = false;
   private String externalName;
   private String certFile;
   private String certPassword;
   private DatabaseClient.ConnectionType connectionType = DatabaseClient.ConnectionType.DIRECT;
-
   private boolean useFixedThreadCount = false;
   private Integer fixedThreadCount = -1;
   private Integer threadsPerHost = 16;
@@ -42,8 +40,8 @@ public class StateConductorDriverConfig {
   private Long pollInterval = 1000L;
   private Long metricsInterval = 5000L;
 
-  private String flowNames;
-  private String flowStatus;
+  private String names;
+  private String status;
 
   private StateConductorDriverConfig() {
     // do nothing
@@ -115,7 +113,7 @@ public class StateConductorDriverConfig {
     config.port = Integer.parseInt(getPropertyValue(props, "mlPort", "8000"));
     config.username = getPropertyValue(props, "username", null);
     config.password = getPropertyValue(props, "password", null);
-    config.jobsDatabase = getPropertyValue(props, "jobsDatabase", "state-conductor-jobs");
+    config.executionsDatabase = getPropertyValue(props, "executionsDatabase", "state-conductor-executions");
     config.appServicesPort = Integer.parseInt(getPropertyValue(props, "appServicesPort", "8000"));
     config.securityContextType = SecurityContextType.valueOf(getPropertyValue(props, "securityContextType", "basic").toUpperCase());
     config.simpleSsl = Boolean.parseBoolean(getPropertyValue(props, "simpleSsl", "false"));
@@ -129,13 +127,13 @@ public class StateConductorDriverConfig {
     config.cooldownMillis = Long.parseLong(getPropertyValue(props, "cooldownMillis", "5000"));
     config.pollInterval = Long.parseLong(getPropertyValue(props, "pollInterval", "1000"));
     config.metricsInterval = Long.parseLong(getPropertyValue(props, "metricsInterval", "5000"));
-    config.flowNames = getPropertyValue(props, "flowNames", null);
-    config.flowStatus = getPropertyValue(props, "flowStatus", null);
-
+    config.names = getPropertyValue(props, "names", null);
+    config.status = getPropertyValue(props, "status", null);
     // thread settings
     config.fixedThreadCount = Integer.parseInt(getPropertyValue(props, "fixedThreadCount", "-1"));
     config.threadsPerHost = Integer.parseInt(getPropertyValue(props, "threadsPerHost", "16"));
     config.maxThreadCount = Integer.parseInt(getPropertyValue(props, "maxThreadCount", "128"));
+
     if (config.fixedThreadCount > 0)
       config.useFixedThreadCount = true;
 
@@ -226,12 +224,12 @@ public class StateConductorDriverConfig {
     this.password = password;
   }
 
-  public String getJobsDatabase() {
-    return jobsDatabase;
+  public String getExecutionsDatabase() {
+    return executionsDatabase;
   }
 
-  public void setJobsDatabase(String jobsDatabase) {
-    this.jobsDatabase = jobsDatabase;
+  public void setExecutionsDatabase(String executionsDatabase) {
+    this.executionsDatabase = executionsDatabase;
   }
 
   public Integer getAppServicesPort() { return appServicesPort; }
@@ -266,11 +264,11 @@ public class StateConductorDriverConfig {
     this.metricsInterval = metricsInterval;
   }
 
-  public String getFlowNames() { return flowNames; }
+  public String getStateMachineNames() { return names; }
 
-  public void setFlowNames(String flowNames) { this.flowNames = flowNames; }
+  public void setStateMachineNames(String names) { this.names = names; }
 
-  public String getFlowStatus() { return flowStatus; }
+  public String getStateMachineStatus() { return status; }
 
-  public void setFlowStatus(String flowStatus) { this.flowStatus = flowStatus; }
+  public void setStateMachineStatus(String status) { this.status = status; }
 }

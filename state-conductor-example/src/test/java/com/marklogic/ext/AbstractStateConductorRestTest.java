@@ -6,8 +6,6 @@ import com.marklogic.client.ext.helper.DatabaseClientProvider;
 import com.marklogic.client.io.FileHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.junit5.AbstractMarkLogicTest;
-import io.restassured.RestAssured;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,11 +52,11 @@ public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTe
   }
 
   @Autowired
-  @Qualifier("jobsDatabaseClientProvider")
-  protected DatabaseClientProvider jobsDatabaseClientProvider;
+  @Qualifier("executionsDatabaseClientProvider")
+  protected DatabaseClientProvider executionsDatabaseClientProvider;
 
-  protected DatabaseClient getJobsDatabaseClient() {
-    return jobsDatabaseClientProvider.getDatabaseClient();
+  protected DatabaseClient getExecutionsDatabaseClient() {
+    return executionsDatabaseClientProvider.getDatabaseClient();
   }
 
   private JSONDocumentManager contentManager;
@@ -69,12 +67,12 @@ public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTe
     return contentManager;
   }
 
-  private JSONDocumentManager jobsManager;
-  protected JSONDocumentManager getJobsManager() {
-    if (jobsManager == null) {
-      jobsManager = getJobsDatabaseClient().newJSONDocumentManager();
+  private JSONDocumentManager executionsManager;
+  protected JSONDocumentManager getExecutionsManager() {
+    if (executionsManager == null) {
+      executionsManager = getExecutionsDatabaseClient().newJSONDocumentManager();
     }
-    return jobsManager;
+    return executionsManager;
   }
 
   private String contentDatabaseId;
@@ -147,10 +145,10 @@ public abstract class AbstractStateConductorRestTest extends AbstractMarkLogicTe
       statusCode(200);
   }
 
-  protected void clearTestJobs() { clearTestJobs("/test/");}
-  protected void clearTestJobs(String root) {
-    logger.info("clearing test jobs \"{}\" ...", root);
-    getJobsDatabaseClient()
+  protected void clearTestExecutions() { clearTestExecutions("/test/");}
+  protected void clearTestExecutions(String root) {
+    logger.info("clearing test executions \"{}\" ...", root);
+    getExecutionsDatabaseClient()
       .newServerEval()
       .xquery(String.format("xdmp:directory-delete(\"%s\")", root))
       .eval();

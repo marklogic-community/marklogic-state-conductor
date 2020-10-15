@@ -1,0 +1,13 @@
+{
+    "functionName": "deleteStateMachine",
+    "desc": "Deletes a single state machine.",
+    "params": [
+        {
+            "name": "name",
+            "datatype": "string",
+            "desc": "The name of the state machine to be deleted.",
+            "nullable": false,
+            "multiple": false
+        }
+    ]
+}

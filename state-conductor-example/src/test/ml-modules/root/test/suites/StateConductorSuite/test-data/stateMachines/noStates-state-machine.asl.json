@@ -1,0 +1,15 @@
+{
+  "Comment": "a stateMachine for unit testing",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "directory",
+        "value": "/test/"
+      },
+      {
+        "scope": "collection",
+        "value": "test"
+      }
+    ]
+  }
+}

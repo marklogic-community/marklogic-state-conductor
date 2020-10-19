@@ -15,6 +15,8 @@ plugins {
   id "net.saliman.properties" version "1.5.1"
   id "com.marklogic.ml-gradle" version "${mlgradleVersion}"
   id 'com.marklogic.ml-development-tools' version '4.2.0'
+  id 'org.springframework.boot' version '2.3.3.RELEASE'
+  id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 }
 
 test {
@@ -30,6 +32,11 @@ dependencies {
   implementation 'com.marklogic:ml-javaclient-util:3.13.4'
   implementation 'com.google.guava:guava:28.1-jre'
   implementation 'commons-cli:commons-cli:1.4'
+
+  implementation 'org.springframework.boot:spring-boot-starter-web:2.3.3.RELEASE'
+  testImplementation('org.springframework.boot:spring-boot-starter-test:2.3.3.RELEASE') {
+    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+  }
 
   runtimeOnly "javax.xml.bind:jaxb-api:2.3.0"
   testImplementation "com.marklogic:marklogic-junit5:1.0.0"
@@ -67,6 +74,11 @@ task stageDockerDirectory(type: Copy, dependsOn: jar) {
   from "${buildDir}/libs/${project.name}-${version}.jar"
   rename(".*", "${project.name}.jar")
   into "docker"
+}
+
+task buildDockerImage(type: Exec, dependsOn: stageDockerDirectory) {
+  workingDir 'docker'
+  commandLine 'docker', 'build', '-t', "state-conductor-driver:${version}",  '-t', 'state-conductor-driver:latest', '.'
 }
 
 jar.finalizedBy stageDockerDirectory

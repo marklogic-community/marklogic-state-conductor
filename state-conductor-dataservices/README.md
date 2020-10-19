@@ -2,10 +2,14 @@
 
 Provides a [Data Services](http://docs.marklogic.com/guide/java/DataServices) based driver for the _MarkLogic State Conductor_.
 
+## Getting the Driver
+Download the driver jar from the latest [Release](https://github.com/aclavio/marklogic-state-conductor/releases), or build the jar from source, or pull a prebuilt container from DockerHub:
+```
+docker pull aclavio/state-conductor-driver:latest
+```
+
 ## Running the Driver
-
-Download the driver jar from the latest [Release](https://github.com/aclavio/marklogic-state-conductor/releases), or build the jar from source. Create a `properties` file containing the required [configuration](#configuration) fields.
-
+Create a `properties` file containing the required [configuration](#configuration) fields.
 The `com.marklogic.StateConductorDriver` main class provides an implementation of a Driver which can be run stand-alone, or integrated into an existing application.
 
 Run the stand-alone jar file:
@@ -42,6 +46,7 @@ From the root of the State Conductor project, execute the `mlDeploy` and `test` 
 ```
 
 ## Configuring the Driver <a name="configuration"></a>
+Configuration values can be provided via a `properties` file, or by utilizing Environment variables.
 
 | Property            | Default                    | Description                                                                                                                                                                                                                                          |
 | ------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

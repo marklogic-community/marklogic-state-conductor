@@ -1,6 +1,7 @@
 allprojects {
   project.ext {
     mlgradleVersion = "3.17.0"
+    springVersion = "2.3.3.RELEASE"
   }
 
   repositories {

@@ -11,7 +11,6 @@ import com.marklogic.tasks.GetConfigTask;
 import com.marklogic.tasks.GetExecutionsTask;
 import com.marklogic.tasks.MetricsTask;
 import com.marklogic.tasks.ProcessExecutionTask;
-import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.security.auth.DestroyFailedException;
@@ -45,78 +44,18 @@ public class StateConductorDriver implements Runnable, Destroyable {
     service = StateConductorService.on(client);
   }
 
-  public static Options getOptions() {
-    Options opts = new Options();
-
-    Option host = new Option("h", "host", true, "MarkLogic State Conductor Host");
-    host.setOptionalArg(true);
-    Option port = new Option("p", "port", true, "MarkLogic State Conductor's Data Services Port");
-    port.setOptionalArg(true);
-    Option user = new Option("u", "username", true, "Username");
-    user.setOptionalArg(true);
-    Option pass = new Option("x", "password", true, "Password");
-    pass.setOptionalArg(true);
-    Option num = new Option("n", "number", true, "Batch size");
-    num.setOptionalArg(true);
-    Option threads = new Option("t", "threads", true, "Thread count");
-    threads.setOptionalArg(true);
-    Option executionsDb = new Option("db", "executions-database", true, "Executions Database Name");
-    executionsDb.setOptionalArg(true);
-    Option batch = new Option("b", "batch", true, "Batch Size");
-    batch.setOptionalArg(true);
-    Option config = new Option("c", "config", true, "Configuration File");
-    config.setOptionalArg(true);
-    Option help = new Option("?", "help", false, "Display Help");
-
-    opts.addOption(host);
-    opts.addOption(port);
-    opts.addOption(user);
-    opts.addOption(pass);
-    opts.addOption(num);
-    opts.addOption(threads);
-    opts.addOption(executionsDb);
-    opts.addOption(batch);
-    opts.addOption(config);
-    opts.addOption(help);
-
-    return opts;
-  }
-
   public static void main(String[] args) throws DestroyFailedException, IOException {
-    CommandLineParser parser = new DefaultParser();
-    HelpFormatter helpFormatter = new HelpFormatter();
-    Options opts = getOptions();
-    CommandLine cmd;
-
-    try {
-      cmd = parser.parse(opts, args);
-    } catch (ParseException e) {
-      System.out.println(e.getMessage());
-      helpFormatter.printHelp(" ", opts);
-      return;
-    }
 
     StateConductorDriverConfig config;
 
-    if (cmd.hasOption("?")) {
-      helpFormatter.printHelp(" ", opts);
-      return;
-    } else if (cmd.hasOption("c")) {
+    if (args.length > 0) {
       // use the config file options
-      Properties props = loadConfigProps(cmd.getOptionValue("c"));
+      Properties props = loadConfigProps(args[0]);
       config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), Maps.fromProperties(props));
     } else {
-      // manually set options
-      Map<String, String> props = new HashMap<>();
-      if (cmd.hasOption("h")) props.put("mlHost", cmd.getOptionValue("h"));
-      if (cmd.hasOption("p")) props.put("mlPort", cmd.getOptionValue("p"));
-      if (cmd.hasOption("u")) props.put("username", cmd.getOptionValue("u"));
-      if (cmd.hasOption("x")) props.put("password", cmd.getOptionValue("x"));
-      if (cmd.hasOption("db")) props.put("executionsDatabase", cmd.getOptionValue("db"));
-      if (cmd.hasOption("n")) props.put("pollSize", cmd.getOptionValue("n"));
-      if (cmd.hasOption("t")) props.put("threadCount", cmd.getOptionValue("t"));
-      if (cmd.hasOption("b")) props.put("batchSize", cmd.getOptionValue("b"));
-      config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), props);
+      System.out.println("Usage: java -jar state-conductor-driver.jar [properties file]");
+      System.out.println("missing required argument: properties file");
+      return;
     }
 
     StateConductorDriver driver = new StateConductorDriver(config);

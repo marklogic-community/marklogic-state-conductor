@@ -15,7 +15,7 @@ plugins {
   id "net.saliman.properties" version "1.5.1"
   id "com.marklogic.ml-gradle" version "${mlgradleVersion}"
   id 'com.marklogic.ml-development-tools' version '4.2.0'
-  id 'org.springframework.boot' version '2.3.3.RELEASE'
+  id 'org.springframework.boot' version "${springVersion}"
   id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 }
 
@@ -31,12 +31,12 @@ dependencies {
 	implementation 'com.marklogic:marklogic-client-api:4.2.0'
   implementation 'com.marklogic:ml-javaclient-util:3.13.4'
   implementation 'com.google.guava:guava:28.1-jre'
-  implementation 'commons-cli:commons-cli:1.4'
 
-  implementation 'org.springframework.boot:spring-boot-starter-web:2.3.3.RELEASE'
-  testImplementation('org.springframework.boot:spring-boot-starter-test:2.3.3.RELEASE') {
+  implementation "org.springframework.boot:spring-boot-starter-web:${springVersion}"
+  testImplementation("org.springframework.boot:spring-boot-starter-test:${springVersion}") {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
+  annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:${springVersion}"
 
   runtimeOnly "javax.xml.bind:jaxb-api:2.3.0"
   testImplementation "com.marklogic:marklogic-junit5:1.0.0"
@@ -44,7 +44,7 @@ dependencies {
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.4.1"
 
 	// Force usage of logback for logging
-	runtimeOnly "ch.qos.logback:logback-classic:1.1.8"
+	runtimeOnly "ch.qos.logback:logback-classic:1.2.3"
 	runtimeOnly group: "org.slf4j", name: "jcl-over-slf4j", version: "1.7.22"
 	runtimeOnly group: "org.slf4j", name: "slf4j-api", version: "1.7.22"
 }

@@ -1,18 +1,22 @@
-package com.marklogic;
+package com.marklogic.stateconductor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Maps;
+import com.marklogic.StateConductorService;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
-import com.marklogic.config.StateConductorDriverConfig;
-import com.marklogic.tasks.GetConfigTask;
-import com.marklogic.tasks.GetExecutionsTask;
-import com.marklogic.tasks.MetricsTask;
-import com.marklogic.tasks.ProcessExecutionTask;
+import com.marklogic.stateconductor.config.StateConductorDriverConfig;
+import com.marklogic.stateconductor.config.StateConductorProperties;
+import com.marklogic.stateconductor.tasks.GetConfigTask;
+import com.marklogic.stateconductor.tasks.GetExecutionsTask;
+import com.marklogic.stateconductor.tasks.MetricsTask;
+import com.marklogic.stateconductor.tasks.ProcessExecutionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
 import java.io.FileInputStream;
@@ -29,6 +33,9 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
   private final static Logger logger = LoggerFactory.getLogger(StateConductorDriver.class);
 
+  @Autowired
+  private StateConductorProperties stateConductorProperties;
+
   private StateConductorDriverConfig config;
   private DatabaseClient client;
   private DatabaseClient appServicesClient;
@@ -36,6 +43,8 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
   public StateConductorDriver(StateConductorDriverConfig config) {
     this.config = config;
+
+    logger.info("stateConductorProperties: {}", stateConductorProperties);
 
     ConfiguredDatabaseClientFactory configuredDatabaseClientFactory = new DefaultConfiguredDatabaseClientFactory();
     client = configuredDatabaseClientFactory.newDatabaseClient(config.getDatabaseClientConfig());

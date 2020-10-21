@@ -1,4 +1,4 @@
-package com.marklogic.config;
+package com.marklogic.stateconductor.config;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;

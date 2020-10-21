@@ -1,7 +1,7 @@
-package com.marklogic.tasks;
+package com.marklogic.stateconductor.tasks;
 
 import com.marklogic.StateConductorService;
-import com.marklogic.config.StateConductorDriverConfig;
+import com.marklogic.stateconductor.config.StateConductorDriverConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

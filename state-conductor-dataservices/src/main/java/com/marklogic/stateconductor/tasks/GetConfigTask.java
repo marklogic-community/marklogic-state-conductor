@@ -58,7 +58,7 @@ public class GetConfigTask implements Runnable {
           currHosts = hostCount.get();
 
           if (!config.useFixedThreadCount()) {
-            maxPoolSize = Math.min(config.getMaxThreadCount(), currHosts * config.getThreadsPerHost());
+            maxPoolSize = Math.min(config.getProperties().getMaxThreadCount(), currHosts * config.getProperties().getThreadsPerHost());
             logger.info("Scaling to {} threads!", maxPoolSize);
             setMaximumPoolSize(maxPoolSize);
           }
@@ -68,7 +68,7 @@ public class GetConfigTask implements Runnable {
       }
 
       if (config.useFixedThreadCount()) {
-        logger.info("FIXED THREAD POOL SIZE: {}", config.getFixedThreadCount());
+        logger.info("FIXED THREAD POOL SIZE: {}", config.getProperties().getFixedThreadCount());
       } else {
         logger.info("THREAD POOL SIZE: {}", maxPoolSize);
       }

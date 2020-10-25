@@ -25,7 +25,7 @@ public class MetricsTask implements Runnable {
     long current = total.get();
     long delta = current - previous;
 
-    double rate = (double)delta / config.getMetricsInterval() * 1000L;
+    double rate = (double)delta / config.getProperties().getMetricsInterval() * 1000L;
 
     logger.info("Processed {} transitions, with {} errors.  Current rate {} transitions/second", total.get(), errorCount.get(), rate);
 
@@ -39,7 +39,7 @@ public class MetricsTask implements Runnable {
       generateReport();
 
       try {
-        Thread.sleep(config.getMetricsInterval());
+        Thread.sleep(config.getProperties().getMetricsInterval());
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         break;

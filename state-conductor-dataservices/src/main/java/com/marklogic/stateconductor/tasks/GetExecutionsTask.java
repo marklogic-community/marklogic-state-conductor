@@ -33,14 +33,14 @@ public class GetExecutionsTask implements Runnable {
     Stream<String> executionUris = null;
     Stream<String> status = null;
 
-    if (config.getStateMachineStatus() != null) {
-      String[] statusArray = config.getStateMachineStatus().split(",");
+    if (config.getProperties().getStatus() != null) {
+      String[] statusArray = config.getProperties().getStatus().split(",");
       status = Arrays.stream(statusArray);
     }
 
     try {
       logger.info("Fetching Executions Batch...");
-      executionUris = service.getExecutions(start, config.getPollSize(), config.getStateMachineNames(), status, null, null, null);
+      executionUris = service.getExecutions(start, config.getProperties().getPollSize(), config.getProperties().getNames(), status, null, null, null);
     } catch (Exception ex) {
       logger.error("An error occurred fetching execution documents: {}", ex.getMessage());
       ex.printStackTrace();
@@ -61,7 +61,7 @@ public class GetExecutionsTask implements Runnable {
       totalNew.set(0);
       totalFetched.set(0);
 
-      if (inProgressSet.size() < config.getQueueThreshold()) {
+      if (inProgressSet.size() < config.getProperties().getQueueThreshold()) {
         // grab execution documents if we're below the queue threshold
         Stream<String> executionUris = FetchExecutionDocuments(start);
         Iterator<String> executions = executionUris.iterator();
@@ -94,9 +94,9 @@ public class GetExecutionsTask implements Runnable {
       }
 
       try {
-        if (totalFetched.get() == config.getPollSize()) {
+        if (totalFetched.get() == config.getProperties().getPollSize()) {
           // request next page
-          start += config.getPollSize();
+          start += config.getProperties().getPollSize();
           emptyCount = 0;
           logger.debug("GetExecutionsTask requesting next page...");
           Thread.sleep(10L);
@@ -106,9 +106,9 @@ public class GetExecutionsTask implements Runnable {
 
           if (emptyCount > 3) {
             logger.debug("GetExecutionsTask cooldown...");
-            Thread.sleep(config.getCooldownMillis());
+            Thread.sleep(config.getProperties().getCooldownMillis());
           } else {
-            Thread.sleep(config.getPollInterval());
+            Thread.sleep(config.getProperties().getPollInterval());
           }
         }
       } catch (InterruptedException e) {

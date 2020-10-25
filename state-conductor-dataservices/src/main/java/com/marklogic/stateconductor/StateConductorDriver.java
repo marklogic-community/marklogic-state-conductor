@@ -33,9 +33,6 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
   private final static Logger logger = LoggerFactory.getLogger(StateConductorDriver.class);
 
-  @Autowired
-  private StateConductorProperties stateConductorProperties;
-
   private StateConductorDriverConfig config;
   private DatabaseClient client;
   private DatabaseClient appServicesClient;
@@ -44,8 +41,6 @@ public class StateConductorDriver implements Runnable, Destroyable {
   public StateConductorDriver(StateConductorDriverConfig config) {
     this.config = config;
 
-    logger.info("stateConductorProperties: {}", stateConductorProperties);
-
     ConfiguredDatabaseClientFactory configuredDatabaseClientFactory = new DefaultConfiguredDatabaseClientFactory();
     client = configuredDatabaseClientFactory.newDatabaseClient(config.getDatabaseClientConfig());
     appServicesClient = configuredDatabaseClientFactory.newDatabaseClient(config.getAppServicesDatabaseClientConfig());
@@ -53,7 +48,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     service = StateConductorService.on(client);
   }
 
-  public static void main(String[] args) throws DestroyFailedException, IOException {
+/*  public static void main(String[] args) throws DestroyFailedException, IOException {
 
     StateConductorDriverConfig config;
 
@@ -77,7 +72,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
       e.printStackTrace();
       driver.destroy();
     }
-  }
+  }*/
 
   private static Properties loadConfigProps(String path) throws IOException {
     FileInputStream fis = new FileInputStream(path);
@@ -96,7 +91,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     AtomicLong totalErrors = new AtomicLong(0);
     AtomicLong batchCount = new AtomicLong(1);
     List<String> urisBuffer = Collections.synchronizedList(new ArrayList<>());
-    Set<String> inProgressSet = Collections.synchronizedSet(new HashSet<>(config.getQueueThreshold()));
+    Set<String> inProgressSet = Collections.synchronizedSet(new HashSet<>(config.getProperties().getQueueThreshold()));
     List<Future<JsonNode>> results = new ArrayList<>();
     List<Future<JsonNode>> completed = new ArrayList<>();
     List<Future<JsonNode>> errored = new ArrayList<>();
@@ -105,9 +100,9 @@ public class StateConductorDriver implements Runnable, Destroyable {
     List<ProcessExecutionTask> executionBuckets = new ArrayList<>();
 
     // set up the thread pool
-    int initialThreads = config.getThreadsPerHost();
+    int initialThreads = config.getProperties().getThreadsPerHost();
     if (config.useFixedThreadCount())
-      initialThreads = config.getFixedThreadCount();
+      initialThreads = config.getProperties().getFixedThreadCount();
     ThreadPoolExecutor pool = new ThreadPoolExecutor(initialThreads, initialThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue());
 
     // start the getConfig thread
@@ -134,7 +129,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
         while(uris.hasNext()) {
           String uri = uris.next();
           batch.add(uri);
-          if (batch.size() >= config.getBatchSize()) {
+          if (batch.size() >= config.getProperties().getBatchSize()) {
             executionBuckets.add(new ProcessExecutionTask(batchCount.getAndIncrement(), service, batch));
             batch = new ArrayList<>();
           }

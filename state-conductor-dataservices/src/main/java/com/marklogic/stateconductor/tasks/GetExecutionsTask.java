@@ -33,14 +33,14 @@ public class GetExecutionsTask implements Runnable {
     Stream<String> executionUris = null;
     Stream<String> status = null;
 
-    if (config.getProperties().getStatus() != null) {
-      String[] statusArray = config.getProperties().getStatus().split(",");
+    if (config.getStatus() != null) {
+      String[] statusArray = config.getStatus().split(",");
       status = Arrays.stream(statusArray);
     }
 
     try {
       logger.info("Fetching Executions Batch...");
-      executionUris = service.getExecutions(start, config.getProperties().getPollSize(), config.getProperties().getNames(), status, null, null, null);
+      executionUris = service.getExecutions(start, config.getPollSize(), config.getNames(), status, null, null, null);
     } catch (Exception ex) {
       logger.error("An error occurred fetching execution documents: {}", ex.getMessage());
       ex.printStackTrace();
@@ -61,7 +61,7 @@ public class GetExecutionsTask implements Runnable {
       totalNew.set(0);
       totalFetched.set(0);
 
-      if (inProgressSet.size() < config.getProperties().getQueueThreshold()) {
+      if (inProgressSet.size() < config.getQueueThreshold()) {
         // grab execution documents if we're below the queue threshold
         Stream<String> executionUris = FetchExecutionDocuments(start);
         Iterator<String> executions = executionUris.iterator();
@@ -94,9 +94,9 @@ public class GetExecutionsTask implements Runnable {
       }
 
       try {
-        if (totalFetched.get() == config.getProperties().getPollSize()) {
+        if (totalFetched.get() == config.getPollSize()) {
           // request next page
-          start += config.getProperties().getPollSize();
+          start += config.getPollSize();
           emptyCount = 0;
           logger.debug("GetExecutionsTask requesting next page...");
           Thread.sleep(10L);
@@ -106,9 +106,9 @@ public class GetExecutionsTask implements Runnable {
 
           if (emptyCount > 3) {
             logger.debug("GetExecutionsTask cooldown...");
-            Thread.sleep(config.getProperties().getCooldownMillis());
+            Thread.sleep(config.getCooldownMillis());
           } else {
-            Thread.sleep(config.getProperties().getPollInterval());
+            Thread.sleep(config.getPollInterval());
           }
         }
       } catch (InterruptedException e) {

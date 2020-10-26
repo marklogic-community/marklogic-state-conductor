@@ -8,7 +8,6 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.stateconductor.config.StateConductorDriverConfig;
-import com.marklogic.stateconductor.config.StateConductorProperties;
 import com.marklogic.stateconductor.tasks.GetConfigTask;
 import com.marklogic.stateconductor.tasks.GetExecutionsTask;
 import com.marklogic.stateconductor.tasks.MetricsTask;
@@ -91,7 +90,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
     AtomicLong totalErrors = new AtomicLong(0);
     AtomicLong batchCount = new AtomicLong(1);
     List<String> urisBuffer = Collections.synchronizedList(new ArrayList<>());
-    Set<String> inProgressSet = Collections.synchronizedSet(new HashSet<>(config.getProperties().getQueueThreshold()));
+    Set<String> inProgressSet = Collections.synchronizedSet(new HashSet<>(config.getQueueThreshold()));
     List<Future<JsonNode>> results = new ArrayList<>();
     List<Future<JsonNode>> completed = new ArrayList<>();
     List<Future<JsonNode>> errored = new ArrayList<>();
@@ -100,9 +99,9 @@ public class StateConductorDriver implements Runnable, Destroyable {
     List<ProcessExecutionTask> executionBuckets = new ArrayList<>();
 
     // set up the thread pool
-    int initialThreads = config.getProperties().getThreadsPerHost();
+    int initialThreads = config.getThreadsPerHost();
     if (config.useFixedThreadCount())
-      initialThreads = config.getProperties().getFixedThreadCount();
+      initialThreads = config.getFixedThreadCount();
     ThreadPoolExecutor pool = new ThreadPoolExecutor(initialThreads, initialThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue());
 
     // start the getConfig thread
@@ -129,7 +128,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
         while(uris.hasNext()) {
           String uri = uris.next();
           batch.add(uri);
-          if (batch.size() >= config.getProperties().getBatchSize()) {
+          if (batch.size() >= config.getBatchSize()) {
             executionBuckets.add(new ProcessExecutionTask(batchCount.getAndIncrement(), service, batch));
             batch = new ArrayList<>();
           }
@@ -223,6 +222,9 @@ public class StateConductorDriver implements Runnable, Destroyable {
   public void destroy() throws DestroyFailedException {
     if (client != null) {
       client.release();
+    }
+    if (appServicesClient != null) {
+      appServicesClient.release();
     }
   }
 }

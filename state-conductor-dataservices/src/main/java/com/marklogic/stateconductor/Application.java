@@ -1,5 +1,9 @@
 package com.marklogic.stateconductor;
 
+import com.marklogic.StateConductorService;
+import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
+import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.stateconductor.config.StateConductorDriverConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -20,6 +24,13 @@ public class Application {
 
   public static void main(String[] args) {
     SpringApplication.run(Application.class, args);
+  }
+
+  @Bean
+  public StateConductorService stateConductorService() {
+    ConfiguredDatabaseClientFactory configuredDatabaseClientFactory = new DefaultConfiguredDatabaseClientFactory();
+    DatabaseClient client = configuredDatabaseClientFactory.newDatabaseClient(config.getDatabaseClientConfig());
+    return StateConductorService.on(client);
   }
 
   @Bean

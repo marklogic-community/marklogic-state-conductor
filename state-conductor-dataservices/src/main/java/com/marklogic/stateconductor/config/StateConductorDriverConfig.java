@@ -60,9 +60,9 @@ public class StateConductorDriverConfig {
   private Long pollInterval = 1000L;
   @Value("${metricsInterval}")
   private Long metricsInterval = 5000L;
-  @Value("${names}")
+  @Value("${names:#{null}}")
   private String names;
-  @Value("${status}")
+  @Value("${status:#{null}}")
   private String status;
 
   public DatabaseClientConfig getAppServicesDatabaseClientConfig() {

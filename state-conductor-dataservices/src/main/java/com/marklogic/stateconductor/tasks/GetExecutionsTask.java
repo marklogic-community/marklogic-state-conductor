@@ -33,7 +33,7 @@ public class GetExecutionsTask implements Runnable {
     Stream<String> executionUris = null;
     Stream<String> status = null;
 
-    if (config.getStatus() != null) {
+    if (config.getStatus() != null && config.getStatus().length() > 0) {
       String[] statusArray = config.getStatus().split(",");
       status = Arrays.stream(statusArray);
     }

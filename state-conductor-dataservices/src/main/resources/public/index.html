@@ -12,11 +12,13 @@
     <button id="btnGo">Go</button>
   </p>
   <p><pre id="statusJson"></pre></p>
+  <p><textarea id="txtStateMachineDef" disabled cols="80" rows="30"></textarea></p>
 </section>
 <script>
   let cmbStateMachines = document.getElementById("cmbStateMachines");
   let btnGo = document.getElementById("btnGo");
   let statusJson = document.getElementById("statusJson");
+  let txtStateMachineDef = document.getElementById("txtStateMachineDef");
   let statusInterval;
 
   function getFlowStatus(name) {
@@ -24,6 +26,14 @@
       .then(response => response.json())
       .then(data => {
         statusJson.innerText = JSON.stringify(data, null, 2);
+      });
+  }
+
+  function getFlowDefinition(name) {
+    fetch(`/api/state-machine/${name}`)
+      .then(response => response.json())
+      .then(data => {
+        txtStateMachineDef.value = JSON.stringify(data, null, 2);
       });
   }
 
@@ -45,6 +55,7 @@
     statusInterval = setInterval(() => {
       getFlowStatus(name);
     }, 5000);
+    getFlowDefinition(name);
   })
 </script>
 </body>

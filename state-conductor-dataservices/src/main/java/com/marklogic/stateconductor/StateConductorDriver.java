@@ -2,7 +2,6 @@ package com.marklogic.stateconductor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.common.collect.Maps;
 import com.marklogic.StateConductorService;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
@@ -14,12 +13,9 @@ import com.marklogic.stateconductor.tasks.MetricsTask;
 import com.marklogic.stateconductor.tasks.ProcessExecutionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -45,39 +41,6 @@ public class StateConductorDriver implements Runnable, Destroyable {
     appServicesClient = configuredDatabaseClientFactory.newDatabaseClient(config.getAppServicesDatabaseClientConfig());
 
     service = StateConductorService.on(client);
-  }
-
-/*  public static void main(String[] args) throws DestroyFailedException, IOException {
-
-    StateConductorDriverConfig config;
-
-    if (args.length > 0) {
-      // use the config file options
-      Properties props = loadConfigProps(args[0]);
-      config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), Maps.fromProperties(props));
-    } else {
-      System.out.println("Usage: java -jar state-conductor-driver.jar [properties file]");
-      System.out.println("missing required argument: properties file");
-      return;
-    }
-
-    StateConductorDriver driver = new StateConductorDriver(config);
-    Thread driverThread = new Thread(driver);
-    driverThread.start();
-
-    try {
-      driverThread.join();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      driver.destroy();
-    }
-  }*/
-
-  private static Properties loadConfigProps(String path) throws IOException {
-    FileInputStream fis = new FileInputStream(path);
-    Properties prop = new Properties();
-    prop.load(fis);
-    return prop;
   }
 
   @Override

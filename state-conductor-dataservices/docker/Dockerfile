@@ -26,5 +26,7 @@ ENV batchSize=5
 ENV fixedThreadCount=-1
 ENV threadsPerHost=16
 ENV maxThreadCount=128
+# expose web service port
+EXPOSE 9000
 # runs application
 CMD ["/usr/bin/java", "-jar", "/state-conductor-dataservices.jar"]

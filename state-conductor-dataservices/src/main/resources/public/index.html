@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hello World</title>
+</head>
+<body>
+<h1>Hello Spring!</h1>
+<section>
+  <p>
+    <label>Select a state-machine: <select id="cmbStateMachines" disabled></select></label>
+    <button id="btnGo">Go</button>
+  </p>
+  <p><pre id="statusJson"></pre></p>
+</section>
+<script>
+  let cmbStateMachines = document.getElementById("cmbStateMachines");
+  let btnGo = document.getElementById("btnGo");
+  let statusJson = document.getElementById("statusJson");
+  let statusInterval;
+
+  function getFlowStatus(name) {
+    fetch(`/api/state-machine/${name}/status`)
+      .then(response => response.json())
+      .then(data => {
+        statusJson.innerText = JSON.stringify(data, null, 2);
+      });
+  }
+
+  fetch("/api/state-machine")
+    .then(response => response.json())
+    .then(data => {
+      data = data.sort();
+      let options = data.map(name => {
+        return `<option>${name}</option>`;
+      });
+      cmbStateMachines.innerHTML = options;
+      cmbStateMachines.disabled = false;
+    });
+
+  btnGo.addEventListener('click', evt => {
+    let name = cmbStateMachines.value;
+    if (statusInterval) clearInterval(statusInterval);
+    statusJson.innerText = 'loading...';
+    statusInterval = setInterval(() => {
+      getFlowStatus(name);
+    }, 5000);
+  })
+</script>
+</body>
+</html>

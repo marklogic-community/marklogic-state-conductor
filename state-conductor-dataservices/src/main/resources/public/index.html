@@ -1,62 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Hello World</title>
-</head>
+  <head>
+    <meta charset="UTF-8">
+    <title>MarkLogic State Conductor</title>
+    <link rel="stylesheet" href="bootstrap.min.css"/>
+    <style>
+      body {
+        display: grid;
+        grid-template-columns: auto;
+        grid-template-rows: auto auto 1fr auto;
+        grid-template-areas:
+                    "head"
+                    "nav"
+                    "main"
+                    "foot";
+        height: 100vh;
+      }
+      header {
+        grid-area: head;
+      }
+      nav {
+        grid-area: nav;
+      }
+      .content {
+        grid-area: main;
+        display: flex;
+        flex-direction: row;
+        padding: 0 5px;
+      }
+      footer {
+        grid-area: foot;
+        padding: 5px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+      }
+      .status {
+        flex-grow: 1;
+        flex-basis: 50%;
+        border: 1px solid grey;
+      }
+      .definition {
+        flex-grow: 1;
+        flex-basis: 50%;
+        border: 1px solid grey;
+      }
+      .status h4, .definition h4 {
+        background-color: grey;
+        color: white;
+      }
+      .status pre, .definition pre {
+        padding: 10px;
+      }
+    </style>
+  </head>
 <body>
-<h1>Hello Spring!</h1>
-<section>
-  <p>
+  <header>
+    <h1>MarkLogic State Conductor</h1>
+  </header>
+  <nav>
     <label>Select a state-machine: <select id="cmbStateMachines" disabled></select></label>
+    <label>start date: <input id="cmbStartDate" type="datetime-local" disabled /></label>
     <button id="btnGo">Go</button>
-  </p>
-  <p><pre id="statusJson"></pre></p>
-  <p><textarea id="txtStateMachineDef" disabled cols="80" rows="30"></textarea></p>
-</section>
-<script>
-  let cmbStateMachines = document.getElementById("cmbStateMachines");
-  let btnGo = document.getElementById("btnGo");
-  let statusJson = document.getElementById("statusJson");
-  let txtStateMachineDef = document.getElementById("txtStateMachineDef");
-  let statusInterval;
+  </nav>
+  <section class="content">
+    <div class="status">
+      <h4>Status</h4>
+      <pre id="statusJson"></pre>
+    </div>
+    <div class="definition">
+      <h4>Definition</h4>
+      <pre id="txtStateMachineDef"></pre>
+    </div>
+  </section>
+  <footer>
+    <a href="https://marklogic.com" target="_blank">MarkLogic</a>
+    <a href="https://github.com/aclavio/marklogic-state-conductor" target="_blank">GitHub Documentation</a>
+  </footer>
+  <script>
+    let cmbStateMachines = document.getElementById("cmbStateMachines");
+    let cmbStartDate = document.getElementById("cmbStartDate");
+    let btnGo = document.getElementById("btnGo");
+    let statusJson = document.getElementById("statusJson");
+    let txtStateMachineDef = document.getElementById("txtStateMachineDef");
+    let statusInterval;
 
-  function getFlowStatus(name) {
-    fetch(`/api/state-machine/${name}/status`)
+    function getFlowStatus(name, startDate) {
+      let params = '';
+      if (startDate) {
+        params = new URLSearchParams({startDate: startDate}).toString();
+      }
+      console.log(params);
+      fetch(`/api/state-machine/${name}/status?${params}`)
+        .then(response => response.json())
+        .then(data => {
+          statusJson.innerText = JSON.stringify(data, null, 2);
+        });
+    }
+
+    function getFlowDefinition(name) {
+      fetch(`/api/state-machine/${name}`)
+        .then(response => response.json())
+        .then(data => {
+          txtStateMachineDef.innerText = JSON.stringify(data, null, 2);
+        });
+    }
+
+    fetch("/api/state-machine")
       .then(response => response.json())
       .then(data => {
-        statusJson.innerText = JSON.stringify(data, null, 2);
+        data = data.sort();
+        let options = data.map(name => {
+          return `<option>${name}</option>`;
+        });
+        cmbStateMachines.innerHTML = options;
+        cmbStateMachines.disabled = false;
+        cmbStartDate.disabled = false;
       });
-  }
 
-  function getFlowDefinition(name) {
-    fetch(`/api/state-machine/${name}`)
-      .then(response => response.json())
-      .then(data => {
-        txtStateMachineDef.value = JSON.stringify(data, null, 2);
-      });
-  }
-
-  fetch("/api/state-machine")
-    .then(response => response.json())
-    .then(data => {
-      data = data.sort();
-      let options = data.map(name => {
-        return `<option>${name}</option>`;
-      });
-      cmbStateMachines.innerHTML = options;
-      cmbStateMachines.disabled = false;
-    });
-
-  btnGo.addEventListener('click', evt => {
-    let name = cmbStateMachines.value;
-    if (statusInterval) clearInterval(statusInterval);
-    statusJson.innerText = 'loading...';
-    statusInterval = setInterval(() => {
-      getFlowStatus(name);
-    }, 5000);
-    getFlowDefinition(name);
-  })
-</script>
+    btnGo.addEventListener('click', evt => {
+      let name = cmbStateMachines.value;
+      let startDate = cmbStartDate.value;
+      if (statusInterval) clearInterval(statusInterval);
+      statusJson.innerText = 'loading...';
+      getFlowStatus(name, startDate);
+      statusInterval = setInterval(() => {
+        getFlowStatus(name, startDate);
+      }, 5000);
+      getFlowDefinition(name);
+    })
+  </script>
 </body>
 </html>

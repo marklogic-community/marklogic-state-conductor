@@ -28,11 +28,6 @@ public class StateMachineController {
     this.stateConductorService = stateConductorService;
   }
 
-  @GetMapping("/api/hello")
-  public String hello() {
-    return "Hello World! - " + new Date();
-  }
-
   @GetMapping("/api/state-machine")
   public List<String> listAllStateMachines() {
     ObjectNode result = stateConductorService.getStateMachine(null);

@@ -1620,9 +1620,6 @@ function handleError(name, message, err, executionDoc, executionObj, save = true
     xdmp.nodeReplace(executionDoc.root, executionObj);
   }
 
-  // trigger CPF error state (intentionally commented out)
-  //fn.error(null, name, Sequence.from([message, err]));
-
   return executionObj;
 }
 

@@ -1,23 +1,21 @@
-package com.marklogic;
+package com.marklogic.stateconductor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.common.collect.Maps;
+import com.marklogic.StateConductorService;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
-import com.marklogic.config.StateConductorDriverConfig;
-import com.marklogic.tasks.GetConfigTask;
-import com.marklogic.tasks.GetExecutionsTask;
-import com.marklogic.tasks.MetricsTask;
-import com.marklogic.tasks.ProcessExecutionTask;
-import org.apache.commons.cli.*;
+import com.marklogic.stateconductor.config.StateConductorDriverConfig;
+import com.marklogic.stateconductor.tasks.GetConfigTask;
+import com.marklogic.stateconductor.tasks.GetExecutionsTask;
+import com.marklogic.stateconductor.tasks.MetricsTask;
+import com.marklogic.stateconductor.tasks.ProcessExecutionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,99 +41,6 @@ public class StateConductorDriver implements Runnable, Destroyable {
     appServicesClient = configuredDatabaseClientFactory.newDatabaseClient(config.getAppServicesDatabaseClientConfig());
 
     service = StateConductorService.on(client);
-  }
-
-  public static Options getOptions() {
-    Options opts = new Options();
-
-    Option host = new Option("h", "host", true, "MarkLogic State Conductor Host");
-    host.setOptionalArg(true);
-    Option port = new Option("p", "port", true, "MarkLogic State Conductor's Data Services Port");
-    port.setOptionalArg(true);
-    Option user = new Option("u", "username", true, "Username");
-    user.setOptionalArg(true);
-    Option pass = new Option("x", "password", true, "Password");
-    pass.setOptionalArg(true);
-    Option num = new Option("n", "number", true, "Batch size");
-    num.setOptionalArg(true);
-    Option threads = new Option("t", "threads", true, "Thread count");
-    threads.setOptionalArg(true);
-    Option executionsDb = new Option("db", "executions-database", true, "Executions Database Name");
-    executionsDb.setOptionalArg(true);
-    Option batch = new Option("b", "batch", true, "Batch Size");
-    batch.setOptionalArg(true);
-    Option config = new Option("c", "config", true, "Configuration File");
-    config.setOptionalArg(true);
-    Option help = new Option("?", "help", false, "Display Help");
-
-    opts.addOption(host);
-    opts.addOption(port);
-    opts.addOption(user);
-    opts.addOption(pass);
-    opts.addOption(num);
-    opts.addOption(threads);
-    opts.addOption(executionsDb);
-    opts.addOption(batch);
-    opts.addOption(config);
-    opts.addOption(help);
-
-    return opts;
-  }
-
-  public static void main(String[] args) throws DestroyFailedException, IOException {
-    CommandLineParser parser = new DefaultParser();
-    HelpFormatter helpFormatter = new HelpFormatter();
-    Options opts = getOptions();
-    CommandLine cmd;
-
-    try {
-      cmd = parser.parse(opts, args);
-    } catch (ParseException e) {
-      System.out.println(e.getMessage());
-      helpFormatter.printHelp(" ", opts);
-      return;
-    }
-
-    StateConductorDriverConfig config;
-
-    if (cmd.hasOption("?")) {
-      helpFormatter.printHelp(" ", opts);
-      return;
-    } else if (cmd.hasOption("c")) {
-      // use the config file options
-      Properties props = loadConfigProps(cmd.getOptionValue("c"));
-      config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), Maps.fromProperties(props));
-    } else {
-      // manually set options
-      Map<String, String> props = new HashMap<>();
-      if (cmd.hasOption("h")) props.put("mlHost", cmd.getOptionValue("h"));
-      if (cmd.hasOption("p")) props.put("mlPort", cmd.getOptionValue("p"));
-      if (cmd.hasOption("u")) props.put("username", cmd.getOptionValue("u"));
-      if (cmd.hasOption("x")) props.put("password", cmd.getOptionValue("x"));
-      if (cmd.hasOption("db")) props.put("executionsDatabase", cmd.getOptionValue("db"));
-      if (cmd.hasOption("n")) props.put("pollSize", cmd.getOptionValue("n"));
-      if (cmd.hasOption("t")) props.put("threadCount", cmd.getOptionValue("t"));
-      if (cmd.hasOption("b")) props.put("batchSize", cmd.getOptionValue("b"));
-      config = StateConductorDriverConfig.newConfig(System.getenv(), Maps.fromProperties(System.getProperties()), props);
-    }
-
-    StateConductorDriver driver = new StateConductorDriver(config);
-    Thread driverThread = new Thread(driver);
-    driverThread.start();
-
-    try {
-      driverThread.join();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      driver.destroy();
-    }
-  }
-
-  private static Properties loadConfigProps(String path) throws IOException {
-    FileInputStream fis = new FileInputStream(path);
-    Properties prop = new Properties();
-    prop.load(fis);
-    return prop;
   }
 
   @Override
@@ -280,6 +185,9 @@ public class StateConductorDriver implements Runnable, Destroyable {
   public void destroy() throws DestroyFailedException {
     if (client != null) {
       client.release();
+    }
+    if (appServicesClient != null) {
+      appServicesClient.release();
     }
   }
 }

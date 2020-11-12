@@ -1,4 +1,4 @@
-package com.marklogic.tasks;
+package com.marklogic.stateconductor.tasks;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.StateConductorService;

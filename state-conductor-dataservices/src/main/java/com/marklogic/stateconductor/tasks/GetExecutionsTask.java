@@ -1,7 +1,7 @@
-package com.marklogic.tasks;
+package com.marklogic.stateconductor.tasks;
 
 import com.marklogic.StateConductorService;
-import com.marklogic.config.StateConductorDriverConfig;
+import com.marklogic.stateconductor.config.StateConductorDriverConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +33,14 @@ public class GetExecutionsTask implements Runnable {
     Stream<String> executionUris = null;
     Stream<String> status = null;
 
-    if (config.getStateMachineStatus() != null) {
-      String[] statusArray = config.getStateMachineStatus().split(",");
+    if (config.getStatus() != null && config.getStatus().length() > 0) {
+      String[] statusArray = config.getStatus().split(",");
       status = Arrays.stream(statusArray);
     }
 
     try {
       logger.info("Fetching Executions Batch...");
-      executionUris = service.getExecutions(start, config.getPollSize(), config.getStateMachineNames(), status, null, null, null);
+      executionUris = service.getExecutions(start, config.getPollSize(), config.getNames(), status, null, null, null);
     } catch (Exception ex) {
       logger.error("An error occurred fetching execution documents: {}", ex.getMessage());
       ex.printStackTrace();

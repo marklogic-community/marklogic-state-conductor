@@ -115,7 +115,7 @@ function getStateMachineFromDatabase(name, databaseId) {
       if (!stateMachine) {
         fn.error(
           null,
-          'MISSING-STATE_MACHINE-FILE',
+          'MISSING-STATE-MACHINE-FILE',
           `Cannot find a stateMachine file with the name: ${name}`
         );
       }
@@ -308,28 +308,32 @@ function getAllStateMachinesContextQuery() {
 }
 
 /**
- * Given a flowName, find the documents matching it's defined context.
- * Optionally exclude documents have already be processed by this flow as
+ * Given a state machine name, find the documents matching it's defined context.
+ * Optionally exclude documents have already be processed by this state machine as
  * indicated by the property metadata.
  *
- * @param {*} flowName - the name of the flow
+ * @param {*} name - the name of the flow
  * @param {boolean} [includeAlreadyProcessed=false] - should we include already processed docs
  * @param {number} [limit=1000] - the number of documents to find
  * @returns a sequence of matching document URIs
  */
-function findFlowTargets(flowName, includeAlreadyProcessed = false, limit = 1000) {
-  const flow = getFlowDocumentFromDatabase(flowName, xdmp.database());
+function findStateMachineTargets(name, includeAlreadyProcessed = false, limit = 1000) {
+  const sm = getStateMachineFromDatabase(name, xdmp.database());
 
-  // find documents matching the flow's context query,
-  const ctxquery = getFlowContextQuery(flow.toObject());
+  // find documents matching the state machine's context query,
+  const ctxquery = getStateMachineContextQuery(sm.toObject());
   const queries = [ctxquery];
 
-  // optionally eliminate documents already processed by this flow
+  // optionally eliminate documents already processed by this state machine
   if (!includeAlreadyProcessed) {
     queries.push(
       cts.notQuery(
         cts.propertiesFragmentQuery(
-          cts.elementAttributeValueQuery(FLOW_JOBID_PROP_NAME, 'flow-name', flowName)
+          cts.elementAttributeValueQuery(
+            STATE_MACHINE_EXECUTIONID_PROP_NAME,
+            'stateMachine-name',
+            name
+          )
         )
       )
     );
@@ -1468,23 +1472,27 @@ function batchCreateStateConductorExecution(name, uris = [], context = {}, optio
 }
 
 /**
- * Given a flow name, find an process document's beloning to the named flow's context.
+ * Given a state machine name, find an process document's belonging to the named state machine's context.
  *
- * @param {*} flowName - the name of the flow
+ * @param {*} name - the name of the flow
  * @param {boolean} [includeAlreadyProcessed=false] - should we include documents which have already been processed by this flow
  * @param {number} [limit=1000] - the number of documents to process
  * @returns an object describing the documents found and jobs created
  */
-function gatherAndCreateJobsForFlow(flowName, includeAlreadyProcessed = false, limit = 1000) {
-  const targets = findFlowTargets(flowName, includeAlreadyProcessed, limit).toArray();
-  const jobs = targets.reduce((acc, uri) => {
-    acc[uri] = createStateConductorJob(flowName, uri);
+function gatherAndCreateExecutionsForStateMachine(
+  name,
+  includeAlreadyProcessed = false,
+  limit = 1000
+) {
+  const targets = findStateMachineTargets(name, includeAlreadyProcessed, limit).toArray();
+  const executions = targets.reduce((acc, uri) => {
+    acc[uri] = createStateConductorExecution(name, uri);
     return acc;
   }, {});
   return {
-    flowName: flowName,
+    name: name,
     total: targets.length,
-    jobs: jobs,
+    executions: executions,
   };
 }
 
@@ -1698,8 +1706,8 @@ module.exports = {
   createStateConductorExecution,
   emitEvent,
   executeStateByExecutionDoc,
-  findFlowTargets,
-  gatherAndCreateJobsForFlow,
+  findStateMachineTargets,
+  gatherAndCreateExecutionsForStateMachine,
   getAllStateMachinesContextQuery,
   getApplicableStateMachines,
   getStateMachineContextQuery,

@@ -22,17 +22,16 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
 
   @BeforeAll
   public static void setupSuite() throws IOException {
-    restTestFlow = loadFileResource("flows/rest-test-flow5.asl.json");
+    restTestFlow = loadFileResource("stateMachines/rest-test-state-machine5.asl.json");
   }
 
   @BeforeEach
   public void setup() throws IOException {
     // add flow docs
-    DocumentWriteSet batch = getJobsManager().newWriteSet();
+    DocumentWriteSet batch = getContentManager().newWriteSet();
     DocumentMetadataHandle flowMeta = new DocumentMetadataHandle();
-    flowMeta.getCollections().add("state-conductor-flow");
-    batch = getContentManager().newWriteSet();
-    batch.add("/state-conductor-flow/rest-test-flow5.asl.json", flowMeta, restTestFlow);
+    flowMeta.getCollections().add("state-conductor-state-machine");
+    batch.add("/state-conductor-flow/rest-test-state-machine5.asl.json", flowMeta, restTestFlow);
     getContentManager().write(batch);
 
     // add data docs
@@ -46,7 +45,7 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
 
   @AfterEach
   public void teardown() {
-    clearTestJobs();
+    clearTestExecutions();
   }
 
   @Test
@@ -54,7 +53,7 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "rest-test-flow5").
+      queryParam("rs:name", "rest-test-state-machine5").
       get("/v1/resources/state-conductor-run").
     then().
       log().body().
@@ -81,7 +80,7 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "non-existent-flow").
+      queryParam("rs:name", "non-existent-flow").
       get("/v1/resources/state-conductor-run").
     then().
       log().body().
@@ -94,7 +93,7 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "rest-test-flow5").
+      queryParam("rs:name", "rest-test-state-machine5").
       queryParam("rs:includeAlreadyProcessed", "false").
       queryParam("rs:limit", 100).
       get("/v1/resources/state-conductor-run").
@@ -109,7 +108,7 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "rest-test-flow5").
+      queryParam("rs:name", "rest-test-state-machine5").
       queryParam("rs:includeAlreadyProcessed", "false").
       queryParam("rs:limit", 1).
       get("/v1/resources/state-conductor-run").
@@ -125,23 +124,23 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "rest-test-flow5").
+      queryParam("rs:name", "rest-test-state-machine5").
       put("/v1/resources/state-conductor-run").
     then().
       log().body().
       statusCode(201).
       contentType(ContentType.JSON).
-      body("flowName", equalTo("rest-test-flow5")).
+      body("name", equalTo("rest-test-state-machine5")).
       body("total", equalTo(2)).
-      body("jobs.size()", equalTo(2)).
-      body("jobs", hasKey("/test/doc1.json")).
-      body("jobs", hasKey("/test/doc2.json"));
+      body("executions.size()", equalTo(2)).
+      body("executions", hasKey("/test/doc1.json")).
+      body("executions", hasKey("/test/doc2.json"));
 
     // make sure they were processed
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "rest-test-flow5").
+      queryParam("rs:name", "rest-test-state-machine5").
       get("/v1/resources/state-conductor-run").
     then().
       log().body().
@@ -153,7 +152,7 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "rest-test-flow5").
+      queryParam("rs:name", "rest-test-state-machine5").
       queryParam("rs:includeAlreadyProcessed", "true").
       get("/v1/resources/state-conductor-run").
     then().
@@ -170,7 +169,7 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "rest-test-flow5").
+      queryParam("rs:name", "rest-test-state-machine5").
       queryParam("rs:includeAlreadyProcessed", "false").
       queryParam("rs:limit", 100).
       put("/v1/resources/state-conductor-run").
@@ -178,17 +177,17 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
       log().body().
       statusCode(201).
       contentType(ContentType.JSON).
-      body("flowName", equalTo("rest-test-flow5")).
+      body("name", equalTo("rest-test-state-machine5")).
       body("total", equalTo(2)).
-      body("jobs.size()", equalTo(2)).
-      body("jobs", hasKey("/test/doc1.json")).
-      body("jobs", hasKey("/test/doc2.json"));
+      body("executions.size()", equalTo(2)).
+      body("executions", hasKey("/test/doc1.json")).
+      body("executions", hasKey("/test/doc2.json"));
 
     // shouldn't find any with includeAlreadyProcessed flag turn off
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "rest-test-flow5").
+      queryParam("rs:name", "rest-test-state-machine5").
       queryParam("rs:includeAlreadyProcessed", "false").
       queryParam("rs:limit", 100).
       put("/v1/resources/state-conductor-run").
@@ -196,15 +195,15 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
       log().body().
       statusCode(201).
       contentType(ContentType.JSON).
-      body("flowName", equalTo("rest-test-flow5")).
+      body("name", equalTo("rest-test-state-machine5")).
       body("total", equalTo(0)).
-      body("jobs.size()", equalTo(0));
+      body("executions.size()", equalTo(0));
 
     // should find 2 with the includeAlreadyProcessed tag turn on
     given().
       log().uri().
     when().
-      queryParam("rs:flowName", "rest-test-flow5").
+      queryParam("rs:name", "rest-test-state-machine5").
       queryParam("rs:includeAlreadyProcessed", "true").
       queryParam("rs:limit", 100).
       put("/v1/resources/state-conductor-run").
@@ -212,10 +211,10 @@ public class RunServiceTest extends AbstractStateConductorRestTest {
       log().body().
       statusCode(201).
       contentType(ContentType.JSON).
-      body("flowName", equalTo("rest-test-flow5")).
+      body("name", equalTo("rest-test-state-machine5")).
       body("total", equalTo(2)).
-      body("jobs.size()", equalTo(2)).
-      body("jobs", hasKey("/test/doc1.json")).
-      body("jobs", hasKey("/test/doc2.json"));
+      body("executions.size()", equalTo(2)).
+      body("executions", hasKey("/test/doc1.json")).
+      body("executions", hasKey("/test/doc2.json"));
   }
 }

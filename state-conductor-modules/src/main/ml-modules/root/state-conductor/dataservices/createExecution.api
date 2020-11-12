@@ -1,0 +1,22 @@
+{
+  "functionName": "createExecution",
+  "desc": "Creates a MarkLogic State Conductor Execution document for the given uri and state machine name.",
+  "params": [
+    {
+      "name": "uri",
+      "datatype": "string",
+      "desc": "The uri of a document to be processed by the state machine",
+      "nullable": false
+    },
+    {
+      "name": "name",
+      "datatype": "string",
+      "desc": "The name of the State Machine",
+      "nullable": false
+    }
+  ],
+  "return": {
+    "datatype": "string",
+    "desc": "The Execution ID of the State Conductor Execution document"
+  }
+}

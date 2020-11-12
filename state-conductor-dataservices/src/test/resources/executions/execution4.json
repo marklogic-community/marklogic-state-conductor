@@ -1,0 +1,13 @@
+{
+  "id": "execution4",
+  "name": "test-state-machine",
+  "status": "complete",
+  "state": "success",
+  "uri": "/test/doc2.json",
+  "database": "%DATABASE%",
+  "modules": "%MODULES%",
+  "createdDate": "2020-03-30T16:20:00.362Z",
+  "context": {},
+  "provenance": [],
+  "errors": {}
+}

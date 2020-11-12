@@ -1,23 +1,23 @@
 # MarkLogic State Conductor
 
 The _MarkLogic State Conductor_ is an event-based orchestrator for manipulating MarkLogic database documents.
-State Conductor flows are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html). State actions are defined using server-side modules.
+State Conductor state machines are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html). State actions are defined using server-side modules.
 
 The _State Conductor_ can be used to perform an arbitrary number of context-based processing actions on a subset of documents. Actions could include: invoking a [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) flow, transforming a document, applying metadata, or calling an external process.
 
-The _State Conductor_ requires a "Driver" to process documents and move them through the installed Flows' states. The _State Conductor_ supports a [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver, a [CoRB2](https://github.com/marklogic-community/corb2) driver, and a [CPF](https://docs.marklogic.com/guide/cpf) driver.
+The _State Conductor_ requires a "Driver" to process documents and move them through the installed Flows' states. The _State Conductor_ supports a [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver, and a [CoRB2](https://github.com/marklogic-community/corb2) driver.
 
 1. [Quick Start Guide](https://github.com/aclavio/marklogic-state-conductor/wiki/QUICKSTART)
 2. [Installation](#installation)
 3. [Usage](#usage)
-4. [Flow Files](#flow-files)
-5. [Flow File Scope](#flow-file-scope)
-6. [Flow File Actions](#flow-file-actions)
-7. [Job Documents](#job-documents)
+4. [State Machine Definitions](#state-machine-definitions)
+5. [State Machine Scope](#state-machine-scope)
+6. [State Machine Actions](#state-machine-actions)
+7. [Execution Documents](#execution-documents)
 8. [Provenance](#provenance)
 9. [Services](#services)
-10. [Jobs Service](#jobs-service)
-11. [Flows Service](#flows-service)
+10. [Executions Service](#executions-service)
+11. [State Machines Service](#state-machines-service)
 12. [Status Service](#status-service)
 13. [Roadmap](#roadmap)
 
@@ -37,7 +37,7 @@ repositories {
   }
 }
 dependencies {
-  mlBundle "com.marklogic:marklogic-state-conductor:0.8.0"
+  mlBundle "com.marklogic:marklogic-state-conductor:1.0.0"
 }
 ```
 
@@ -45,19 +45,19 @@ dependencies {
 
 ## Usage <a name="usage"></a>
 
-Any documents created or modified having the `state-conductor-item` collection will trigger processing by the _State Conductor_. They will be evaluated against the context of all installed _Flow Files_. For each matching _Flow File_ a `Job` document will be created corresponding to the matching flow and triggering document. A property will be added to the triggering document's metadata indicating the `Job` file's id:
+Any documents created or modified having the `state-conductor-item` collection will trigger processing by the _State Conductor_. They will be evaluated against the context of all installed _State Machine Definitions_. For each matching _State Machine Definition_ an `Execution` document will be created corresponding to the matching state machine and triggering document. A property will be added to the triggering document's metadata indicating the `Execution` file's id:
 
 ```xml
-<state-conductor-job flow-name="flow-name" job-id="ec89d520-e7ec-4b6b-ba63-7ea3a85eff02" date="2019-11-08T17:34:28.529Z" />
+<state-conductor-execution stateMachine-name="state-machine-name" execution-id="ec89d520-e7ec-4b6b-ba63-7ea3a85eff02" date="2019-11-08T17:34:28.529Z" />
 ```
 
-> NOTE: Document modifications during, or after the competion of a Flow will not cause that document to be reprocessed by that same flow. To run a Flow on a document that it has already been processed by requires manual invokation of the [`Jobs Service`](#jobs-service).
+> NOTE: Document modifications during, or after the competion of a State Machine will not cause that document to be reprocessed by that same state machine. To manually run a State Machine on a document that it has already been processed by requires manual invokation of the [`Jobs Service`](#executions-service).
 
-### Flow Files <a name="flow-files"></a>
+### State Machine Definitions <a name="state-machine-definitions"></a>
 
-Flow files define the states that documents will transition through. States can perform actions (utilizing SJS modules in MarkLogic), performing branching logic, or terminate processing. Flow files are json formatted documents within the application's content database; they should have the "state-conductor-flow" collection, and have the ".asl.json" file extension.
+State Machine definition files define the states that documents will transition through. States can perform actions (utilizing SJS modules in MarkLogic), performing branching logic, or terminate processing. State Machine definition files are json formatted documents within the application's content database; they should have the "state-conductor-state-machine" collection, and have the ".asl.json" file extension.
 
-Example Flow File:
+Example State Machine Definition File:
 
 ```json
 {
@@ -95,9 +95,9 @@ Example Flow File:
 }
 ```
 
-#### Flow File Scope <a name="flow-file-scope"></a>
+#### State Machine Scope <a name="state-machine-scope"></a>
 
-Flow files must define a context within an `mlDomain` property under the flow file's root. The context defines one or more scopes for which matching documents will have this State Conductor flow automatically applied.
+State Machine Definition files must define a context within an `mlDomain` property under the definition file's root. This context defines one or more scopes for which matching documents will have this state machine automatically applied.
 
 Example:
 
@@ -122,9 +122,9 @@ Example:
 
 Valid scopes are `collection`, `directory`, and `query`. For scopes of type `query`, the value must be a string containing the JSON serialization of a cts query.
 
-#### Flow File Actions <a name="flow-file-actions"></a>
+#### State Machine Actions <a name="state-machine-actions"></a>
 
-Flow File States of the type "Task" can define actions to perform on in-process documents. These actions take the form of Server-Side Javascript modules referenced by the "Resource" property. Action modules can perform custom activities such as updating the in-process document, performing a query, invoking an external service, etc. Action modules should export a "performAction" function with the following signature:
+State machine States of the type "Task" can define actions to perform on in-process documents. These actions take the form of Server-Side Javascript modules referenced by the "Resource" property. Action modules can perform custom activities such as updating the in-process document, performing a query, invoking an external service, etc. Action modules should export a "performAction" function with the following signature:
 
 ```javascript
 'use strict';
@@ -136,15 +136,15 @@ function performAction(uri, parameters = {}, context = {}) {
 exports.performAction = performAction;
 ```
 
-Where `uri` is the document being processed by the flow; `parameters` is a json object configured via this State's Flow File "Parameters" property; and `context` contains the current in-process Flow's context. Any data returned by the performAction function will be stored in the in-process flow's context object.
+Where `uri` is the document being processed by the flow; `parameters` is a json object configured via this State's "Parameters" property; and `context` contains the current in-process State Machine's context. Any data returned by the performAction function will be stored as the in-process state machine's new context object.
 
-### Job Documents <a name="job-documents"></a>
+### Execution Documents <a name="execution-documents"></a>
 
-For every document processed by a _State Conductor_ flow there is a corresponding `Job` document. Job documents are stored in the `state-conductor-jobs` database (new in v0.3.0), in the `/stateConductorJob/` folder. These documents track the in-process document, and flow; they also store the flow's context and provenance information.
+For every document processed by a _State Conductor_ state machine there is a corresponding `Execution` document. Execution documents are stored in the `state-conductor-executions` database, in the `/stateConductorExecution/` folder. These documents track the in-process document, and state machine status; they also store the state machine's context and provenance information.
 
 ### Provenance <a name="provenance"></a>
 
-Every time a document starts, stops, or transitions from one state to another within a Flow, the Provenance information stored in the Job document is updated.
+Every time a document starts, stops, or transitions from one state to another within a state machine, the Provenance information stored in the Execution document is updated.
 
 ---
 
@@ -152,46 +152,46 @@ Every time a document starts, stops, or transitions from one state to another wi
 
 The _State Conductor_ includes MarkLogic REST service extensions for managing Flow files and State Conductor Jobs.
 
-### Jobs Service <a name="jobs-service"></a>
+### Executions Service <a name="executions-service"></a>
 
-Create one or more _State Conductor_ Jobs:
-
-```
-PUT /v1/resources/state-conductor-jobs?rs:uris=</my/documents/uri>&rs:flowName=<my-flow-name>
-```
-
-Get the job id for the given document and flow:
+Start one or more _State Conductor_ Executions:
 
 ```
-GET /v1/resources/state-conductor-jobs?rs:uri=</my/documents/uri>&rs:flowName=<my-flow-name>
+PUT /v1/resources/state-conductor-executions?rs:uris=</my/documents/uri>&rs:name=<state-machine-name>
 ```
 
-### Flows Service <a name="flows-service"></a>
-
-List the installed _State Conductor_ Flows:
+Get the execution id for the given document and state machine:
 
 ```
-GET /v1/resources/state-conductor-flows?rs:flowName=<my-flow-name>
+GET /v1/resources/state-conductor-executions?rs:uri=</my/documents/uri>&rs:name=<state-machine-name>
 ```
 
-Install a _State Conductor_ Flow:
+### State Machine Service <a name="state-machines-service"></a>
+
+List the installed _State Conductor_ state machines:
 
 ```
-PUT /v1/resources/state-conductor-flows?rs:flowName=<my-flow-name>
+GET /v1/resources/state-conductor-state-machines?rs:name=<state-machine-name>
 ```
 
-Remove an installed _State Conductor_ Flow:
+Install a _State Conductor_ State Machine definition:
 
 ```
-DELETE /v1/resources/state-conductor-flows?rs:flowName=<my-flow-name>
+PUT /v1/resources/state-conductor-state-machines?rs:name=<state-machine-name>
+```
+
+Remove an installed _State Conductor_ State Machine definition:
+
+```
+DELETE /v1/resources/state-conductor-state-machines?rs:name=<state-machine-name>
 ```
 
 ### Status Service <a name="status-service"></a>
 
-List the status of the given _State Conductor_ Flow:
+List the status of the given _State Conductor_ State Machine:
 
 ```
-GET /v1/resources/state-conductor-status?rs:flowName=<my-flow-name>&rs:startDate=<xs.dateTime>&rs:endDate=<xs.dateTime>
+GET /v1/resources/state-conductor-status?rs:name=<state-machine-name>&rs:startDate=<xs.dateTime>&rs:endDate=<xs.dateTime>
 ```
 
 New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.

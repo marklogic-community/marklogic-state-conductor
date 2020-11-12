@@ -1,0 +1,17 @@
+{
+  "functionName": "processExecution",
+  "desc": "Invokes the processing of a MarkLogic State Conductor Execution",
+  "params": [
+    {
+      "name": "uri",
+      "datatype": "string",
+      "desc": "The uri of a State Conductor Execution document to be processed",
+      "nullable": false,
+      "multiple": true
+    }
+  ],
+  "return": {
+    "datatype": "array",
+    "$javaClass": "com.fasterxml.jackson.databind.node.ArrayNode"
+  }
+}

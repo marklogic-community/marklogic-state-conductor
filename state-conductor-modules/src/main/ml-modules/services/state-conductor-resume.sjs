@@ -11,7 +11,7 @@ function returnError(statusCode, statusMsg, body) {
 }
 
 /**
- * resumes the jobs with the URIS sent
+ * resumes the executions with the URIS sent
  */
 function put(context, { uris = [], resumeBy = 'unspecified' }, input) {
   if (typeof uris === 'string') {
@@ -26,10 +26,10 @@ function put(context, { uris = [], resumeBy = 'unspecified' }, input) {
 
   const resp = {
     uris: [],
-    jobs: {},
+    executions: {},
   };
 
-  //runs the update in the jobs database
+  //runs the update in the executions database
   sc.invokeOrApplyFunction(
     () => {
       declareUpdate();
@@ -37,11 +37,11 @@ function put(context, { uris = [], resumeBy = 'unspecified' }, input) {
       uris.forEach(function (uri) {
         resp.uris.push(uri);
 
-        resp.jobs[uri] = sc.resumeWaitingJob(uri, resumeBy);
+        resp.executions[uri] = sc.resumeWaitingExecution(uri, resumeBy);
       });
     },
     {
-      database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
+      database: xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
     }
   );
 

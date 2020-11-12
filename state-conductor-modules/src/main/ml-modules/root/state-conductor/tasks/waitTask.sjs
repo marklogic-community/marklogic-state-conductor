@@ -13,7 +13,7 @@ sc.invokeOrApplyFunction(
         'limit=1000',
 
         cts.andQuery([
-          cts.collectionQuery('stateConductorJob'),
+          cts.collectionQuery(sc.EXECUTION_COLLECTION),
           cts.jsonPropertyScopeQuery(
             'currentlyWaiting',
             cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
@@ -26,12 +26,12 @@ sc.invokeOrApplyFunction(
 
     if (uris.length > 0) {
       uris.forEach((uri) => {
-        sc.resumeWaitingJob(uri, 'waitTask');
+        sc.resumeWaitingExecution(uri, 'waitTask');
       });
     }
   },
   {
-    database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
+    database: xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
   }
 );
 

@@ -1,0 +1,20 @@
+{
+    "functionName": "insertStateMachine",
+    "desc": "Creates or updates a single state machine.",
+    "params": [
+        {
+            "name": "name",
+            "datatype": "string",
+            "desc": "The name of the state machine to be created or updated.",
+            "nullable": false,
+            "multiple": false
+        },
+        {
+            "name": "stateMachine",
+            "datatype": "object",
+            "desc": "The stateMachine to be created or updated.",
+            "nullable": false,
+            "multiple": false
+        }
+    ]
+}

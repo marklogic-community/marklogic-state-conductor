@@ -1,0 +1,24 @@
+{
+  "Comment": "does things",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "collection",
+        "value": "test"
+      }
+    ]
+  },
+  "StartAt": "test-data",
+  "States": {
+    "test-data": {
+      "Type": "Pass",
+      "Result": {
+        "data": "Lorem ipsum dolor sit amet"
+      },
+      "Next": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

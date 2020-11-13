@@ -26,7 +26,9 @@ try {
   error = e;
 }
 
-assertions.push(test.assertEqual('INVALID-STATE_MACHINE-STATUS', error.name, 'status check working'));
+assertions.push(
+  test.assertEqual('INVALID-STATE_MACHINE-STATUS', error.name, 'status check working')
+);
 
 //check waiting status
 executionDoc = xdmp.toJSON({
@@ -47,7 +49,9 @@ try {
   error = e;
 }
 
-assertions.push(test.assertEqual('INVALID-STATE_MACHINE-STATUS', error.name, 'status check waiting'));
+assertions.push(
+  test.assertEqual('INVALID-STATE_MACHINE-STATUS', error.name, 'status check waiting')
+);
 
 //check for missing stateMachine file
 executionDoc = xdmp.toJSON({
@@ -65,7 +69,11 @@ assertion = sc.startProcessingStateMachineByExecutionDoc(executionDoc, false);
 
 assertions.push(
   test.assertEqual('failed', assertion.status, 'status check'),
-  test.assertEqual('MISSING-STATE_MACHINE-FILE', assertion.errors['find-gender'].name, 'missing state machine')
+  test.assertEqual(
+    'MISSING-STATE-MACHINE-FILE',
+    assertion.errors['find-gender'].name,
+    'missing state machine'
+  )
 );
 
 //check for missing stateMachine file

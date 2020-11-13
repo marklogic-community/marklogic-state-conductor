@@ -109,6 +109,16 @@ public abstract class AbstractStateConductorTest extends AbstractMarkLogicTest {
   }
   */
 
+  protected String loadStringResource(String name) throws IOException {
+    URL resource = getClass().getClassLoader().getResource(name);
+    if (resource == null) {
+      throw new FileNotFoundException(name);
+    }
+    File file = new File(resource.getFile());
+    String content = new String(Files.readAllBytes(file.toPath()));
+    return content;
+  }
+
   protected FileHandle loadFileResource(String name) throws FileNotFoundException {
     URL resource = getClass().getClassLoader().getResource(name);
     if (resource == null) {

@@ -2,10 +2,9 @@ package com.marklogic;
 
 // IMPORTANT: Do not edit. This file is generated.
 
-import java.util.stream.Stream;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import java.io.Reader;
+import java.util.stream.Stream;
 
 
 import com.marklogic.client.DatabaseClient;
@@ -32,6 +31,21 @@ public interface StateConductorService {
             private StateConductorServiceImpl(DatabaseClient dbClient) {
                 baseProxy = new BaseProxy(dbClient, "/state-conductor/dataservices/");
             }
+
+            @Override
+            public String createStateMachine(String name, com.fasterxml.jackson.databind.node.ObjectNode stateMachine) {
+              return BaseProxy.StringType.toString(
+                baseProxy
+                .request("createStateMachine.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_MIXED)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)),
+                    BaseProxy.documentParam("stateMachine", false, BaseProxy.ObjectType.fromObjectNode(stateMachine)))
+                .withMethod("POST")
+                .responseSingle(false, null)
+                );
+            }
+
 
             @Override
             public void deleteStateMachine(String name) {
@@ -94,19 +108,6 @@ public interface StateConductorService {
 
 
             @Override
-            public void insertStateMachine(String name, Reader stateMachine) {
-              baseProxy
-                .request("insertStateMachine.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_MIXED)
-                .withSession()
-                .withParams(
-                    BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)),
-                    BaseProxy.documentParam("stateMachine", false, BaseProxy.ObjectType.fromReader(stateMachine)))
-                .withMethod("POST")
-                .responseNone();
-            }
-
-
-            @Override
             public com.fasterxml.jackson.databind.node.ObjectNode getStateMachineStatus(Stream<String> names, String startDate, String endDate, Boolean detailed) {
               return BaseProxy.ObjectType.toObjectNode(
                 baseProxy
@@ -141,6 +142,15 @@ public interface StateConductorService {
 
         return new StateConductorServiceImpl(db);
     }
+
+  /**
+   * Creates or updates a MarkLogic State Conductor state machine definition.
+   *
+   * @param name	The name of the state machine to be created or updated.
+   * @param stateMachine	The State Machine definition.
+   * @return	The uri of the created or updated State Machine.
+   */
+    String createStateMachine(String name, com.fasterxml.jackson.databind.node.ObjectNode stateMachine);
 
   /**
    * Deletes a single state machine.
@@ -179,15 +189,6 @@ public interface StateConductorService {
    * @return	as output
    */
     com.fasterxml.jackson.databind.node.ArrayNode processExecution(Stream<String> uri);
-
-  /**
-   * Creates or updates a single state machine.
-   *
-   * @param name	The name of the state machine to be created or updated.
-   * @param stateMachine	The stateMachine to be created or updated.
-   * 
-   */
-    void insertStateMachine(String name, Reader stateMachine);
 
   /**
    * Returns the status and states of one or more State Conductor state machines.

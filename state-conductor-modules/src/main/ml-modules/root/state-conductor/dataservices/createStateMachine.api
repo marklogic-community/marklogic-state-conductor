@@ -1,0 +1,23 @@
+{
+  "functionName": "createStateMachine",
+  "desc": "Creates or updates a MarkLogic State Conductor state machine definition.",
+  "params": [
+    {
+      "name": "name",
+      "datatype": "string",
+      "desc": "The name of the state machine to be created or updated.",
+      "nullable": false
+    },
+    {
+      "name": "stateMachine",
+      "datatype": "object",
+      "$javaClass": "com.fasterxml.jackson.databind.node.ObjectNode",
+      "desc": "The State Machine definition.",
+      "nullable": false
+    }
+  ],
+  "return": {
+    "datatype": "string",
+    "desc": "The uri of the created or updated State Machine."
+  }
+}

@@ -4,11 +4,7 @@ const sc = require('/state-conductor/state-conductor.sjs');
 const validator = require('/state-conductor/state-machine-validator.sjs');
 
 function returnError(statusCode, statusMsg, body) {
-  fn.error(
-    null,
-    'RESTAPI-SRVEXERR',
-    Sequence.from([statusCode, statusMsg, body])
-  );
+  fn.error(null, 'RESTAPI-SRVEXERR', Sequence.from([statusCode, statusMsg, body]));
 }
 
 /**
@@ -21,11 +17,7 @@ function get(context, params) {
       context.outputStatus = [200, 'Success'];
       return stateMachine;
     } else {
-      returnError(
-        404,
-        'NOT FOUND',
-        `StateMachine File "${params.name}" not found.`
-      );
+      returnError(404, 'NOT FOUND', `StateMachine File "${params.name}" not found.`);
     }
   } else {
     const stateMachines = sc.getStateMachines();
@@ -46,20 +38,12 @@ function put(context, params, input) {
   const name = params.name ? params.name.trim() : '';
   if (name === '') {
     returnError(400, 'Bad Request', 'Missing parameter "name"');
-  } else if (
-    !input ||
-    !context.inputTypes ||
-    context.inputTypes[0] !== 'application/json'
-  ) {
+  } else if (!input || !context.inputTypes || context.inputTypes[0] !== 'application/json') {
     returnError(400, 'Bad Request', 'Invalid request body');
   } else if (!validator.validateStateMachineFile(input.toObject())) {
     returnError(400, 'Bad Request', 'Invalid state-conductor stateMachine file');
   } else {
-    const uri = `${sc.STATE_MACHINE_DIRECTORY}${name}.asl.json`;
-    xdmp.documentInsert(uri, input, {
-      permissions: xdmp.defaultPermissions(),
-      collections: [sc.STATE_MACHINE_COLLECTION],
-    });
+    const uri = sc.createStateMachine(name, input);
     context.outputStatus = [201, 'Created'];
     return '';
   }
@@ -75,11 +59,7 @@ function deleteFunction(context, params) {
   } else {
     const stateMachine = sc.getStateMachine(name);
     if (!stateMachine) {
-      returnError(
-        404,
-        'NOT FOUND',
-        `StateMachine File "${params.name}" not found.`
-      );
+      returnError(404, 'NOT FOUND', `StateMachine File "${params.name}" not found.`);
     } else {
       const uri = fn.documentUri(stateMachine);
       xdmp.documentDelete(uri);

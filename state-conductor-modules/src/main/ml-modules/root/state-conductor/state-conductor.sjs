@@ -164,6 +164,23 @@ function getStateMachineNameFromUri(uri) {
 }
 
 /**
+ * Create or update a state machine with the given name and definition.
+ * Assumes the definition has already been validated.
+ *
+ * @param {*} name
+ * @param {*} definitionJson
+ * @returns
+ */
+function createStateMachine(name, definitionJson) {
+  const uri = `${STATE_MACHINE_DIRECTORY}${name}${STATE_MACHINE_FILE_EXTENSION}`;
+  xdmp.documentInsert(uri, definitionJson, {
+    permissions: xdmp.defaultPermissions(),
+    collections: [STATE_MACHINE_COLLECTION],
+  });
+  return uri;
+}
+
+/**
  * Returns the initial state for the given state machine definition
  *
  * @param {*} { name, StartAt }
@@ -1703,6 +1720,7 @@ module.exports = {
   addExecutionMetadata,
   batchCreateStateConductorExecution,
   checkStateMachineContext,
+  createStateMachine,
   createStateConductorExecution,
   emitEvent,
   executeStateByExecutionDoc,

@@ -62,15 +62,13 @@ public class StateConductorServiceMock implements StateConductorService {
   }
 
   @Override
-  public void deleteStateMachine(String name) {
-    // TODO Auto-generated method stub
-
+  public String createStateMachine(String name, ObjectNode stateMachine) {
+    return String.format("/state-conductor-definition/%s.asl.json", name);
   }
 
   @Override
-  public void insertStateMachine(String name, Reader stateMachine) {
+  public void deleteStateMachine(String name) {
     // TODO Auto-generated method stub
-
   }
 
 }

@@ -1,5 +1,8 @@
 package com.marklogic;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.FailedRequestException;
@@ -35,6 +38,8 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
   StateConductorService mockService;
   StateConductorService service;
+
+  ObjectMapper mapper = new ObjectMapper();
 
   @BeforeEach
   public void setup() throws IOException {
@@ -107,22 +112,37 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   }
 
   @Test
-  public void testInsertStateMachine() throws IOException {
+  public void testCreateStateMachine() throws IOException {
     final String stateMachineName = "test-state-machine";
     final ObjectNode testStateMachine = service.getStateMachine(stateMachineName);
     assertEquals("does things", testStateMachine.get("Comment").asText());
     testStateMachine.put("Comment", "Also Does Other Things");
-    service.insertStateMachine(stateMachineName, new StringReader(testStateMachine.toString()));
+    service.createStateMachine(stateMachineName, testStateMachine);
     final ObjectNode updatedTestStateMachine = service.getStateMachine(stateMachineName);
     assertNotNull(updatedTestStateMachine);
     assertEquals("Also Does Other Things", testStateMachine.get("Comment").asText());
   }
 
   @Test
+  public void testCreateInvalidStateMachine() throws IOException {
+    final String stateMachineName = "invalid-state-machine";
+    final String stateMachineJson = loadStringResource("stateMachines/invalid-state-machine.asl.json");
+    ObjectNode stateMachine = mapper.readValue(stateMachineJson, ObjectNode.class);
+
+    try {
+      String uri = service.createStateMachine(stateMachineName, stateMachine);
+      assertTrue(false, "Failed to throw exception for invalid stateMachine");
+    } catch (Exception e) {
+      logger.info("expected exception", e);
+      assertTrue(true);
+    }
+  }
+
+  @Test
   public void testDeleteStateMachine() throws IOException {
     final String newName = "new-test-state-machine";
     final String stateMachineName = "test-state-machine";
-    service.insertStateMachine(newName, new StringReader(service.getStateMachine(stateMachineName).toString()));
+    service.createStateMachine(newName, service.getStateMachine(stateMachineName));
     final ObjectNode updatedTestStateMachine = service.getStateMachine(stateMachineName);
     assertEquals("does things", updatedTestStateMachine.get("Comment").asText());
     service.deleteStateMachine(newName);

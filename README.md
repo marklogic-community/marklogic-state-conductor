@@ -1,11 +1,22 @@
 # MarkLogic State Conductor
 
-The _MarkLogic State Conductor_ is an event-based orchestrator for manipulating MarkLogic database documents.
-State Conductor state machines are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html). State actions are defined using server-side modules.
+The _MarkLogic State Conductor (MLSC)_ allows a developer or architect to define state machines which govern how data moves through a set of [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) Steps, and optionally through other custom processing actions. MLSC state machines are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html). Actions to run a DHF Step or Flow are included, and any other state actions can be defined using server-side modules.
 
-The _State Conductor_ can be used to perform an arbitrary number of context-based processing actions on a subset of documents. Actions could include: invoking a [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) flow, transforming a document, applying metadata, or calling an external process.
+The _State Conductor_ can be used to perform an arbitrary number of actions, in any order, and with branching or other logic based on document content, or context that is passed from state to state. Actions could include: invoking a _Data Hub_ flow, transforming a document, applying metadata, manipulating or querying side-car documents, or invoking a non-DHF process. On premise, these actions can include calling out to another process via HTTP or posting to an event queue.
 
-The _State Conductor_ requires a "Driver" to process documents and move them through the installed Flows' states. The _State Conductor_ supports a [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver, and a [CoRB2](https://github.com/marklogic-community/corb2) driver.
+The _State Conductor_ requires a [Driver](#drivers) to process documents and move them through the installed state machines' states. The _State Conductor_ supports a [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver, and a [CoRB2](https://github.com/marklogic-community/corb2) driver.
+
+---
+
+The _State Conductor_ allows a division of labor among different personas, where business analysts or architects analyze and define the overall flow of data through the system, developers convert that to a state machine configuration, and MarkLogic experts define the DHF Steps or other processes to perform on each state transition. Conversely, architects can define state machines which are then consumed and discussed by less-technical experts with business knowledge.
+
+MLSC uses a variant of Amazon States Language as inspiration for the state machine definition files, so it is familiar to some AWS users and is flexible in the same ways AWS States Language is flexible.
+
+In addition to defining a flexible set of states and transitions via state machines, MLSC ensures that the state of every record is tracked and managed via state-oriented metadata in “execution documents.”
+
+Should you use MLSC for your project? See [Applicability](#applicability)
+
+---
 
 1. [Quick Start Guide](https://github.com/aclavio/marklogic-state-conductor/wiki/QUICKSTART)
 2. [Installation](#installation)
@@ -19,7 +30,11 @@ The _State Conductor_ requires a "Driver" to process documents and move them thr
 10. [Executions Service](#executions-service)
 11. [State Machines Service](#state-machines-service)
 12. [Status Service](#status-service)
-13. [Roadmap](#roadmap)
+13. [Drivers](#drivers)
+14. [Applicability](#applicability)
+15. [Roadmap](#roadmap)
+
+---
 
 ## Installation <a name="installation"></a>
 
@@ -195,6 +210,58 @@ GET /v1/resources/state-conductor-status?rs:name=<state-machine-name>&rs:startDa
 ```
 
 New (optional) temporal parameters `startDate` and `endDate` in v0.3.0.
+
+---
+
+## Drivers
+
+The _State Conductor_ utilizes a "Driver" to process documents; moving them through the installed state machines' states in the prescribed order.
+
+It is simple to “drive” MLSC:
+
+1. Get a set of execution document URIs that represent data not yet in a final state using the `getExecutions` data service.
+2. For each of these documents, make a request to the `processExecution` data service, which takes one URI and advances that execution to the next State per the DHF Step or other process.
+3. Repeat this forever.
+
+For convenience, two drivers are included: one using corb, and one written in Java that executes the above data services. The responsiblity of the Driver in MLSC is only to determine which state machines to run and with how many threads. Which Steps are run in what order, when to retry, and other logic is the province of the state machine definition itself.
+
+Note that MLSC does not use the DHF built-in libraries as drivers to run DHF Steps. Those libraries execute each Step’s sourceQuery, and MLSC does not use sourceQuery configurations to determine what steps to run. It uses state machines, defined declaratively as JSON files. This is a rather different paradigm, which offloads much of the logic from the callers, and is why the “drivers” for MLSC are extremely simple.
+
+For more information see [Drivers](https://github.com/aclavio/marklogic-state-conductor/wiki/Drivers).
+
+---
+
+## Applicability <a name="applicability"></a>
+
+When to use the MarkLogic State Conductor?
+
+- An overall state machine paradigm is desirable. Stakeholders are familiar with state machines, or will be able to easily understand and discuss state machines – either in their native JSON format, or as diagrams for discussion purposes. (MLSC does not automatically convert state machine configurations to graphical views, however).
+- Complex flows are needed, with conditional logic, event listeners, retries, and other MLSC features.
+- Real-time data is flowing into the system, and it is not natural to process data as a set of batches with batch-ids.
+- Eventual migration to Amazon Step Functions, which uses Amazon States Language, is possible in the future. MLSC uses a similar format so migration to AWS later may be easier.
+- Data is being processed without Data Hub Framework, so it is necessary to sequence and monitor a set of processes that are not (or are not exclusively) DHF Steps
+
+### Comparison and Usage Guidance vs Other Tools
+
+- Pure Data Hub Framework Processing
+  - Marklogic Data Hub Framework uses a sourceQuery on every Step to “find” data from prior steps that need to be processed. These queries can be parameterized by the flowRunner or other external caller into DHF. For simple flows this works well, and is fully supported in core MarkLogic DHF and DHS. However, for complex cases it requires a lot of information in scattered places to be brought together to understand and govern the overall flow of data. MLSC consolidates all this information in one place (one or more state machine definition JSON files) and allows complex operations to be supported naturally, such as branching, conditional logic, and events.
+  - Specific situations not handled naturally in DHF that may require use of MLSC include:
+    - Retry of errors
+    - Branching and other more complex data flows
+    - Conditional logic that is difficult to build into DHF sourceQuery and metadata tagging configurations
+  - Note that DHF processing using supplied DHF Java drivers includes writing certain Jobs summary data for a “batch” and this is not written by State Conductor, which is not fundamentally batch oriented
+- Content Processing Framework (CPF)
+  - CPF is a heavyweight process that is far slower than MLSC, is not available in the newer MarkLogic Data Hub Service (DHS), and is difficult to configure and to debug.
+  - A CPF state transition handles very complex cases involving concurrency of updates to a document while the document is being processed, but at the cost performance and debuggability.
+  - CPF is not generally not recommended as an alternative other than cases where complex issues of concurrent updates are a primary concern.
+- Third party external “orchestrators” such as AWS Glue, Azure Data Factory, AWS Step Functions, MuleSoft, NiFi and others.
+  - These external tools may be ideal for your use case. A case-by-case analysis is needed to evaluate use of these tools.
+  - External tools can coordinate the entire data processing pipeline, including operations outside MarkLogic. E.g. an external tool might convert a proprietary format, run NLP enrichment, or virus scan content before it reaches MarkLogic, or extract and move data after it is exported from MarkLogic.
+  - That said, MLSC is conceptually compatible with these other tools, and has advantages over more complex approaches:
+    - MLSC is built to be cloud-neutral. Despite leveraging insights and data formats from AWS States Language, it can run anywhere.
+    - MLSC is intended to be simple and efficient, without a steep learning curve.
+    - MLSC is open source and free (as in beer).
+    - MLSC can work with any external tool if that tool can call a MarkLogic Data Service or REST endpoint. The external tool may take the place of the supplied Java drivers (Data Services or corb) and push data through the MLSC-defined state machine as part of the external tool’s workflow.
 
 ---
 

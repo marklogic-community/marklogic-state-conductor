@@ -8,3 +8,4 @@ gradle-local.properties
 *.classpath
 state-conductor-example/bin/
 .DS_Store
+*.jar

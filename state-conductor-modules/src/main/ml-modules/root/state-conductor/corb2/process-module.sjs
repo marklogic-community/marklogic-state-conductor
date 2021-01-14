@@ -12,9 +12,9 @@ var URI;
 xdmp.invokeFunction(
   () => {
     declareUpdate();
-    return sc.processJob(URI);
+    return sc.processExecution(URI);
   },
   {
-    database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
+    database: xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
   }
 );

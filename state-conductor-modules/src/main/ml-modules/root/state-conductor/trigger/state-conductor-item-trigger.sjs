@@ -19,7 +19,7 @@ function executeContextRegQuery(uri, regQueryId) {
 }
 
 function registerCtxQuery() {
-  let query = sc.getAllFlowsContextQuery();
+  let query = sc.getAllStateMachinesContextQuery();
   let regCtxQueryId = cts.register(query);
   xdmp.setServerField(FIELD_CTX_QUERY_ID, regCtxQueryId);
   xdmp.setServerField(FIELD_CTX_QUERY_TIMESTAMP, new Date().getTime());
@@ -64,27 +64,27 @@ function checkUriAgainstContext(uri) {
     }
   }
 
-  // does this uri match the flow context?
+  // does this uri match the stateMachine context?
   return uri === fn.string(fn.head(resp));
 }
 
 xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger check for "${uri}"`);
 
-// does this doc match any state-conductor flows' context?
+// does this doc match any state-conductor stateMachines' context?
 if (checkUriAgainstContext(uri)) {
-  // find the specific flow that applies
-  const flows = sc.getApplicableFlows(uri);
+  // find the specific stateMachine that applies
+  const stateMachines = sc.getApplicableStateMachines(uri);
   xdmp.trace(
     sc.TRACE_EVENT,
-    `state-conductor-item-trigger found "${flows.length}" matching flows in ${DATABASE_NAME} for ${uri}`
+    `state-conductor-item-trigger found "${stateMachines.length}" matching stateMachines in ${DATABASE_NAME} for ${uri}`
   );
-  // create a state conductor job for each flow that applies
-  flows.forEach((flow) => {
-    const flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
-    sc.createStateConductorJob(flowName, uri);
+  // create a state conductor execution for each stateMachine that applies
+  stateMachines.forEach((stateMachine) => {
+    const stateMachineName = sc.getStateMachineNameFromUri(fn.documentUri(stateMachine));
+    sc.createStateConductorExecution(stateMachineName, uri);
   });
 } else {
-  xdmp.trace(sc.TRACE_EVENT, `no matching flows in ${DATABASE_NAME} for ${uri}`);
+  xdmp.trace(sc.TRACE_EVENT, `no matching stateMachines in ${DATABASE_NAME} for ${uri}`);
 }
 
 xdmp.trace(sc.TRACE_EVENT, `state-conductor-item-trigger completed in "${xdmp.elapsedTime()}"`);

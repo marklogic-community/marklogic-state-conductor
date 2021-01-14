@@ -1,7 +1,7 @@
 <metadata>
   <title>State Conductor Resume</title>
   <description>
-    <p>Service for Resumming jobs within the State Conductor</p>
+    <p>Service for Resuming executions within the State Conductor</p>
   </description>
   <method name="PUT">
     <param name="uris" type="xs:string*" />

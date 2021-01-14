@@ -1,0 +1,4 @@
+{
+  "role-name": "state-conductor-reader-role",
+  "description": "Permits reading state machine documents and knowing stateMachine status"
+}

@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 public class StateConductorServiceMock implements StateConductorService {
 
   @Override
-  public Stream<String> getJobs(Integer start, Integer count, String flowNames, Stream<String> flowStatus,
+  public Stream<String> getExecutions(Integer start, Integer count, String names, Stream<String> status,
       Stream<String> forestIds, String startDate, String endDate) {
     List<String> uris = new ArrayList<>();
     for (int i = 1; i <= count; i++) {
@@ -20,17 +20,17 @@ public class StateConductorServiceMock implements StateConductorService {
   }
 
   @Override
-  public String createJob(String uri, String flowName) {
+  public String createExecution(String uri, String name) {
     return UUID.randomUUID().toString();
   }
 
   @Override
-  public ArrayNode processJob(Stream<String> uri) {
+  public ArrayNode processExecution(Stream<String> uri) {
     ArrayNode arr = new ArrayNode(JsonNodeFactory.instance);
 
     uri.forEach(value -> {
       Map<String, JsonNode> vals = new HashMap<>();
-      vals.put("job", new TextNode(value));
+      vals.put("execution", new TextNode(value));
       vals.put("result", BooleanNode.getTrue());
       arr.add(new ObjectNode(JsonNodeFactory.instance, vals));
     });
@@ -39,22 +39,22 @@ public class StateConductorServiceMock implements StateConductorService {
   }
 
   @Override
-  public ObjectNode getFlowStatus(Stream<String> flowNames, String startDate, String endDate, Boolean detailed) {
+  public ObjectNode getStateMachineStatus(Stream<String> names, String startDate, String endDate, Boolean detailed) {
     ObjectNode obj = new ObjectNode(JsonNodeFactory.instance);
 
-    flowNames.forEach(flowName -> {
-      ObjectNode flowStatus = new ObjectNode(JsonNodeFactory.instance);
-      flowStatus.put("flowName", flowName);
-      flowStatus.put("totalPerStatus", "");
-      flowStatus.put("totalPerState", "");
-      obj.set(flowName, flowStatus);
+    names.forEach(name -> {
+      ObjectNode status = new ObjectNode(JsonNodeFactory.instance);
+      status.put("name", name);
+      status.put("totalPerStatus", "");
+      status.put("totalPerState", "");
+      obj.set(name, status);
     });
 
     return obj;
   }
 
   @Override
-  public com.fasterxml.jackson.databind.node.ObjectNode getFlow(String flowName) {
+  public com.fasterxml.jackson.databind.node.ObjectNode getStateMachine(String name) {
     // TODO Auto-generated method stub
 
     ObjectNode obj = new ObjectNode(JsonNodeFactory.instance);
@@ -62,15 +62,13 @@ public class StateConductorServiceMock implements StateConductorService {
   }
 
   @Override
-  public void deleteFlow(String flowName) {
-    // TODO Auto-generated method stub
-
+  public String createStateMachine(String name, ObjectNode stateMachine) {
+    return String.format("/state-conductor-definition/%s.asl.json", name);
   }
 
   @Override
-  public void insertFlow(String flowName, Reader flow) {
+  public void deleteStateMachine(String name) {
     // TODO Auto-generated method stub
-
   }
 
 }

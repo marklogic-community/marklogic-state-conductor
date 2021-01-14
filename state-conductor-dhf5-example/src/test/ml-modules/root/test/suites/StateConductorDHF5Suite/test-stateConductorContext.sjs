@@ -22,14 +22,14 @@ function isolate(func, db) {
 }
 
 const assertions = [];
-let jobDoc, assertion;
+let executionDoc, assertion;
 
 //checks see if the new status check is working
-jobDoc = xdmp.toJSON({
+executionDoc = xdmp.toJSON({
   id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
-  flowName: 'custom-steps-flow',
-  flowStatus: sc.FLOW_STATUS_WORKING,
-  flowState: 'runStep1',
+  name: 'custom-steps-state-machine',
+  status: sc.STATE_MACHINE_STATUS_WORKING,
+  state: 'runStep1',
   uri: '/data/johndoe.json',
   database: xdmp.database(),
   modules: xdmp.modulesDatabase(),
@@ -37,7 +37,7 @@ jobDoc = xdmp.toJSON({
   context: {},
 });
 
-assertion = isolate(() => sc.executeStateByJobDoc(jobDoc, false));
+assertion = isolate(() => sc.executeStateByExecutionDoc(executionDoc, false));
 
 assertions.push(
   test.assertTrue(assertion.context.hasOwnProperty('hasChanged'), 'hasOwnProperty hasChanged')

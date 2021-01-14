@@ -11,14 +11,14 @@ test.loadTestFile(
   xdmp.database(),
   '/data/johndoe.json',
   xdmp.defaultPermissions(),
-  [sc.FLOW_ITEM_COLLECTION, 'test']
+  [sc.STATE_MACHINE_ITEM_COLLECTION, 'test']
 );
 test.loadTestFile(
   'janedoe.json',
   xdmp.database(),
   '/data/janedoe.json',
   xdmp.defaultPermissions(),
-  [sc.FLOW_ITEM_COLLECTION, 'test']
+  [sc.STATE_MACHINE_ITEM_COLLECTION, 'test']
 );
 
 test.log('StateConductorDHF5Suite Test Setup COMPLETE....');

@@ -5,7 +5,7 @@ let assertion;
 
 let invokeDeveloperResult = xdmp
   .httpGet(
-    'http://localhost:8010/v1/resources/state-conductor-flows?rs:flowName=waitState-time-flow',
+    'http://localhost:8010/v1/resources/state-conductor-state-machines?rs:name=waitState-time-state-machine',
     {
       authentication: {
         username: 'state-conductor-test-developer',
@@ -17,7 +17,7 @@ let invokeDeveloperResult = xdmp
 
 let invokeNonDeveloperResult = xdmp
   .httpGet(
-    'http://localhost:8010/v1/resources/state-conductor-flows?rs:flowName=waitState-time-flow',
+    'http://localhost:8010/v1/resources/state-conductor-state-machines?rs:name=waitState-time-state-machine',
     {
       authentication: {
         username: 'state-conductor-test-non-developer',
@@ -37,11 +37,11 @@ assertions.push(
 const sc = require('/state-conductor/state-conductor.sjs');
 
 let evalDeveloperResult = xdmp.eval('cts.uris().toArray().length', null, {
-  database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
+  database: xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
   userId: xdmp.user('state-conductor-test-developer'),
 });
 let evalNonDeveloperResult = xdmp.eval('cts.uris().toArray().length', null, {
-  database: xdmp.database(sc.STATE_CONDUCTOR_JOBS_DB),
+  database: xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
   userId: xdmp.user('state-conductor-test-non-developer'),
 });
 assertion = evalDeveloperResult <= evalNonDeveloperResult ? true : false;

@@ -45,34 +45,34 @@ const now = new Date();
 }
 */
 
-// grab all state conductor flows with a 'scheduled' context
-const flows = cts
+// grab all state conductor stateMachines with a 'scheduled' context
+const stateMachines = cts
   .search(
     cts.andQuery([
-      cts.collectionQuery(sc.FLOW_COLLECTION),
+      cts.collectionQuery(sc.STATE_MACHINE_COLLECTION),
       cts.jsonPropertyScopeQuery('mlDomain', cts.jsonPropertyValueQuery('scope', 'scheduled')),
     ])
   )
   .toArray();
 
-xdmp.trace(sc.TRACE_EVENT, `found ${flows.length} scheduled flows`);
+xdmp.trace(sc.TRACE_EVENT, `found ${stateMachines.length} scheduled stateMachines`);
 
-// determine which flows should run and create state conductor jobs
-flows
-  .filter((flow) => {
-    // find the flows with an elapsed time period
-    let contexts = flow.toObject().mlDomain.context;
+// determine which stateMachines should run and create state conductor executions
+stateMachines
+  .filter((stateMachine) => {
+    // find the stateMachines with an elapsed time period
+    let contexts = stateMachine.toObject().mlDomain.context;
     let elapsed = false;
     contexts.forEach((ctx) => {
       elapsed = elapsed || scLib.hasScheduleElapsed(ctx, now);
     });
     return elapsed;
   })
-  .forEach((flow) => {
-    // create a state conductor job for the elapsed flows
-    let flowName = sc.getFlowNameFromUri(fn.documentUri(flow));
-    let resp = sc.createStateConductorJob(flowName, null);
-    xdmp.trace(sc.TRACE_EVENT, `created state conductor job for scheduled flow: ${resp}`);
+  .forEach((stateMachine) => {
+    // create a state conductor execution for the elapsed stateMachines
+    let stateMachineName = sc.getStateMachineNameFromUri(fn.documentUri(stateMachine));
+    let resp = sc.createStateConductorExecution(stateMachineName, null);
+    xdmp.trace(sc.TRACE_EVENT, `created state conductor execution for scheduled stateMachine: ${resp}`);
   });
 
 xdmp.trace(sc.TRACE_EVENT, `state-conductor-scheduler-task completed in "${xdmp.elapsedTime()}"`);

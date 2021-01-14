@@ -1,0 +1,13 @@
+{
+  "id": "execution5",
+  "name": "test-state-machine",
+  "status": "failed",
+  "state": "add-collection-2",
+  "uri": "/test/doc2.json",
+  "database": "%DATABASE%",
+  "modules": "%MODULES%",
+  "createdDate": "2020-03-30T17:20:00.362Z",
+  "context": {},
+  "provenance": [],
+  "errors": {}
+}

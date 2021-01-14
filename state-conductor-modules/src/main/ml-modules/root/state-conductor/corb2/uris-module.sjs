@@ -5,27 +5,27 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 // external variables
-var jobCount;
-var flowNames;
+var executionCount;
+var names;
 var resumeWait;
 
-if (!jobCount) {
-  jobCount = 1000;
+if (!executionCount) {
+  executionCount = 1000;
 }
 
-if (flowNames) {
-  flowNames = flowNames.split(',');
+if (names) {
+  names = names.split(',');
 }
 
 let options = {
-  count: jobCount,
-  flowStatus: [sc.FLOW_STATUS_NEW, sc.FLOW_STATUS_WORKING],
-  flowNames: flowNames,
+  count: executionCount,
+  status: [sc.STATE_MACHINE_STATUS_NEW, sc.STATE_MACHINE_STATUS_WORKING],
+  names: names,
   startDate: null,
   endDate: null,
   resumeWait: resumeWait,
 };
 
-const uris = sc.getJobDocuments(options);
+const uris = sc.getExecutionDocuments(options);
 
 Sequence.from([uris.length, ...uris]);

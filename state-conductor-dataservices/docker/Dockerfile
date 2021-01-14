@@ -14,9 +14,9 @@ ENV simpleSsl=false
 ENV externalName=
 ENV certFile=
 ENV certPassword=
-ENV jobsDatabase=state-conductor-jobs
-ENV flowNames=
-ENV flowStatus=
+ENV executionDatabase=state-conductor-executions
+ENV names=
+ENV status=
 ENV pollSize=1000
 ENV pollInterval=1000
 ENV cooldownMillis=5000
@@ -26,5 +26,7 @@ ENV batchSize=5
 ENV fixedThreadCount=-1
 ENV threadsPerHost=16
 ENV maxThreadCount=128
+# expose web service port
+EXPOSE 9000
 # runs application
 CMD ["/usr/bin/java", "-jar", "/state-conductor-dataservices.jar"]

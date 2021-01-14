@@ -12,7 +12,7 @@
       },
       {
         "scope": "query",
-        "value": "{\"andQuery\":{\"queries\":[{\"collectionQuery\":{\"uris\":[\"flow-time\"]}}, {\"elementValueQuery\":{\"element\":[\"name\"], \"text\":[\"Cobb Pauley\"], \"options\":[\"lang=en\"]}}]}}"
+        "value": "{\"andQuery\":{\"queries\":[{\"collectionQuery\":{\"uris\":[\"stateMachine-time\"]}}, {\"elementValueQuery\":{\"element\":[\"name\"], \"text\":[\"Cobb Pauley\"], \"options\":[\"lang=en\"]}}]}}"
       }
     ]
   },
@@ -20,7 +20,7 @@
   "States": {
     "A": {
       "Type": "Choice",
-      "Comment": "initial state of the flow",
+      "Comment": "initial state of the stateMachine",
       "Resource": "/uri/to/action1.sjs",
       "Choices": [
         {

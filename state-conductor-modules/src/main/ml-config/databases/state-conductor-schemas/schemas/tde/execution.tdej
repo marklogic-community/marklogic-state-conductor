@@ -1,0 +1,74 @@
+{
+  "template": {
+    "description": "state Conductor Executions",
+    "context": "/",
+    "collections": [
+      "stateConductorExecution"
+    ],
+    "rows": [
+      {
+        "schemaName": "StateConductor",
+        "viewName": "Executions",
+        "viewLayout": "sparse",
+        "columns": [
+          {
+            "name": "id",
+            "scalarType": "string",
+            "val": "id",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "name",
+            "scalarType": "string",
+            "val": "name",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "status",
+            "scalarType": "string",
+            "val": "status",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "state",
+            "scalarType": "string",
+            "val": "state",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "uri",
+            "scalarType": "string",
+            "val": "uri",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "createdDate",
+            "scalarType": "dateTime",
+            "val": "createdDate",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "databaseID",
+            "scalarType": "string",
+            "val": "database",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "modulesID",
+            "scalarType": "string",
+            "val": "modules",
+            "nullable": true,
+            "invalidValues": "ignore"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "template": {
+    "description": "state Conductor provenance of executions ",
+    "context": "/provenance",
+    "collections": [
+      "stateConductorExecution"
+    ],
+    "vars": [
+      {
+        "name": "id",
+        "val": "/id"
+      }
+    ],
+    "rows": [
+      {
+        "schemaName": "StateConductor",
+        "viewName": "ExecutionsProvenance",
+        "viewLayout": "sparse",
+        "columns": [
+          {
+            "name": "id",
+            "scalarType": "string",
+            "val": "$id",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "from",
+            "scalarType": "string",
+            "val": "from",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "to",
+            "scalarType": "string",
+            "val": "to",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "executionTime",
+            "scalarType": "string",
+            "val": "executionTime",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "date",
+            "scalarType": "dateTime",
+            "val": "date",
+            "nullable": true,
+            "invalidValues": "ignore"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "info": {
+    "title": "execution",
+    "version": "0.0.1",
+    "baseUri": "/stateConductorExecution/",
+    "description": "An execution of a state machine"
+  },
+  "definitions": {
+    "execution": {
+      "required": [],
+      "pii": [],
+      "elementRangeIndex": ["id", "createdDate"],
+      "wordLexicon": [],
+      "properties": {
+        "id": {
+          "datatype": "string",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "name": {
+          "datatype": "string",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "status": {
+          "datatype": "string",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "state": {
+          "datatype": "string",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "uri": {
+          "datatype": "iri",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "database": {
+          "datatype": "string",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "modules": {
+          "datatype": "string",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "createdDate": {
+          "datatype": "dateTime",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "context": {
+          "$ref": "#/definitions/context"
+        },
+        "errors": {
+          "$ref": "#/definitions/errors"
+        },
+        "retries": {
+          "$ref": "#/definitions/retries"
+        },
+        "provenance": {
+          "datatype": "array",
+          "items": { "$ref": "#/definitions/provenance" }
+        }
+      }
+    },
+    "context": {
+      "required": [],
+      "pii": [],
+      "elementRangeIndex": [],
+      "wordLexicon": [],
+      "properties": {}
+    },
+    "errors": {
+      "required": [],
+      "pii": [],
+      "elementRangeIndex": [],
+      "wordLexicon": [],
+      "properties": {}
+    },
+    "retries": {
+      "required": [],
+      "pii": [],
+      "elementRangeIndex": [],
+      "wordLexicon": [],
+      "properties": {}
+    },
+    "provenance": {
+      "required": [],
+      "pii": [],
+      "elementRangeIndex": [],
+      "wordLexicon": [],
+      "properties": {
+        "date": {
+          "datatype": "dateTime",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "state": {
+          "datatype": "string",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "resumeBy": {
+          "datatype": "resumeBy",
+          "collation": "http://marklogic.com/collation/codepoint"
+        },
+        "executionTime": {
+          "datatype": "resumeBy",
+          "collation": "http://marklogic.com/collation/codepoint"
+        }
+      }
+    }
+  }
+}

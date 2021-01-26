@@ -40,7 +40,7 @@
           },
           {
             "name": "executionTime",
-            "scalarType": "string",
+            "scalarType": "dayTimeDuration",
             "val": "executionTime",
             "nullable": true,
             "invalidValues": "ignore"

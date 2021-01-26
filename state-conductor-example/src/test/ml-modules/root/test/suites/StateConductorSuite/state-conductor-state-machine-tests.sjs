@@ -6,11 +6,11 @@ const test = require('/test/test-helper.xqy');
 const assertions = [];
 
 const stateMachineDocuments = sc.getStateMachines().toArray();
-assertions.push(test.assertEqual(12, stateMachineDocuments.length, 'StateMachine files are present'));
+assertions.push(test.assertEqual(14, stateMachineDocuments.length, 'StateMachine files are present'));
 
 const names = sc.getStateMachineNames().sort();
 assertions.push(
-  test.assertEqual(12, names.length, 'names count'),
+  test.assertEqual(14, names.length, 'names count'),
   test.assertEqual('bad-state-machine', names[0]),
   test.assertEqual('branching-state-machine', names[1]),
   test.assertEqual('choice-state-machine', names[2]),

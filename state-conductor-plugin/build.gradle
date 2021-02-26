@@ -1,0 +1,45 @@
+plugins {
+  id 'java-gradle-plugin'
+  id 'groovy'
+}
+
+repositories {
+  jcenter()
+}
+
+dependencies {
+  implementation gradleApi()
+  implementation localGroovy()
+  testImplementation localGroovy()
+  testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
+}
+
+gradlePlugin {
+  // Define the plugin
+  plugins {
+    greeting {
+      id = 'com.marklogic.gradle.stateconductor.state-conductor'
+      implementationClass = 'com.marklogic.gradle.stateconductor.StateConductorPlugin'
+    }
+  }
+}
+
+// Add a source set for the functional test suite
+sourceSets {
+  functionalTest {
+  }
+}
+
+gradlePlugin.testSourceSets(sourceSets.functionalTest)
+configurations.functionalTestImplementation.extendsFrom(configurations.testImplementation)
+
+// Add a task to run the functional tests
+task functionalTest(type: Test) {
+  testClassesDirs = sourceSets.functionalTest.output.classesDirs
+  classpath = sourceSets.functionalTest.runtimeClasspath
+}
+
+check {
+  // Run the functional tests as part of `check`
+  dependsOn(tasks.functionalTest)
+}

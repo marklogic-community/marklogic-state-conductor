@@ -246,27 +246,33 @@ function getExecutionIds(uri, name) {
 }
 
 /**
- * Get execution documents for the given uri.  Optionally include
+ * Get execution documents for the given uri. Optionally include
  * "historic" execution documents - eg: executions which have processed
  * a document at this uri, regardless of whether that document contains
  * execution metadata properties linking it to that execution.
  *
- * @param {*} uri
+ * @param {*} uri - document uri
+ * @param {*} name - state machine name
  * @param {boolean} [includeHistoric=false]
  * @returns
  */
-function getExecutionsForUri(uri, includeHistoric = false) {
+function getExecutionsForUri(uri, name, includeHistoric = false) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const executionIds = getExecutionIds(uri);
   const searchFilter = includeHistoric
     ? cts.jsonPropertyValueQuery('uri', uri)
     : cts.jsonPropertyValueQuery('id', executionIds);
-  const executions = sc.invokeOrApplyFunction(
+  const executions = invokeOrApplyFunction(
     () => {
       return op
-        .fromSearch(cts.andQuery([cts.collectionQuery(EXECUTION_COLLECTION), searchFilter]), [
-          'fragmentId',
-        ])
+        .fromSearch(
+          cts.andQuery([
+            cts.collectionQuery(EXECUTION_COLLECTION),
+            name ? cts.jsonPropertyValueQuery('name', name) : cts.trueQuery(),
+            searchFilter,
+          ]),
+          ['fragmentId']
+        )
         .joinDocUri('uri', op.fragmentIdCol('fragmentId'))
         .joinDoc('doc', op.fragmentIdCol('fragmentId'))
         .result();

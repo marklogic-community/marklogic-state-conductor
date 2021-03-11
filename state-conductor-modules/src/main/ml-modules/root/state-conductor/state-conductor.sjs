@@ -1,5 +1,6 @@
 'use strict';
 
+const op = require('/MarkLogic/optic');
 const lib = require('/state-conductor/state-conductor-lib.sjs');
 
 const configuration = lib.getConfiguration();
@@ -206,8 +207,11 @@ function getExecutionMetadataProperty(uri, name) {
     return xdmp
       .documentGetProperties(uri, fn.QName('', STATE_MACHINE_EXECUTIONID_PROP_NAME))
       .toArray()
-      .filter((prop) => prop.getAttributeNode('stateMachine-name').nodeValue === name);
+      .filter((prop) => {
+        return !name || prop.getAttributeNode('stateMachine-name').nodeValue === name;
+      });
   }
+  return [];
 }
 
 /**
@@ -228,10 +232,50 @@ function addExecutionMetadata(uri, name, executionId) {
   xdmp.documentAddProperties(uri, [executionMetaElem]);
 }
 
+/**
+ * Get a list of execution id's for a given document.
+ *
+ * @param {*} uri
+ * @param {*} name
+ * @returns
+ */
 function getExecutionIds(uri, name) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
   const executionProps = getExecutionMetadataProperty(uri, name);
   return executionProps.map((prop) => prop.getAttributeNode('execution-id').nodeValue);
+}
+
+/**
+ * Get execution documents for the given uri.  Optionally include
+ * "historic" execution documents - eg: executions which have processed
+ * a document at this uri, regardless of whether that document contains
+ * execution metadata properties linking it to that execution.
+ *
+ * @param {*} uri
+ * @param {boolean} [includeHistoric=false]
+ * @returns
+ */
+function getExecutionsForUri(uri, includeHistoric = false) {
+  xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
+  const executionIds = getExecutionIds(uri);
+  const searchFilter = includeHistoric
+    ? cts.jsonPropertyValueQuery('uri', uri)
+    : cts.jsonPropertyValueQuery('id', executionIds);
+  const executions = sc.invokeOrApplyFunction(
+    () => {
+      return op
+        .fromSearch(cts.andQuery([cts.collectionQuery(EXECUTION_COLLECTION), searchFilter]), [
+          'fragmentId',
+        ])
+        .joinDocUri('uri', op.fragmentIdCol('fragmentId'))
+        .joinDoc('doc', op.fragmentIdCol('fragmentId'))
+        .result();
+    },
+    {
+      database: xdmp.database(STATE_CONDUCTOR_EXECUTIONS_DB),
+    }
+  );
+  return executions.toArray();
 }
 
 /**
@@ -1728,6 +1772,7 @@ module.exports = {
   gatherAndCreateExecutionsForStateMachine,
   getAllStateMachinesContextQuery,
   getApplicableStateMachines,
+  getExecutionsForUri,
   getStateMachineContextQuery,
   getStateMachineCounts,
   getStateMachine,

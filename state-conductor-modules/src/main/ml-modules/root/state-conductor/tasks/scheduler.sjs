@@ -3,7 +3,7 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 const scLib = require('/state-conductor/state-conductor-lib.sjs');
 
-const now = new Date();
+const now = fn.currentDateTime();
 
 /*
 {

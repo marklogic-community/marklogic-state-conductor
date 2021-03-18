@@ -5,7 +5,7 @@ const test = require('/test/test-helper.xqy');
 
 const assertions = [];
 let context = {};
-let dt = new Date();
+let dt = fn.currentDateTime()
 
 function addMinutes(date, minutes) {
   return new Date(date.getTime() + minutes * 60000);

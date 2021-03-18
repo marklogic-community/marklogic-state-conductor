@@ -80,7 +80,7 @@ assertions.push(
 
 // getExecutionDocuments() tests
 
-const executionBatch1Time = new Date().toISOString();
+const executionBatch1Time = fn.currentDateTime()
 xdmp.sleep(100);
 const executionBatch1 = isolate(() =>
   Array.from(Array(1000)).map(() =>
@@ -88,7 +88,7 @@ const executionBatch1 = isolate(() =>
   )
 );
 xdmp.sleep(2000);
-const executionBatch2Time = new Date().toISOString();
+const executionBatch2Time = fn.currentDateTime()
 xdmp.sleep(100);
 const executionBatch2 = isolate(() =>
   Array.from(Array(1000)).map(() =>
@@ -96,7 +96,7 @@ const executionBatch2 = isolate(() =>
   )
 );
 xdmp.sleep(2000);
-const executionBatch3Time = new Date().toISOString();
+const executionBatch3Time = fn.currentDateTime()
 xdmp.sleep(100);
 const executionBatch3 = isolate(() =>
   Array.from(Array(1000)).map(() =>

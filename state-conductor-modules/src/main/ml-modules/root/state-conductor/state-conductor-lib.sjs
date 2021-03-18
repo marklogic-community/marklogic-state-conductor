@@ -180,7 +180,7 @@ function hasScheduleElapsed(context, now) {
     return false;
   }
 
-  now = now || new Date();
+  now = now || fn.currentDateTime();
   const millis = now.getTime();
   const minutes = Math.floor(millis / 1000 / 60);
   const hours = Math.floor(minutes / 60);

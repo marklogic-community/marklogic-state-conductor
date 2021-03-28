@@ -15,7 +15,15 @@ const sc = require('/state-conductor/state-conductor.sjs');
  */
 function getContentDescriptorArray(uri, flowName, stepNumber, options) {
   let flow = datahub.flow.getFlow(flowName);
+  if (!flow)
+    fn.error(null, 'MISSING-FLOW', `The flow with the name ${flowName} could not be found.`);
   let stepRef = flow.steps[stepNumber];
+  if (!stepRef)
+    fn.error(
+      null,
+      'MISSING-STEP',
+      `Step ${stepNumber} for the flow: ${flowName} could not be found.`
+    );
   let stepDetails = datahub.flow.step.getStepByNameAndType(
     stepRef.stepDefinitionName,
     stepRef.stepDefinitionType

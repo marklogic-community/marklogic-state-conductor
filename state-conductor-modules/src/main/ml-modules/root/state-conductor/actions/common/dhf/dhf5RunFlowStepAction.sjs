@@ -74,11 +74,12 @@ function performAction(uri, options = {}, context = {}) {
     sc.TRACE_EVENT,
     Sequence.from([
       'Execute DHF flow using Source Query:',
+      '  uri:         ' + uri,
       '  records:     ' + contentObjs.length,
       '  flowName:    ' + flowName,
       '  step:        ' + step,
-      '  flowOptions: ' + flowOptions,
-      '  flowContext: ' + flowContext,
+      '  flowOptions: ' + JSON.stringify(flowOptions),
+      '  flowContext: ' + JSON.stringify(flowContext),
     ])
   );
 

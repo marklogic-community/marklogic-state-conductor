@@ -81,7 +81,7 @@ function performAction(uri, options = {}, context = {}) {
   xdmp.trace(
     sc.TRACE_EVENT,
     Sequence.from([
-      'Execute DHF flow using Source Query:',
+      'Execute DHF flow:',
       '  uri:         ' + uri,
       '  records:     ' + contentObjs.length,
       '  flowName:    ' + flowName,

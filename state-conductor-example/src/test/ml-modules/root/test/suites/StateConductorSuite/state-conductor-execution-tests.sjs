@@ -80,7 +80,7 @@ assertions.push(
 
 // getExecutionDocuments() tests
 
-const executionBatch1Time = fn.currentDateTime()
+const executionBatch1Time = fn.currentDateTime().add(xdmp.elapsedTime());
 xdmp.sleep(100);
 const executionBatch1 = isolate(() =>
   Array.from(Array(1000)).map(() =>
@@ -88,7 +88,7 @@ const executionBatch1 = isolate(() =>
   )
 );
 xdmp.sleep(2000);
-const executionBatch2Time = fn.currentDateTime()
+const executionBatch2Time = fn.currentDateTime().add(xdmp.elapsedTime());
 xdmp.sleep(100);
 const executionBatch2 = isolate(() =>
   Array.from(Array(1000)).map(() =>
@@ -96,7 +96,7 @@ const executionBatch2 = isolate(() =>
   )
 );
 xdmp.sleep(2000);
-const executionBatch3Time = fn.currentDateTime()
+const executionBatch3Time = fn.currentDateTime().add(xdmp.elapsedTime());
 xdmp.sleep(100);
 const executionBatch3 = isolate(() =>
   Array.from(Array(1000)).map(() =>
@@ -121,7 +121,10 @@ let options = {
 };
 
 const executionUris = isolate(() => sc.getExecutionDocuments(options));
-assertions.push(test.assertTrue(Array.isArray(executionUris)), test.assertEqual(2000, executionUris.length));
+assertions.push(
+  test.assertTrue(Array.isArray(executionUris)),
+  test.assertEqual(2000, executionUris.length)
+);
 executionUris.forEach((uri) => {
   let executionDoc = getExecutionDocByUri(uri);
   assertions.push(test.assertTrue(names.includes(executionDoc.name)));

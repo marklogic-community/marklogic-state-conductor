@@ -7,6 +7,8 @@ const sc = require('/state-conductor/state-conductor.sjs');
  * Creates a content descriptor array suitable for passing to the DataHub run step api.
  * Will generate descriptors for the passed in uri or for documents matching the step's "sourceQuery".
  *
+ * Note: this implementation works with DHF 5.0.3-5.2.X.  It should be revisited for 5.4+ compabibility.
+ *
  * @param {*} uri - uri of document to generate context object for - if null the step's "sourceQuery" will be used.
  * @param {*} flowName - DHF flow name
  * @param {*} stepNumber - step number of in the flow

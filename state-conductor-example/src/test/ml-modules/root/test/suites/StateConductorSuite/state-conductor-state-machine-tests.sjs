@@ -6,23 +6,25 @@ const test = require('/test/test-helper.xqy');
 const assertions = [];
 
 const stateMachineDocuments = sc.getStateMachines().toArray();
-assertions.push(test.assertEqual(14, stateMachineDocuments.length, 'StateMachine files are present'));
+assertions.push(
+  test.assertTrue(0 < stateMachineDocuments.length, 'StateMachine files are present')
+);
 
 const names = sc.getStateMachineNames().sort();
 assertions.push(
-  test.assertEqual(14, names.length, 'names count'),
-  test.assertEqual('bad-state-machine', names[0]),
-  test.assertEqual('branching-state-machine', names[1]),
-  test.assertEqual('choice-state-machine', names[2]),
-  test.assertEqual('contextual-state-machine', names[3]),
-  test.assertEqual('no-context-state-machine', names[4]),
-  test.assertEqual('noStates-state-machine', names[5]),
-  test.assertEqual('ref-path-state-machine', names[6]),
-  test.assertEqual('retry-state-machine', names[7]),
-  test.assertEqual('task-state-machine', names[8]),
-  test.assertEqual('test-state-machine', names[9]),
-  test.assertEqual('test-time-wait', names[10]),
-  test.assertEqual('wait-state-machine', names[11])
+  test.assertTrue(0 < names.length, 'names count'),
+  test.assertTrue(names.includes('bad-state-machine')),
+  test.assertTrue(names.includes('branching-state-machine')),
+  test.assertTrue(names.includes('choice-state-machine')),
+  test.assertTrue(names.includes('contextual-state-machine')),
+  test.assertTrue(names.includes('no-context-state-machine')),
+  test.assertTrue(names.includes('noStates-state-machine')),
+  test.assertTrue(names.includes('ref-path-state-machine')),
+  test.assertTrue(names.includes('retry-state-machine')),
+  test.assertTrue(names.includes('task-state-machine')),
+  test.assertTrue(names.includes('test-state-machine')),
+  test.assertTrue(names.includes('test-time-wait')),
+  test.assertTrue(names.includes('wait-state-machine'))
 );
 
 const branchingStateMachine = sc.getStateMachine('branching-state-machine');
@@ -39,8 +41,14 @@ assertions.push(
 );
 
 assertions.push(
-  test.assertEqual('branching-state-machine', sc.getStateMachineNameFromUri(fn.documentUri(branchingStateMachine))),
-  test.assertEqual('test-state-machine', sc.getStateMachineNameFromUri(fn.documentUri(testStateMachine)))
+  test.assertEqual(
+    'branching-state-machine',
+    sc.getStateMachineNameFromUri(fn.documentUri(branchingStateMachine))
+  ),
+  test.assertEqual(
+    'test-state-machine',
+    sc.getStateMachineNameFromUri(fn.documentUri(testStateMachine))
+  )
 );
 
 assertions.push(

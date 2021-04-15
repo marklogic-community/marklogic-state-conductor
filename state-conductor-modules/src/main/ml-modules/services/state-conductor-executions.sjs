@@ -3,33 +3,36 @@
 const sc = require('/state-conductor/state-conductor.sjs');
 
 function returnError(statusCode, statusMsg, body) {
-  fn.error(
-    null,
-    'RESTAPI-SRVEXERR',
-    Sequence.from([statusCode, statusMsg, body])
-  );
+  fn.error(null, 'RESTAPI-SRVEXERR', Sequence.from([statusCode, statusMsg, body]));
 }
 
 /**
  * Lists the execution id for the given document of the named State Conductor State Machine
  */
-function get(context, params) {
-  if (!params.uri) {
+function get(context, { uri, name, historic = 'false', full = 'true' }) {
+  historic = historic === 'true';
+  full = full === 'true';
+
+  if (!uri) {
     returnError(400, 'Bad Request', 'Missing required parameter "uri"');
   }
-  if (!params.name) {
-    returnError(400, 'Bad Request', 'Missing required parameter "name"');
+
+  if (!fn.docAvailable(uri)) {
+    returnError(404, 'NOT FOUND', `Document at uri "${uri}" not found.`);
+  }
+  if (name && !sc.getStateMachine(name)) {
+    returnError(404, 'NOT FOUND', `StateMachine "${name}" not found.`);
   }
 
-  if (!fn.docAvailable(params.uri)) {
-    returnError(404, 'NOT FOUND', `Document at uri "${params.uri}" not found.`);
-  }
-  if (!sc.getStateMachine(params.name)) {
-    returnError(404, 'NOT FOUND', `StateMachine "${params.name}" not found.`);
+  let resp = [];
+  if (full) {
+    resp = sc.getExecutionsForUri(uri, name, historic);
+  } else {
+    resp = sc.getExecutionIds(uri, name);
   }
 
   context.outputStatus = [200, 'Success'];
-  return sc.getExecutionIds(params.uri, params.name);
+  return resp;
 }
 
 /**

@@ -6,6 +6,8 @@
   <method name="GET">
     <param name="uri" type="xs:string" />
     <param name="name" type="xs:string" />
+    <param name="full" type="xs:boolean" />
+    <param name="historic" type="xs:boolean" />
   </method>
   <method name="PUT">
     <param name="uris" type="xs:string*" />

@@ -40,7 +40,7 @@ Should you use MLSC for your project? See [Applicability](#applicability)
 
 Prerequisites:
 
-> 1. MarkLogic 9+
+> 1. MarkLogic 10.0-6+
 > 2. [ml-gradle](https://github.com/marklogic-community/ml-gradle) 3.14.0+
 
 The _State Conductor_ is distributed as an [mlBundle](https://github.com/marklogic-community/ml-gradle/wiki/Bundles) for `ml-gradle` projects. To add the State Conductor to your project, add the following dependency to your ml-gradle project:

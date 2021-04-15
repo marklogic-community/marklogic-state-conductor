@@ -28,7 +28,7 @@ Looking to build the code from source?
 #### Prerequisites
 You need:
 
-- MarkLogic 9.0-10 or later
+- MarkLogic 10.0-6 or later
 - Gradle 4.6 or later
 - Java JDK 8 or later
 - A decent IDE. (Recommended: Visual Studio Code)

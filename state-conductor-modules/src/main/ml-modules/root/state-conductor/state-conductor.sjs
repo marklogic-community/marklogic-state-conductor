@@ -226,7 +226,7 @@ function addExecutionMetadata(uri, name, executionId) {
   builder.startElement(STATE_MACHINE_EXECUTIONID_PROP_NAME);
   builder.addAttribute('stateMachine-name', name);
   builder.addAttribute('execution-id', executionId);
-  builder.addAttribute('date', new Date().toISOString());
+  builder.addAttribute('date', xs.string(fn.currentDateTime()));
   builder.endElement();
   let executionMetaElem = builder.toNode();
   xdmp.documentAddProperties(uri, [executionMetaElem]);
@@ -498,7 +498,7 @@ function startProcessingStateMachineByExecutionDoc(executionDoc, save = true) {
     );
 
     executionObj.provenance.push({
-      date: new Date().toISOString(),
+      date: fn.currentDateTime(),
       from: STATE_MACHINE_NEW_STEP,
       to: initialState,
       executionTime: xdmp.elapsedTime(),
@@ -625,7 +625,7 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
 
     executionObj.status = STATE_MACHINE_STATUS_WORKING;
     executionObj.provenance.push({
-      date: new Date().toISOString(),
+      date: fn.currentDateTime(),
       state: stateName,
       resumeBy: resumeBy,
       executionTime: xdmp.elapsedTime(),
@@ -709,7 +709,7 @@ function retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy,
 
     executionObj.status = STATE_MACHINE_STATUS_WORKING;
     executionObj.provenance.push({
-      date: new Date().toISOString(),
+      date: fn.currentDateTime(),
       state: stateName,
       retriedBy: retriedBy,
       executionTime: xdmp.elapsedTime(),
@@ -750,7 +750,7 @@ function transition(executionDoc, executionObj, stateName, state, stateMachineOb
       delete pro['nextTaskTime'];
 
       executionObj.provenance.push({
-        date: new Date().toISOString(),
+        date: fn.currentDateTime(),
         state: stateName,
         waiting: pro,
         executionTime: xdmp.elapsedTime(),
@@ -830,7 +830,7 @@ function transition(executionDoc, executionObj, stateName, state, stateMachineOb
         executionObj.state = targetState;
 
         executionObj.provenance.push({
-          date: new Date().toISOString(),
+          date: fn.currentDateTime(),
           from: stateName,
           to: targetState,
           executionTime: xdmp.elapsedTime(),
@@ -854,7 +854,7 @@ function transition(executionDoc, executionObj, stateName, state, stateMachineOb
 
       // terminal states have no "Next" target state
       executionObj.provenance.push({
-        date: new Date().toISOString(),
+        date: fn.currentDateTime(),
         from: stateName,
         to: 'COMPLETED',
         executionTime: xdmp.elapsedTime(),
@@ -1260,7 +1260,7 @@ function handleStateFailure(uri, name, stateMachine, stateName, err, save = true
         executionObj.state = stateName;
 
         executionObj.provenance.push({
-          date: new Date().toISOString(),
+          date: fn.currentDateTime(),
           from: stateName,
           to: stateName,
           retryNumber: retryNumber,
@@ -1300,7 +1300,7 @@ function handleStateFailure(uri, name, stateMachine, stateName, err, save = true
         executionObj.status = STATE_MACHINE_STATUS_WORKING;
         executionObj.state = target;
         executionObj.provenance.push({
-          date: new Date().toISOString(),
+          date: fn.currentDateTime(),
           from: stateName,
           to: target,
           executionTime: xdmp.elapsedTime(),
@@ -1490,7 +1490,7 @@ function createStateConductorExecution(name, uri, context = {}, options = {}) {
     uri: uri,
     database: database,
     modules: modules,
-    createdDate: new Date().toISOString(),
+    createdDate: fn.currentDateTime(),
     context: context,
   });
 

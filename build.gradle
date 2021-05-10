@@ -5,8 +5,9 @@ allprojects {
   }
 
   repositories {
-    jcenter()
     mavenLocal()
+    mavenCentral()
+    jcenter() // remove after dependencies have been migrated
     maven {url "http://developer.marklogic.com/maven2/"}
   }
 

@@ -1,7 +1,7 @@
 buildscript {
   repositories {
-    jcenter()
     mavenLocal()
+    mavenCentral()
   }
   dependencies {
     classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
@@ -25,7 +25,7 @@ dependencies {
   corb "com.marklogic:marklogic-corb:2.4.0"
 }
 
-task runCorbDriver(type: com.marklogic.gradle.task.CorbTask, dependsOn: ["mlLoadModules"]) {
+task runCorbDriver(type: com.marklogic.gradle.task.CorbTask) {
   urisModule="/state-conductor/corb2/uris-module.sjs"
   transformModule="/state-conductor/corb2/process-module.sjs"
   threadCount = 5

@@ -8,22 +8,23 @@
   },
   "steps": {
     "1": {
-      "name" : "MyCustomStep",
-      "stepDefinitionName" : "MyCustomStep",
-      "stepDefinitionType" : "CUSTOM",
-      "description" : "Adds some custom test data",
-      "options" : {
-        "collections" : [ "MyCustomStep" ],
-        "sourceDatabase" : "sce-dh5-STAGING",
-        "permissions" : "data-hub-operator,read,data-hub-operator,update",
-        "outputFormat" : "json",
-        "targetDatabase" : "sce-dh5-STAGING"
+      "name": "MyCustomStep",
+      "stepDefinitionName": "MyCustomStep",
+      "stepDefinitionType": "CUSTOM",
+      "description": "Adds some custom test data",
+      "options": {
+        "collections": ["MyCustomStep"],
+        "sourceQuery": "cts.collectionQuery([\"test\"])",
+        "sourceDatabase": "sce-dh5-STAGING",
+        "permissions": "data-hub-operator,read,data-hub-operator,update",
+        "outputFormat": "json",
+        "targetDatabase": "sce-dh5-STAGING"
       },
-      "customHook" : { },
-      "modulePath" : "/custom-modules/custom/MyCustomStep/main.sjs",
-      "retryLimit" : 0,
-      "batchSize" : 100,
-      "threadCount" : 4
+      "customHook": {},
+      "modulePath": "/custom-modules/custom/MyCustomStep/main.sjs",
+      "retryLimit": 0,
+      "batchSize": 100,
+      "threadCount": 4
     }
   }
 }

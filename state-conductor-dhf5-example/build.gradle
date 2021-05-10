@@ -1,12 +1,12 @@
 buildscript {
-	repositories {
-		jcenter()
-		mavenLocal()
-	}
-	dependencies {
-		classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
-		classpath "com.marklogic:ml-gradle:${mlgradleVersion}"
-	}
+  repositories {
+    mavenLocal()
+    mavenCentral()
+  }
+  dependencies {
+    classpath "com.marklogic:marklogic-unit-test-client:1.0.0"
+    classpath "com.marklogic:ml-gradle:${mlgradleVersion}"
+  }
 }
 
 plugins {
@@ -16,6 +16,6 @@ plugins {
 }
 
 dependencies {
-	mlBundle "com.marklogic:marklogic-state-conductor:${version}"
+  mlBundle "com.marklogic:marklogic-state-conductor:${version}"
   mlBundle "com.marklogic:marklogic-unit-test-modules:1.0.0"
 }

@@ -36,6 +36,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
     batch = getContentManager().newWriteSet();
     batch.add("/test/doc1.json", loadFileResource("data/doc1.json"));
     batch.add("/test/doc2.json", loadFileResource("data/doc2.json"));
+    batch.add("/test/doc3.json", loadFileResource("data/doc2.json"));
     getContentManager().write(batch);
   }
 
@@ -144,8 +145,9 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
     given().
       log().uri().
     when().
-      queryParam("rs:uri", "/test/doc2.json").
+      queryParam("rs:uri", "/test/doc1.json").
       queryParam("rs:name", "rest-test-state-machine").
+      queryParam("rs:full", false).
       get("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -178,6 +180,7 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
     when().
       queryParam("rs:uri", "/test/doc1.json").
       queryParam("rs:name", "rest-test-state-machine").
+      queryParam("rs:full", false).
       get("/v1/resources/state-conductor-executions").
     then().
       log().body().
@@ -185,6 +188,37 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       contentType(ContentType.JSON).
       body("size()", equalTo(1)).
       body("[0]", equalTo(uuid));
+
+    // create execution
+    resp = given().
+      log().uri().
+    when().
+      queryParam("rs:uris", "/test/doc1.json").
+      queryParam("rs:name", "rest-test-state-machine2").
+      put("/v1/resources/state-conductor-executions").
+    then().
+      log().body().
+      statusCode(201).
+      contentType(ContentType.JSON).
+    extract().
+      response();
+
+    String uuid2 = resp.as(JsonNode.class).get("/test/doc1.json").asText();
+
+    // get both execution ids
+    given().
+      log().uri().
+    when().
+      queryParam("rs:uri", "/test/doc1.json").
+      queryParam("rs:full", false).
+      get("/v1/resources/state-conductor-executions").
+    then().
+      log().body().
+      statusCode(200).
+      contentType(ContentType.JSON).
+      body("size()", equalTo(2)).
+      body(".", hasItem(uuid)).
+      body(".", hasItem(uuid2));
   }
 
   @Test
@@ -218,10 +252,11 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
       log().uri().
     when().
       queryParam("rs:uri", "/test/doc1.json").
+      queryParam("rs:full", false).
       get("/v1/resources/state-conductor-executions").
     then().
       log().body().
-      statusCode(400);
+      statusCode(200);
   }
 
   @Test
@@ -235,6 +270,93 @@ public class ExecutionsServiceTest extends AbstractStateConductorRestTest {
     then().
       log().body().
       statusCode(404);
+  }
+
+  @Test
+  public void getExecutionsByUri() {
+    // no executions yet
+    given().
+      log().uri().
+    when().
+      queryParam("rs:uri", "/test/doc3.json").
+      queryParam("rs:full", true).
+      get("/v1/resources/state-conductor-executions").
+    then().
+      log().body().
+      statusCode(200).
+      contentType(ContentType.JSON).
+      body("size()", equalTo(0));
+
+    // create execution
+    Response resp = given().
+      log().uri().
+    when().
+      queryParam("rs:uris", "/test/doc3.json").
+      queryParam("rs:name", "rest-test-state-machine").
+      put("/v1/resources/state-conductor-executions").
+    then().
+      log().body().
+      statusCode(201).
+      contentType(ContentType.JSON).
+    extract().
+      response();
+
+    JsonNode respObj = resp.as(JsonNode.class);
+    assertTrue(respObj.has("/test/doc3.json"));
+    String uuid1 = respObj.get("/test/doc3.json").asText();
+    assertTrue(uuid1.length() > 0);
+
+    // create execution 2
+    resp = given().
+      log().uri().
+    when().
+      queryParam("rs:uris", "/test/doc3.json").
+      queryParam("rs:name", "rest-test-state-machine2").
+      put("/v1/resources/state-conductor-executions").
+    then().
+      log().body().
+      statusCode(201).
+      contentType(ContentType.JSON).
+    extract().
+      response();
+
+    respObj = resp.as(JsonNode.class);
+    assertTrue(respObj.has("/test/doc3.json"));
+    String uuid2 = respObj.get("/test/doc3.json").asText();
+    assertTrue(uuid2.length() > 0);
+
+    // get both execution docs
+    given().
+      log().uri().
+    when().
+      queryParam("rs:uri", "/test/doc3.json").
+      queryParam("rs:full", true).
+      get("/v1/resources/state-conductor-executions").
+    then().
+      log().body().
+      statusCode(200).
+      contentType(ContentType.JSON).
+      body("size()", equalTo(2)).
+      body("doc.name", hasItem("rest-test-state-machine")).
+      body("doc.find { it.name == 'rest-test-state-machine' }.id", equalTo(uuid1)).
+      body("doc.name", hasItem("rest-test-state-machine2")).
+      body("doc.find { it.name == 'rest-test-state-machine2' }.id", equalTo(uuid2));
+
+    // get single execution doc
+    given().
+      log().uri().
+    when().
+      queryParam("rs:uri", "/test/doc3.json").
+      queryParam("rs:full", true).
+      queryParam("rs:name", "rest-test-state-machine").
+      get("/v1/resources/state-conductor-executions").
+    then().
+      log().body().
+      statusCode(200).
+      contentType(ContentType.JSON).
+      body("size()", equalTo(1)).
+      body("[0].doc.name", equalTo("rest-test-state-machine")).
+      body("[0].doc.id", equalTo(uuid1));
   }
 
 }

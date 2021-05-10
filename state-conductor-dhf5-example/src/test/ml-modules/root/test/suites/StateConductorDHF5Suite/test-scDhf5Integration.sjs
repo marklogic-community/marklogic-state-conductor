@@ -41,10 +41,35 @@ respDoc = sc.executeStateByExecutionDoc(executionDoc, false);
 xdmp.log(respDoc);
 assertions.push(
   test.assertEqual('failed', respDoc.status, 'status check'),
-  test.assertEqual('JS-JAVASCRIPT', respDoc.errors['runStep1'].name, 'handled missing dhf flow'),
+  test.assertEqual('MISSING-FLOW', respDoc.errors['runStep1'].name, 'handled missing dhf flow'),
   test.assertTrue(
     respDoc.errors['runStep1'].data.includes(
-      'Error: The flow with the name MissingFlow could not be found.'
+      'The flow with the name MissingFlow could not be found.'
+    ),
+    'handled missing dhf flow'
+  )
+);
+
+// test reference to wrong DHF step
+executionDoc = xdmp.toJSON({
+  id: '0405536f-dd84-4ca6-8de8-c57062b2252d',
+  name: 'missing-dhf-state-machine',
+  status: 'working',
+  state: 'runStep99',
+  uri: '/data/johndoe.json',
+  database: xdmp.database(),
+  modules: xdmp.modulesDatabase(),
+  provenance: [],
+});
+
+respDoc = sc.executeStateByExecutionDoc(executionDoc, false);
+xdmp.log(respDoc);
+assertions.push(
+  test.assertEqual('failed', respDoc.status, 'status check'),
+  test.assertEqual('MISSING-STEP', respDoc.errors['runStep99'].name, 'handled missing dhf step'),
+  test.assertTrue(
+    respDoc.errors['runStep99'].data.includes(
+      'Step 99 for the flow: PersonFlow could not be found.'
     ),
     'handled missing dhf flow'
   )

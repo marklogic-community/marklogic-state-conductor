@@ -104,9 +104,25 @@ test.loadTestFile(
 
 // insert the test executions
 test.loadTestFile(
-  'test-wait-execution.json',
+  'executions/test-wait-execution.json',
   xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
   '/stateConductorExecution/test-wait-execution.json',
+  xdmp.defaultPermissions(),
+  [sc.EXECUTION_COLLECTION, 'unitTest']
+);
+
+test.loadTestFile(
+  'executions/test-execution1.json',
+  xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
+  '/stateConductorExecution/test-execution1.json',
+  xdmp.defaultPermissions(),
+  [sc.EXECUTION_COLLECTION, 'unitTest']
+);
+
+test.loadTestFile(
+  'executions/test-execution2.json',
+  xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB),
+  '/stateConductorExecution/test-execution2.json',
   xdmp.defaultPermissions(),
   [sc.EXECUTION_COLLECTION, 'unitTest']
 );

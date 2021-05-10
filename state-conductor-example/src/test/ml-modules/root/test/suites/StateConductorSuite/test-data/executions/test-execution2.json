@@ -1,0 +1,41 @@
+{
+  "id": "62dd6d16-2b16-4d6c-a16f-3aecc8e7d2ba",
+  "name": "test-state-machine",
+  "status": "complete",
+  "state": "Success",
+  "uri": "/data/test-doc2.json",
+  "database": "18362886368181886203",
+  "modules": "8102028357983228731",
+  "provenance": [
+    {
+      "date": "2021-03-11T01:01:00Z",
+      "from": "NEW",
+      "to": "state1",
+      "executionTime": "PT0.5S"
+    },
+    {
+      "date": "2021-03-11T01:01:05Z",
+      "from": "state1",
+      "to": "state2",
+      "executionTime": "PT0.5S"
+    },
+    {
+      "date": "2021-03-11T01:01:10Z",
+      "from": "state2",
+      "to": "state3",
+      "executionTime": "PT0.5S"
+    },
+    {
+      "date": "2021-03-11T01:01:15Z",
+      "from": "state3",
+      "to": "state4",
+      "executionTime": "PT0.5S"
+    },
+    {
+      "date": "2021-03-11T01:01:20Z",
+      "from": "state4",
+      "to": "COMPLETE",
+      "executionTime": "PT0.5S"
+    }
+  ]
+}

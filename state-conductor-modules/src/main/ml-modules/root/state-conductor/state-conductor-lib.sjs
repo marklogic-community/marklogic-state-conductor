@@ -180,12 +180,12 @@ function hasScheduleElapsed(context, now) {
     return false;
   }
 
-  now = now || new Date();
-  const millis = now.getTime();
-  const minutes = Math.floor(millis / 1000 / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  const dayname = xdmp.daynameFromDate(now);
+  now = now || fn.currentDateTime();
+  const currDate = xs.date(now);
+  const minutes = fn.minutesFromDateTime(now);
+  const hours = fn.hoursFromDateTime(now);
+  const days = fn.dayFromDateTime(now);
+  const dayname = xdmp.daynameFromDate(currDate);
 
   try {
     if ('minutely' === context.value) {
@@ -208,7 +208,7 @@ function hasScheduleElapsed(context, now) {
     } else if ('weekly' === context.value) {
       // checks periodicity and if we've arrived at the specified time and day(s) of the week
       // periodicity check uses the week number for the current year (1-52)
-      const periodMatch = xdmp.weekFromDate(now) % context.period === 0;
+      const periodMatch = xdmp.weekFromDate(currDate) % context.period === 0;
       const dayMatch = context.days.map((day) => day.toLowerCase()).includes(dayname.toLowerCase());
       const [h, m] = context.startTime.split(':');
       return (
@@ -221,7 +221,7 @@ function hasScheduleElapsed(context, now) {
       // checks periodicity and if we've arrived at the specified time and day of the week
       // periodicity check uses the month number for the current year (1-12)
       // day check uses the day number of the month (1 - 31)
-      const periodMatch = fn.monthFromDate(now) % context.period === 0;
+      const periodMatch = fn.monthFromDateTime(now) % context.period === 0;
       const dayMatch = fn.dayFromDateTime(now) === context.monthDay;
       const [h, m] = context.startTime.split(':');
       return (
@@ -233,9 +233,14 @@ function hasScheduleElapsed(context, now) {
     } else if ('once' === context.value) {
       // checks if we've arrived at the specified date and time
       // generates a range of one minute from specified time and validates the current time is within that minute
-      const start = xdmp.parseDateTime(
-        '[M01]/[D01]/[Y0001]-[H01]:[m01][Z]',
-        `${context.startDate}-${context.startTime}Z`
+      let start = xdmp.parseDateTime(
+        '[M01]/[D01]/[Y0001]-[H01]:[m01]',
+        `${context.startDate}-${context.startTime}`
+      );
+      // adjust start to be in the same timezone of "now"
+      start = fn.adjustDateTimeToTimezone(
+        fn.adjustDateTimeToTimezone(start, null),
+        fn.timezoneFromDateTime(now)
       );
       const upper = start.add('PT1M');
       return start.le(now) && upper.gt(now);

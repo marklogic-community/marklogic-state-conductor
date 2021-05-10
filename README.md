@@ -46,13 +46,8 @@ Prerequisites:
 The _State Conductor_ is distributed as an [mlBundle](https://github.com/marklogic-community/ml-gradle/wiki/Bundles) for `ml-gradle` projects. To add the State Conductor to your project, add the following dependency to your ml-gradle project:
 
 ```groovy
-repositories {
-  maven {
-    url {"https://dl.bintray.com/aclavio/maven"}
-  }
-}
 dependencies {
-  mlBundle "com.marklogic:marklogic-state-conductor:1.0.0"
+  mlBundle "com.marklogic:marklogic-state-conductor:1.1.0"
 }
 ```
 

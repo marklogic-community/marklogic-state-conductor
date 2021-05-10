@@ -18,7 +18,7 @@ The `com.marklogic.stateconductor.StateConductorDriver` class provides an implem
 Run the stand-alone jar file:
 
 ```
-java -jar state-conductor-dataservices-1.0.0.jar
+java -jar state-conductor-dataservices-1.1.0.jar
 ```
 
 ## Status WebServer

@@ -1,37 +1,7 @@
-## Welcome to GitHub Pages
+# MarkLogic State Conductor
 
-You can use the [editor on GitHub](https://github.com/aclavio/marklogic-state-conductor/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+The _MarkLogic State Conductor (MLSC)_ allows a developer or architect to define state machines which govern how data moves through a set of [MarkLogic Data Hub](https://docs.marklogic.com/datahub/) Steps, and optionally through other custom processing actions. MLSC state machines are defined using a subset of [Amazon States Language (ASL)](https://states-language.net/spec.html). Actions to run a DHF Step or Flow are included, and any other state actions can be defined using server-side modules.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+The _State Conductor_ can be used to perform an arbitrary number of actions, in any order, and with branching or other logic based on document content, or context that is passed from state to state. Actions could include: invoking a _Data Hub_ flow, transforming a document, applying metadata, manipulating or querying side-car documents, or invoking a non-DHF process. On premise, these actions can include calling out to another process via HTTP or posting to an event queue.
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/aclavio/marklogic-state-conductor/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+The _State Conductor_ requires a [Driver](#drivers) to process documents and move them through the installed state machines' states. The _State Conductor_ supports a [Data Services](https://github.com/aclavio/marklogic-state-conductor/tree/develop/state-conductor-dataservices) driver, and a [CoRB2](https://github.com/marklogic-community/corb2) driver.

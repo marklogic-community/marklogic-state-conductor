@@ -13,6 +13,12 @@ const configuration = {
     stateMachine: '/state-conductor-state-machine/',
     execution: '/stateConductorExecution/',
   },
+  executionExpiration: {
+    enabled: true,
+    duration: 'P5D',
+    status: ['complete', 'failed'],
+    batchSize: 1000,
+  },
 };
 
 module.exports = {

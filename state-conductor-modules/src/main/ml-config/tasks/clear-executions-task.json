@@ -1,0 +1,10 @@
+{
+  "task-enabled": true,
+  "task-path": "/state-conductor/tasks/clear-expired-executions.sjs",
+  "task-root": "/",
+  "task-type": "hourly",
+  "task-period": 1,
+  "task-database": "%%DATABASE%%",
+  "task-modules": "%%MODULES_DATABASE%%",
+  "task-user": "%%mlUsername%%"
+}

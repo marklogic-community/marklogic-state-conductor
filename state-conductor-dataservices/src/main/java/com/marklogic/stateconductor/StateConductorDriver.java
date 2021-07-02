@@ -7,15 +7,15 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.ext.ConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.stateconductor.config.StateConductorDriverConfig;
-import com.marklogic.stateconductor.tasks.GetConfigTask;
-import com.marklogic.stateconductor.tasks.GetExecutionsTask;
-import com.marklogic.stateconductor.tasks.MetricsTask;
-import com.marklogic.stateconductor.tasks.ProcessExecutionTask;
+import com.marklogic.stateconductor.exceptions.ProcessExecutionTaskException;
+import com.marklogic.stateconductor.exceptions.RetryExecutionTaskException;
+import com.marklogic.stateconductor.tasks.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -33,6 +33,9 @@ public class StateConductorDriver implements Runnable, Destroyable {
   private DatabaseClient appServicesClient;
   private StateConductorService service;
 
+  AtomicLong total = new AtomicLong(0);
+  AtomicLong totalErrors = new AtomicLong(0);
+
   public StateConductorDriver(StateConductorDriverConfig config) {
     this.config = config;
 
@@ -49,17 +52,16 @@ public class StateConductorDriver implements Runnable, Destroyable {
 
     // initializations
     boolean keepRunning = true;
-    AtomicLong total = new AtomicLong(0);
-    AtomicLong totalErrors = new AtomicLong(0);
     AtomicLong batchCount = new AtomicLong(1);
     List<String> urisBuffer = Collections.synchronizedList(new ArrayList<>());
-    Set<String> inProgressSet = Collections.synchronizedSet(new HashSet<>(config.getQueueThreshold()));
+    Map<String, LocalDateTime> inProgressMap = Collections.synchronizedMap(new HashMap<>(config.getQueueThreshold()));
     List<Future<JsonNode>> results = new ArrayList<>();
     List<Future<JsonNode>> completed = new ArrayList<>();
     List<Future<JsonNode>> errored = new ArrayList<>();
 
     List<String> batch = new ArrayList<>();
     List<ProcessExecutionTask> executionBuckets = new ArrayList<>();
+    List<RetryExecutionTask> retryBuckets = new ArrayList<>();
 
     // set up the thread pool
     int initialThreads = config.getThreadsPerHost();
@@ -73,12 +75,12 @@ public class StateConductorDriver implements Runnable, Destroyable {
     configThread.start();
 
     // start the metrics thread
-    MetricsTask metricsTask = new MetricsTask(config, total, totalErrors);
+    MetricsTask metricsTask = new MetricsTask(config, total, totalErrors, pool, inProgressMap);
     Thread metricsThread = new Thread(metricsTask);
     metricsThread.start();
 
     // start the thread for getting executions
-    Thread getExecutionsTask = new Thread(new GetExecutionsTask(service, config, urisBuffer, inProgressSet));
+    Thread getExecutionsTask = new Thread(new GetExecutionsTask(service, config, urisBuffer, inProgressMap));
     getExecutionsTask.start();
 
     while (keepRunning) {
@@ -107,13 +109,21 @@ public class StateConductorDriver implements Runnable, Destroyable {
         urisBuffer.clear();
       }
 
-      // submit the executions to the executor pool
+      // submit any retry tasks to the executor pool
+      for (RetryExecutionTask bucket : retryBuckets) {
+        Future<JsonNode> future = pool.submit(bucket);
+        results.add(future);
+      }
+      if (retryBuckets.size() > 0) {
+        logger.info("Populated thread pool with {} retry tasks", retryBuckets.size());
+      }
+      retryBuckets.clear();
+
+      // submit the batch tasks to the executor pool
       for (ProcessExecutionTask bucket : executionBuckets) {
         Future<JsonNode> future = pool.submit(bucket);
         results.add(future);
       }
-
-
       if (executionBuckets.size() > 0) {
         logger.info("Populated thread pool with {} batches", executionBuckets.size());
       }
@@ -125,19 +135,47 @@ public class StateConductorDriver implements Runnable, Destroyable {
             AtomicInteger errorCount = new AtomicInteger(0);
             ArrayNode arr = (ArrayNode) jsonNodeFuture.get();
             arr.forEach(jsonNode -> {
+              if (logger.isDebugEnabled()) {
+                logger.debug("execution result: {}", jsonNode.toPrettyString());
+              }
               total.getAndIncrement();
               String executionUri = jsonNode.get("execution").asText();
-              inProgressSet.remove(executionUri);
-              boolean hasError = jsonNode.get("error") != null;
-              if (hasError)
+              inProgressMap.remove(executionUri);
+              JsonNode errorNode = jsonNode.get("error");
+              if (errorNode != null) {
                 errorCount.incrementAndGet();
+                logger.warn("error processing execution {}:", executionUri, errorNode);
+              }
             });
             logger.info("batch result: {} executions complete - with {} errors", arr.size(), errorCount.get());
             totalErrors.addAndGet(errorCount.get());
             completed.add(jsonNodeFuture);
           } catch (Exception e) {
-            logger.error("error retrieving batch results", e);
-            totalErrors.incrementAndGet();
+            Throwable cause = e.getCause();
+            if (cause instanceof RetryExecutionTaskException) {
+              RetryExecutionTaskException rex = (RetryExecutionTaskException)cause;
+              logger.error("error processing retry execution: {} attempt {}", rex.getExecutionUri(), rex.getAttempts(), rex);
+              if (rex.getAttempts() < config.getRetryCount()) {
+                // if we have attempts left then retry
+                retryBuckets.add(new RetryExecutionTask(service, rex.getExecutionUri(), rex.getAttempts()));
+              } else {
+                // otherwise remove from the in progress queue
+                logger.info("no more attempts left for execution: {}", rex.getExecutionUri());
+                inProgressMap.remove(rex.getExecutionUri());
+              }
+              totalErrors.incrementAndGet();
+            } else if (cause instanceof ProcessExecutionTaskException) {
+              ProcessExecutionTaskException pex = (ProcessExecutionTaskException)cause;
+              logger.error("error processing batch execution: {} uris: {}", pex.getId(), pex.getExecutionUris(), pex);
+              totalErrors.addAndGet(pex.getExecutionUris().size());
+              // retry these errored executions
+              for (String uri : pex.getExecutionUris()) {
+                retryBuckets.add(new RetryExecutionTask(service, uri));
+              }
+            } else {
+              logger.error("error retrieving batch results", e);
+              totalErrors.incrementAndGet();
+            }
             errored.add(jsonNodeFuture);
           }
         }
@@ -148,7 +186,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
       completed.clear();
       errored.forEach(jsonNodeFuture -> results.remove(jsonNodeFuture));
 
-      logger.debug("errored: {}, in-progress: {}", errored.size(), inProgressSet.size());
+      logger.trace("errored: {}, in-progress: {}, tasks: {}", errored.size(), inProgressMap.size(), pool.getQueue().size());
 
       try {
         Thread.sleep(10L);

@@ -16,7 +16,15 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
+  <logger name="com.marklogic.stateconductor.StateConductorDriver" level="INFO" additivity="false">
+    <appender-ref ref="STDOUT" />
+  </logger>
+
   <logger name="com.marklogic.stateconductor.tasks.GetExecutionsTask" level="INFO" additivity="false">
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="com.marklogic.stateconductor.tasks.MetricsTask" level="INFO" additivity="false">
     <appender-ref ref="STDOUT" />
   </logger>
 

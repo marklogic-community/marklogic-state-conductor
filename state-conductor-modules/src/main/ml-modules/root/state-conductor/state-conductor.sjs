@@ -1355,7 +1355,7 @@ function inTerminalState(execution, stateMachine) {
  * @param {*} name
  * @returns
  */
-function getStateMachineCounts(name, { startDate, endDate, detailed = false }) {
+function getStateMachineCounts(name, { startDate, endDate, detailed = false } = {}) {
   const stateMachine = getStateMachine(name).toObject();
   const states = Object.keys(stateMachine.States);
   const statuses = [
@@ -1374,49 +1374,35 @@ function getStateMachineCounts(name, { startDate, endDate, detailed = false }) {
     baseQuery.push(cts.jsonPropertyRangeQuery('createdDate', '<=', xs.dateTime(endDate)));
   }
 
-  const numInStatus = (status) =>
-    fn.count(
-      cts.uris(
-        '',
-        null,
-        cts.andQuery(
-          [].concat(
-            baseQuery,
-            cts.jsonPropertyValueQuery('name', name),
-            cts.jsonPropertyValueQuery('status', status)
-          )
-        )
-      )
-    );
-
-  const numInState = (status, state) =>
-    fn.count(
-      cts.uris(
-        '',
-        null,
-        cts.andQuery(
-          [].concat(
-            baseQuery,
-            cts.jsonPropertyValueQuery('name', name),
-            cts.jsonPropertyValueQuery('status', status),
-            cts.jsonPropertyValueQuery('state', state)
-          )
+  const numInStateMachine = (status, state) =>
+    cts.countAggregate(
+      cts.uriReference(),
+      'document',
+      cts.andQuery(
+        [].concat(
+          baseQuery,
+          cts.jsonPropertyValueQuery('name', name),
+          status ? cts.jsonPropertyValueQuery('status', status) : [],
+          state ? cts.jsonPropertyValueQuery('state', state) : []
         )
       )
     );
 
   const resp = {
     name: name,
+    total: 0,
     totalPerStatus: {},
     totalPerState: {},
   };
 
   invokeOrApplyFunction(
     () => {
-      statuses.forEach((status) => (resp.totalPerStatus[status] = numInStatus(status)));
+      resp.total = numInStateMachine();
+
+      statuses.forEach((status) => (resp.totalPerStatus[status] = numInStateMachine(status)));
 
       states.forEach((state) => {
-        resp.totalPerState[state] = numInState(statuses, state);
+        resp.totalPerState[state] = numInStateMachine(statuses, state);
       });
 
       if (detailed) {
@@ -1424,7 +1410,7 @@ function getStateMachineCounts(name, { startDate, endDate, detailed = false }) {
         statuses.forEach((status) => {
           details[status] = {};
           states.forEach((state) => {
-            details[status][state] = numInState(status, state);
+            details[status][state] = numInStateMachine(status, state);
           });
         });
         resp.detailedTotalPerStatus = details;

@@ -1464,17 +1464,19 @@ function scaffoldExecutionDoc(executionDoc) {
 
 /**
  * Convienence function to create a execution record for a document to be
- * processed by a state conductor stateMachine.
+ * processed by a state conductor State Machine.
  *
- * @param {*} name
- * @param {*} uri
+ * @param {*} name the name of the State Machine
+ * @param {*} uri the uri of the document to be processed by the named State Machine
  * @param {*} [context={}]
  * @param {*} [options={}]
  */
 function createStateConductorExecution(name, uri, context = {}, options = {}) {
   xdmp.securityAssert('http://marklogic.com/state-conductor/privilege/execute', 'execute');
 
-  const collections = [EXECUTION_COLLECTION].concat(options.collections || []);
+  const collections = [EXECUTION_COLLECTION, xdmp.urlEncode(name)].concat(
+    options.collections || []
+  );
   const directory = options.directory || '/' + EXECUTION_COLLECTION + '/';
   const database = options.database || xdmp.database();
   const modules = options.modules || xdmp.modulesDatabase();

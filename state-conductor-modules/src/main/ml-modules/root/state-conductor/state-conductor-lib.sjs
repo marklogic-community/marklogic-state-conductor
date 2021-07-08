@@ -23,6 +23,12 @@ function getConfiguration() {
       stateMachine: '/state-conductor-state-machine/',
       execution: '/stateConductorExecution/',
     },
+    executionExpiration: {
+      enabled: false,
+      duration: 'P30D',
+      status: ['complete'],
+      batchSize: 5000,
+    },
   };
 
   let configuration = {};

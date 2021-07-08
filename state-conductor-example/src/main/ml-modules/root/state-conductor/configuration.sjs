@@ -14,10 +14,10 @@ const configuration = {
     execution: '/stateConductorExecution/',
   },
   executionExpiration: {
-    enabled: true,
-    duration: 'P5D',
-    status: ['complete', 'failed'],
-    batchSize: 1000,
+    enabled: false,
+    duration: 'P30D',
+    status: ['complete'],
+    batchSize: 5000,
   },
 };
 

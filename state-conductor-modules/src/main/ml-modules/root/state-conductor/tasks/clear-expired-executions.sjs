@@ -27,7 +27,7 @@ if (scConfig.executionExpiration.enabled) {
     () => {
       declareUpdate();
       const executions = fn.subsequence(
-        cts.search(query, 'document', 1, excsForestsOnHost),
+        cts.uris(null, 'document', query, 1, excsForestsOnHost),
         1,
         scConfig.executionExpiration.batchSize
       );
@@ -37,8 +37,8 @@ if (scConfig.executionExpiration.enabled) {
           executions
         )} executions older than ${endDate}`
       );
-      for (const doc of executions) {
-        xdmp.documentDelete(xdmp.nodeUri(doc));
+      for (const uri of executions) {
+        xdmp.documentDelete(uri);
       }
     },
     {

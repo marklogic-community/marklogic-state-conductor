@@ -60,6 +60,10 @@ public class StateConductorDriverConfig {
   private Long pollInterval = 1000L;
   @Value("${metricsInterval}")
   private Long metricsInterval = 5000L;
+  @Value("${expiredExecutionsSeconds}")
+  private Long expiredExecutionsSeconds = 3600L;
+  @Value("${retryCount}")
+  private Integer retryCount = 3;
   @Value("${names:#{null}}")
   private String names;
   @Value("${status:#{null}}")
@@ -299,5 +303,21 @@ public class StateConductorDriverConfig {
 
   public void setStatus(String status) {
     this.status = status;
+  }
+
+  public Integer getRetryCount() {
+    return retryCount;
+  }
+
+  public void setRetryCount(Integer retryCount) {
+    this.retryCount = retryCount;
+  }
+
+  public Long getExpiredExecutionsSeconds() {
+    return expiredExecutionsSeconds;
+  }
+
+  public void setExpiredExecutionsSeconds(Long expiredExecutionsSeconds) {
+    this.expiredExecutionsSeconds = expiredExecutionsSeconds;
   }
 }

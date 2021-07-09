@@ -2,6 +2,7 @@ package com.marklogic.stateconductor.tasks;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.StateConductorService;
+import com.marklogic.stateconductor.exceptions.ProcessExecutionTaskException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,11 +24,23 @@ public class ProcessExecutionTask implements Callable<JsonNode> {
   }
 
   @Override
-  public JsonNode call() throws Exception {
+  public JsonNode call() throws ProcessExecutionTaskException {
     logger.info("processing batch execution: {} [size: {}]", id, executionUris.size());
     if (logger.isDebugEnabled()) {
       logger.debug("uris: {}", executionUris.toString());
     }
-    return service.processExecution(executionUris.stream());
+    try {
+      return service.processExecution(executionUris.stream());
+    } catch (Exception ex) {
+      throw new ProcessExecutionTaskException(id, executionUris, ex);
+    }
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public List<String> getExecutionUris() {
+    return executionUris;
   }
 }

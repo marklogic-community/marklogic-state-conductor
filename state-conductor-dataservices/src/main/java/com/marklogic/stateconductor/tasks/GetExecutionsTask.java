@@ -5,10 +5,9 @@ import com.marklogic.stateconductor.config.StateConductorDriverConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -19,14 +18,14 @@ public class GetExecutionsTask implements Runnable {
   private StateConductorDriverConfig config;
   private StateConductorService service;
   private List<String> urisBuffer;
-  private Set<String> inProgressSet;
+  private Map<String, LocalDateTime> inProgressMap;
 
   public GetExecutionsTask(StateConductorService service, StateConductorDriverConfig config, List<String> urisBuffer,
-      Set<String> inProgressSet) {
+      Map<String, LocalDateTime> inProgressMap) {
     this.service = service;
     this.config = config;
     this.urisBuffer = urisBuffer;
-    this.inProgressSet = inProgressSet;
+    this.inProgressMap = inProgressMap;
   }
 
   private Stream<String> FetchExecutionDocuments(int start) {
@@ -50,18 +49,41 @@ public class GetExecutionsTask implements Runnable {
     return executionUris;
   }
 
+  private void purgeExpiredExecutions() {
+    List<String> oldExecutions = new ArrayList<>();
+    synchronized (inProgressMap) {
+      LocalDateTime oldDate = LocalDateTime.now().minusSeconds(config.getExpiredExecutionsSeconds());
+      Iterator<String> keys = inProgressMap.keySet().iterator();
+      while (keys.hasNext()) {
+        String key = keys.next();
+        LocalDateTime fetchedTime = inProgressMap.get(key);
+        if (fetchedTime.isBefore(oldDate)) {
+          oldExecutions.add(key);
+          logger.info("GetExecutionsTask aged out old execution: {}", key);
+        }
+      }
+      oldExecutions.forEach(uri -> inProgressMap.remove(uri));
+      oldExecutions.clear();
+    }
+  }
+
   @Override
   public void run() {
     int start = 1;
     long emptyCount = 0;
+    LocalDateTime now;
     AtomicLong totalNew = new AtomicLong();
     AtomicLong totalFetched = new AtomicLong();
 
     while(true) {
       totalNew.set(0);
       totalFetched.set(0);
+      now = LocalDateTime.now();
 
-      if (inProgressSet.size() < config.getQueueThreshold()) {
+      // age out any "old" in-progress executions - allows them to be retried
+      purgeExpiredExecutions();
+
+      if (inProgressMap.size() < config.getQueueThreshold()) {
         // grab execution documents if we're below the queue threshold
         Stream<String> executionUris = FetchExecutionDocuments(start);
         Iterator<String> executions = executionUris.iterator();
@@ -70,10 +92,10 @@ public class GetExecutionsTask implements Runnable {
           while(executions.hasNext()) {
             String executionUri = executions.next();
             totalFetched.getAndIncrement();
-            if (!inProgressSet.contains(executionUri)) {
+            if (!inProgressMap.containsKey(executionUri)) {
               totalNew.getAndIncrement();
               urisBuffer.add(executionUri);
-              inProgressSet.add(executionUri);
+              inProgressMap.put(executionUri, now);
             } else {
               logger.trace("got already in-progress execution {}", executionUri);
             }
@@ -87,7 +109,7 @@ public class GetExecutionsTask implements Runnable {
         }
 
         if (logger.isDebugEnabled())
-          logger.debug("in progress queue size: {}", inProgressSet.size());
+          logger.debug("in progress queue size: {}", inProgressMap.size());
 
       } else {
         logger.info("Queued executions limit reached!");

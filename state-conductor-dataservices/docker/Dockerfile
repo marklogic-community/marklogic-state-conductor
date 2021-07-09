@@ -26,6 +26,8 @@ ENV batchSize=5
 ENV fixedThreadCount=-1
 ENV threadsPerHost=16
 ENV maxThreadCount=128
+ENV retryCount=3
+ENV expiredExecutionsSeconds=3600
 # expose web service port
 EXPOSE 9000
 # runs application

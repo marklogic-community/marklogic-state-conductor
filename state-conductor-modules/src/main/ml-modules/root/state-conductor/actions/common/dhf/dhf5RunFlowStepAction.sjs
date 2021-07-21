@@ -26,6 +26,7 @@ function getContentDescriptorArray(uri, flowName, stepNumber, options) {
       'MISSING-STEP',
       `Step ${stepNumber} for the flow: ${flowName} could not be found.`
     );
+
   let stepDetails = datahub.flow.step.getStepByNameAndType(
     stepRef.stepDefinitionName,
     stepRef.stepDefinitionType
@@ -41,11 +42,34 @@ function getContentDescriptorArray(uri, flowName, stepNumber, options) {
     : sourceQuery
     ? cts.query(fn.head(xdmp.eval(sourceQuery)).toObject())
     : null;
-  let contentObjs = datahub.hubUtils.queryToContentDescriptorArray(
-    query,
-    combinedOptions,
-    sourceDatabase
-  );
+
+  let contentObjs = [];
+  if (typeof datahub.hubUtils.queryToContentDescriptorArray === 'function') {
+    // DHF >=5.2.X
+    contentObjs = datahub.hubUtils.queryToContentDescriptorArray(
+      query,
+      combinedOptions,
+      sourceDatabase
+    );
+  } else {
+    // DHF 5.0.3
+    xdmp.invokeFunction(
+      () => {
+        const results = cts.search(query, cts.indexOrder(cts.uriReference()));
+        for (let doc of results) {
+          contentObjs.push({
+            uri: xdmp.nodeUri(doc),
+            value: doc,
+            context: {},
+          });
+        }
+      },
+      {
+        update: 'false',
+      }
+    );
+  }
+
   if (stepDetails.name === 'default-merging' && stepDetails.type === 'merging') {
     // merge step requires we grab the URIsToProcess values from the match summaries
     const urisPathReference = cts.pathReference('/matchSummary/URIsToProcess', [

@@ -15,7 +15,7 @@ public class GetConfigTask implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(GetConfigTask.class);
 
   static final String HOSTS_QUERY = "xdmp.hosts()";
-  static final String ACTIVE_HOSTS_QUERY = "xdmp.hosts().toArray().map(id => fn.head(xdmp.hostStatus(id))).filter(status => !status.error)";
+  static final String ACTIVE_HOSTS_QUERY = "Sequence.from(xdmp.hosts().toArray().map(id => fn.head(xdmp.hostStatus(id))).filter(status => !status.error))";
 
   DatabaseClient client;
   StateConductorDriverConfig config;
@@ -50,6 +50,7 @@ public class GetConfigTask implements Runnable {
         AtomicInteger hostCount = new AtomicInteger(0);
 
         result.forEach(evalResult -> {
+          logger.debug("hosts query result: {}", evalResult.getString());
           hostCount.incrementAndGet();
         });
 

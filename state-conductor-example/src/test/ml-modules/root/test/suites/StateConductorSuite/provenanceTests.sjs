@@ -175,7 +175,7 @@ assertions.push(
   )
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[0].state, 'dialUp', 'resumeWaitingExecutionByExecutionDoc-state')
+  test.assertEqual(assertion.provenance[0].resumeState, 'dialUp', 'resumeWaitingExecutionByExecutionDoc-state')
 );
 assertions.push(
   test.assertEqual(assertion.provenance[0].resumeBy, 'testing', 'resumeWaitingExecutionByExecutionDoc-testing')
@@ -235,7 +235,7 @@ assertions.push(
   )
 );
 assertions.push(
-  test.assertEqual(assertion.provenance[0].state, 'dialUp', 'retryExecutionAtStateByExecutionDoc-state')
+  test.assertEqual(assertion.provenance[0].retryState, 'dialUp', 'retryExecutionAtStateByExecutionDoc-state')
 );
 assertions.push(
   test.assertEqual(assertion.provenance[0].retriedBy, 'testing', 'retryExecutionAtStateByExecutionDoc-testing')

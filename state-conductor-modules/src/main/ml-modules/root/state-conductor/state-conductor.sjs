@@ -626,7 +626,7 @@ function resumeWaitingExecutionByExecutionDoc(executionDoc, resumeBy, save = tru
     executionObj.status = STATE_MACHINE_STATUS_WORKING;
     executionObj.provenance.push({
       date: fn.currentDateTime(),
-      state: stateName,
+      resumeState: stateName,
       resumeBy: resumeBy,
       executionTime: xdmp.elapsedTime(),
     });
@@ -710,7 +710,7 @@ function retryExecutionAtStateByExecutionDoc(executionDoc, stateName, retriedBy,
     executionObj.status = STATE_MACHINE_STATUS_WORKING;
     executionObj.provenance.push({
       date: fn.currentDateTime(),
-      state: stateName,
+      retryState: stateName,
       retriedBy: retriedBy,
       executionTime: xdmp.elapsedTime(),
     });
@@ -751,7 +751,7 @@ function transition(executionDoc, executionObj, stateName, state, stateMachineOb
 
       executionObj.provenance.push({
         date: fn.currentDateTime(),
-        state: stateName,
+        waitingState: stateName,
         waiting: pro,
         executionTime: xdmp.elapsedTime(),
       });

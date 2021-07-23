@@ -47,8 +47,8 @@ The _State Conductor_ is distributed as an [mlBundle](https://github.com/marklog
 
 ```groovy
 dependencies {
-  mlBundle "com.marklogic:marklogic-state-conductor:1.2.0"                  // to use a published version
-  mlBundle files("${projectDir}/lib/marklogic-state-conductor-1.2.0.jar")   // to include locally in your project
+  mlBundle "com.marklogic:marklogic-state-conductor:1.2.1"                  // to use a published version
+  mlBundle files("${projectDir}/lib/marklogic-state-conductor-1.2.1.jar")   // to include locally in your project
 }
 ```
 

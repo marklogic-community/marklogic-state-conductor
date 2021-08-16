@@ -6,12 +6,8 @@ const scLib = require('/state-conductor/state-conductor-lib.sjs');
 
 const now = fn.currentDateTime();
 const db = xdmp.database();
-const host = xdmp.host();
 const scConfig = scLib.getConfiguration();
-const excsForestsOnHost = xdmp
-  .databaseForests(xdmp.database(sc.STATE_CONDUCTOR_EXECUTIONS_DB), false)
-  .toArray()
-  .filter((forestId) => fn.string(xdmp.forestHost(forestId)) === fn.string(host));
+const excsForestsOnHost = scLib.getExecutionForestsForHost();
 
 const endDate = now.subtract(xs.dayTimeDuration(scConfig.executionExpiration.duration));
 

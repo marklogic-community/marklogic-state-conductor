@@ -3,6 +3,8 @@ declareUpdate();
 //this task runs every minutes and excutes docs that have elapsed scheduled wait time
 
 const sc = require('/state-conductor/state-conductor.sjs');
+const scLib = require('/state-conductor/state-conductor-lib.sjs');
+const excsForestsOnHost = scLib.getExecutionForestsForHost();
 
 sc.invokeOrApplyFunction(
   () => {
@@ -11,14 +13,15 @@ sc.invokeOrApplyFunction(
       .uris(
         null,
         'limit=1000',
-
         cts.andQuery([
           cts.collectionQuery(sc.EXECUTION_COLLECTION),
           cts.jsonPropertyScopeQuery(
             'currentlyWaiting',
             cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
           ),
-        ])
+        ]),
+        1,
+        excsForestsOnHost
       )
       .toArray();
 
@@ -35,4 +38,7 @@ sc.invokeOrApplyFunction(
   }
 );
 
-xdmp.trace(sc.TRACE_EVENT, `state-conductor-waitTask completed in "${xdmp.elapsedTime()}"`);
+xdmp.trace(
+  sc.TRACE_EVENT,
+  `state-conductor-waitTask completed in "${xdmp.elapsedTime()}" on host "${xdmp.hostName()}"`
+);

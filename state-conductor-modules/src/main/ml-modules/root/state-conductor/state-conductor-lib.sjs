@@ -276,9 +276,20 @@ function isLatestTemporalDocument(uri) {
   return hasTemporalCollection.length > 0 && documentCollections.includes('latest');
 }
 
+function getExecutionForestsForHost(hostId) {
+  const db = getConfiguration().databases.executions;
+  const host = hostId || xdmp.host();
+  const excsForestsOnHost = xdmp
+    .databaseForests(xdmp.database(db), false)
+    .toArray()
+    .filter((forestId) => fn.string(xdmp.forestHost(forestId)) === fn.string(host));
+  return excsForestsOnHost;
+}
+
 module.exports = {
   evaluateChoiceRule,
   getConfiguration,
+  getExecutionForestsForHost,
   hasScheduleElapsed,
   isLatestTemporalDocument,
   materializeParameters,

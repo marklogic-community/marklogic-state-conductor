@@ -33,9 +33,10 @@ public class GetConfigTask implements Runnable {
     this.maxPoolSize = initialThreads;
   }
 
-  protected void setMaximumPoolSize(int size) {
+  protected void setPoolSize(int size) {
     synchronized (pool) {
       pool.setMaximumPoolSize(size);
+      pool.setCorePoolSize(size);
     }
   }
 
@@ -61,7 +62,7 @@ public class GetConfigTask implements Runnable {
           if (!config.useFixedThreadCount()) {
             maxPoolSize = Math.min(config.getMaxThreadCount(), currHosts * config.getThreadsPerHost());
             logger.info("Scaling to {} threads!", maxPoolSize);
-            setMaximumPoolSize(maxPoolSize);
+            setPoolSize(maxPoolSize);
           }
         }
       } catch (FailedRequestException e) {

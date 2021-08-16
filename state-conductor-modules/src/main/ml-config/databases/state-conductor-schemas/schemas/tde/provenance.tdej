@@ -9,6 +9,10 @@
       {
         "name": "id",
         "val": "/id"
+      },
+      {
+        "name": "name",
+        "val": "/name"
       }
     ],
     "rows": [
@@ -21,6 +25,13 @@
             "name": "id",
             "scalarType": "string",
             "val": "$id",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "stateMachineName",
+            "scalarType": "string",
+            "val": "$name",
             "nullable": true,
             "invalidValues": "ignore"
           },

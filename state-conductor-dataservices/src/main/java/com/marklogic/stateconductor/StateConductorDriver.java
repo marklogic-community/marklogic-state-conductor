@@ -144,7 +144,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
               JsonNode errorNode = jsonNode.get("error");
               if (errorNode != null) {
                 errorCount.incrementAndGet();
-                logger.warn("error processing execution {}:", executionUri, errorNode);
+                logger.warn("error processing execution {}: {}", executionUri, errorNode.toString());
               }
             });
             logger.info("batch result: {} executions complete - with {} errors", arr.size(), errorCount.get());

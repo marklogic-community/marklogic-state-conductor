@@ -112,7 +112,7 @@ public class GetExecutionsTask implements Runnable {
           logger.debug("in progress queue size: {}", inProgressMap.size());
 
       } else {
-        logger.info("Queued executions limit reached!");
+        logger.info("Queued executions limit ({}) reached!", config.getQueueThreshold());
       }
 
       try {
@@ -127,7 +127,7 @@ public class GetExecutionsTask implements Runnable {
           emptyCount = (totalNew.get() == 0) ? emptyCount + 1 : 0;
 
           if (emptyCount > 3) {
-            logger.debug("GetExecutionsTask cooldown...");
+            logger.info("GetExecutionsTask cooldown...");
             Thread.sleep(config.getCooldownMillis());
           } else {
             Thread.sleep(config.getPollInterval());

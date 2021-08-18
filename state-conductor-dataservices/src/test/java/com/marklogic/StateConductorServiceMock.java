@@ -71,4 +71,21 @@ public class StateConductorServiceMock implements StateConductorService {
     // TODO Auto-generated method stub
   }
 
+  @Override
+  public ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName) {
+    ObjectNode obj = new ObjectNode(JsonNodeFactory.instance);
+    obj.set("name", JsonNodeFactory.instance.textNode(name));
+    obj.set("total", JsonNodeFactory.instance.numberNode(count));
+    obj.set("executions", JsonNodeFactory.instance.objectNode());
+    return obj;
+  }
+
+  @Override
+  public Stream<String> findStateMachineTargets(String name, Integer count, String databaseName) {
+    List<String> uris = new ArrayList<>();
+    for (int i = 1; i <= count; i++) {
+      uris.add(String.format("/test/test%s.json", i));
+    }
+    return uris.stream();
+  }
 }

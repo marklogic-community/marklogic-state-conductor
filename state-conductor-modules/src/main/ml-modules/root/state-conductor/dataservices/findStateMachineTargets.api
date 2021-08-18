@@ -1,0 +1,29 @@
+{
+  "functionName": "findStateMachineTargets",
+  "desc": "Finds target documents for the given state machine.",
+  "params": [
+    {
+      "name": "name",
+      "datatype": "string",
+      "desc": "The name of the State Machine",
+      "nullable": false
+    },
+    {
+      "name": "count",
+      "datatype": "unsignedInt",
+      "desc": "The number of uris to return",
+      "nullable": true
+    },
+    {
+      "name": "databaseName",
+      "datatype": "string",
+      "desc": "The database of the named State Machine",
+      "nullable": true
+    }
+  ],
+  "return": {
+    "datatype": "string",
+    "multiple": true,
+    "nullable": true
+  }
+}

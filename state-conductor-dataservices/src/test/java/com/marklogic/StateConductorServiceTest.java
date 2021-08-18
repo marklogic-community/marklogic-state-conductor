@@ -17,9 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,6 +39,8 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
   ObjectMapper mapper = new ObjectMapper();
 
+  String randCollection = UUID.randomUUID().toString();
+
   @BeforeEach
   public void setup() throws IOException {
     // setup the service
@@ -51,6 +51,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     Map<String, String> tokens = new HashMap<>();
     tokens.put("%DATABASE%", getContentDatabaseId());
     tokens.put("%MODULES%", getModulesDatabaseId());
+    tokens.put("%GUID%", randCollection);
 
     // add execution docs
     DocumentWriteSet batch = getExecutionsManager().newWriteSet();
@@ -77,6 +78,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     meta.getCollections().add("state-conductor-state-machine");
     batch = getContentManager().newWriteSet();
     batch.add("/state-conductor-state-machine/test-state-machine.asl.json", meta, loadFileResource("stateMachines/test-state-machine.asl.json"));
+    batch.add("/state-conductor-state-machine/test3-state-machine.asl.json", meta, loadTokenizedResource("stateMachines/test3-state-machine.asl.json", tokens));
     getContentManager().write(batch);
   }
 
@@ -462,6 +464,99 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertEquals("/not/a/real/execution2.json", resp.get(1).get("execution").asText());
     assertEquals(false, resp.get(1).get("result").asBoolean());
     assertNotNull(resp.get(1).get("error").asText());
+  }
+
+  @Test
+  public void testFindTargetsMock() {
+    String[] uris = mockService.findStateMachineTargets("test-state-machine", 100, null).toArray(String[]::new);
+    logger.info("resp: {}", String.join(",", uris));
+    assertEquals(100, uris.length);
+  }
+
+  @Test
+  public void testFindTargets() throws IOException {
+    // no targets
+    String[] uris = service.findStateMachineTargets("test3-state-machine", 100, null).toArray(String[]::new);
+    logger.info("resp: {}", String.join(",", uris));
+    assertEquals(0, uris.length);
+    // add targets
+    DocumentWriteSet batch = getExecutionsManager().newWriteSet();
+    DocumentMetadataHandle docMeta = new DocumentMetadataHandle();
+    docMeta.getCollections().addAll("test", randCollection);
+    batch = getContentManager().newWriteSet();
+    batch.add("/test/docFindMe1.json", docMeta, loadFileResource("data/doc1.json"));
+    batch.add("/test/docFindMe2.json", docMeta, loadFileResource("data/doc2.json"));
+    getContentManager().write(batch);
+    // find the targets
+    uris = service.findStateMachineTargets("test3-state-machine", 100, null).toArray(String[]::new);
+    logger.info("resp: {}", String.join(",", uris));
+    List<String> uriList = Arrays.asList(uris);
+    assertEquals(2, uris.length);
+    assertTrue(uriList.contains("/test/docFindMe1.json"));
+    assertTrue(uriList.contains("/test/docFindMe2.json"));
+    // cleanup
+    deleteCollections(getDatabaseClient(), randCollection);
+    // no targets
+    uris = service.findStateMachineTargets("test3-state-machine", 100, null).toArray(String[]::new);
+    logger.info("resp: {}", String.join(",", uris));
+    assertEquals(0, uris.length);
+  }
+
+  @Test
+  public void testCreateStateMachineExecutionsMock() {
+    ObjectNode resp = mockService.createStateMachineExecutions("test-state-machine", 100, null);
+    logger.info("resp: {}", resp.toPrettyString());
+    assertEquals(100, resp.get("total").asInt());
+    assertEquals("test-state-machine", resp.get("name").asText());
+  }
+
+  @Test
+  public void testCreateStateMachineExecutions() throws IOException {
+    // no targets
+    ObjectNode resp = service.createStateMachineExecutions("test3-state-machine", 100, null);
+    logger.info("resp: {}", resp.toPrettyString());
+    assertEquals("test3-state-machine", resp.get("name").asText());
+    assertEquals(0, resp.get("total").asInt());
+    // add targets
+    DocumentWriteSet batch = getExecutionsManager().newWriteSet();
+    DocumentMetadataHandle docMeta = new DocumentMetadataHandle();
+    docMeta.getCollections().addAll("test", randCollection);
+    batch = getContentManager().newWriteSet();
+    batch.add("/test/docFindMe1.json", docMeta, loadFileResource("data/doc1.json"));
+    batch.add("/test/docFindMe2.json", docMeta, loadFileResource("data/doc2.json"));
+    getContentManager().write(batch);
+    // find the targets
+    resp = service.createStateMachineExecutions("test3-state-machine", 100, null);
+    logger.info("resp: {}", resp.toPrettyString());
+    assertEquals("test3-state-machine", resp.get("name").asText());
+    assertEquals(2, resp.get("total").asInt());
+    assertTrue(resp.get("executions").hasNonNull("/test/docFindMe1.json"));
+    assertTrue(resp.get("executions").hasNonNull("/test/docFindMe2.json"));
+    // find those execution docs
+    String ex1 = resp.get("executions").get("/test/docFindMe1.json").asText();
+    String ex2 = resp.get("executions").get("/test/docFindMe2.json").asText();
+    StateConductorExecution executionDoc = getExecutionDocument("/stateConductorExecution/" + ex1 + ".json");
+    assertTrue(executionDoc != null);
+    assertEquals(ex1, executionDoc.getId());
+    assertEquals("/test/docFindMe1.json", executionDoc.getUri());
+    assertEquals("test3-state-machine", executionDoc.getName());
+    executionDoc = getExecutionDocument("/stateConductorExecution/" + ex2 + ".json");
+    assertTrue(executionDoc != null);
+    assertEquals(ex2, executionDoc.getId());
+    assertEquals("/test/docFindMe2.json", executionDoc.getUri());
+    assertEquals("test3-state-machine", executionDoc.getName());
+    // subsequent calls don't find these docs
+    resp = service.createStateMachineExecutions("test3-state-machine", 100, null);
+    logger.info("resp: {}", resp.toPrettyString());
+    assertEquals("test3-state-machine", resp.get("name").asText());
+    assertEquals(0, resp.get("total").asInt());
+    // cleanup
+    deleteCollections(getDatabaseClient(), randCollection);
+    // no targets
+    resp = service.createStateMachineExecutions("test3-state-machine", 100, null);
+    logger.info("resp: {}", resp.toPrettyString());
+    assertEquals("test3-state-machine", resp.get("name").asText());
+    assertEquals(0, resp.get("total").asInt());
   }
 
 }

@@ -1,0 +1,28 @@
+{
+  "functionName": "createStateMachineExecutions",
+  "desc": "Given a state machine, find and create executions for documents matching its context.",
+  "params": [
+    {
+      "name": "name",
+      "datatype": "string",
+      "desc": "The name of the State Machine",
+      "nullable": false
+    },
+    {
+      "name": "count",
+      "datatype": "unsignedInt",
+      "desc": "The number of executions to create",
+      "nullable": true
+    },
+    {
+      "name": "databaseName",
+      "datatype": "string",
+      "desc": "The database of the named State Machine",
+      "nullable": true
+    }
+  ],
+  "return": {
+    "datatype": "object",
+    "$javaClass": "com.fasterxml.jackson.databind.node.ObjectNode"
+  }
+}

@@ -108,6 +108,22 @@ public interface StateConductorService {
 
 
             @Override
+            public com.fasterxml.jackson.databind.node.ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName) {
+              return BaseProxy.ObjectType.toObjectNode(
+                baseProxy
+                .request("createStateMachineExecutions.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)),
+                    BaseProxy.atomicParam("count", true, BaseProxy.UnsignedIntegerType.fromInteger(count)),
+                    BaseProxy.atomicParam("databaseName", true, BaseProxy.StringType.fromString(databaseName)))
+                .withMethod("POST")
+                .responseSingle(false, Format.JSON)
+                );
+            }
+
+
+            @Override
             public com.fasterxml.jackson.databind.node.ObjectNode getStateMachineStatus(Stream<String> names, String startDate, String endDate, Boolean detailed) {
               return BaseProxy.ObjectType.toObjectNode(
                 baseProxy
@@ -135,6 +151,22 @@ public interface StateConductorService {
                     BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)))
                 .withMethod("POST")
                 .responseSingle(false, null)
+                );
+            }
+
+
+            @Override
+            public Stream<String> findStateMachineTargets(String name, Integer count, String databaseName) {
+              return BaseProxy.StringType.toString(
+                baseProxy
+                .request("findStateMachineTargets.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)),
+                    BaseProxy.atomicParam("count", true, BaseProxy.UnsignedIntegerType.fromInteger(count)),
+                    BaseProxy.atomicParam("databaseName", true, BaseProxy.StringType.fromString(databaseName)))
+                .withMethod("POST")
+                .responseMultiple(true, null)
                 );
             }
 
@@ -191,6 +223,16 @@ public interface StateConductorService {
     com.fasterxml.jackson.databind.node.ArrayNode processExecution(Stream<String> uri);
 
   /**
+   * Given a state machine, find and create executions for documents matching its context.
+   *
+   * @param name	The name of the State Machine
+   * @param count	The number of executions to create
+   * @param databaseName	The database of the named State Machine
+   * @return	as output
+   */
+    com.fasterxml.jackson.databind.node.ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName);
+
+  /**
    * Returns the status and states of one or more State Conductor state machines.
    *
    * @param names	The state machine names for which to report status.
@@ -209,5 +251,15 @@ public interface StateConductorService {
    * @return	The Execution ID of the State Conductor Execution document
    */
     String createExecution(String uri, String name);
+
+  /**
+   * Finds target documents for the given state machine.
+   *
+   * @param name	The name of the State Machine
+   * @param count	The number of uris to return
+   * @param databaseName	The database of the named State Machine
+   * @return	as output
+   */
+    Stream<String> findStateMachineTargets(String name, Integer count, String databaseName);
 
 }

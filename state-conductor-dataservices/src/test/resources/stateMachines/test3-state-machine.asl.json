@@ -1,0 +1,26 @@
+{
+  "Comment": "tests for context",
+  "mlDomain": {
+    "context": [
+      {
+        "scope": "collection",
+        "value": "%GUID%"
+      }
+    ]
+  },
+  "StartAt": "add-collection-1",
+  "States": {
+    "add-collection-1": {
+      "Type": "Task",
+      "Comment": "adds a collection",
+      "Resource": "/state-conductor/actions/common/add-collections.sjs",
+      "Parameters": {
+        "collections": ["testcol3"]
+      },
+      "Next": "success"
+    },
+    "success": {
+      "Type": "Succeed"
+    }
+  }
+}

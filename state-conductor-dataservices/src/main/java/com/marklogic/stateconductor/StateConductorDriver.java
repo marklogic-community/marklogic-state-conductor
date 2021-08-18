@@ -83,6 +83,18 @@ public class StateConductorDriver implements Runnable, Destroyable {
     Thread getExecutionsTask = new Thread(new GetExecutionsTask(service, config, urisBuffer, inProgressMap));
     getExecutionsTask.start();
 
+    // start the thread(s) for creating executions
+    ThreadGroup createExecutionsTasks = new ThreadGroup("CreateExecutionsGroup");
+    List<StateConductorDriverConfig.CreateExecutionsConfig> createExecutionsConfigs = config.getCreateExecutionsConfigs();
+    if (createExecutionsConfigs.size() > 0) {
+      for (StateConductorDriverConfig.CreateExecutionsConfig exConfig : createExecutionsConfigs) {
+        Thread task = new Thread(createExecutionsTasks, new CreateExecutionsTask(service, config, exConfig.stateMachine, exConfig.database, exConfig.modules));
+        task.start();
+      }
+    } else {
+      logger.info("No \"createExecutions\" configuration detected - not creating new executions!");
+    }
+
     while (keepRunning) {
       executionBuckets.clear();
 
@@ -194,7 +206,8 @@ public class StateConductorDriver implements Runnable, Destroyable {
         // initiate a thread shutdown
         pool.shutdown();
         // stop fetching tasks
-        logger.info("Stopping GetExecutionsTask thread...");
+        logger.info("Stopping driver threads...");
+        createExecutionsTasks.interrupt();
         getExecutionsTask.interrupt();
         metricsThread.interrupt();
         configThread.interrupt();

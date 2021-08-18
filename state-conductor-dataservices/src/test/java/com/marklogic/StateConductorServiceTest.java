@@ -504,7 +504,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
 
   @Test
   public void testCreateStateMachineExecutionsMock() {
-    ObjectNode resp = mockService.createStateMachineExecutions("test-state-machine", 100, null);
+    ObjectNode resp = mockService.createStateMachineExecutions("test-state-machine", 100, null, null);
     logger.info("resp: {}", resp.toPrettyString());
     assertEquals(100, resp.get("total").asInt());
     assertEquals("test-state-machine", resp.get("name").asText());
@@ -513,7 +513,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
   @Test
   public void testCreateStateMachineExecutions() throws IOException {
     // no targets
-    ObjectNode resp = service.createStateMachineExecutions("test3-state-machine", 100, null);
+    ObjectNode resp = service.createStateMachineExecutions("test3-state-machine", 100, null, null);
     logger.info("resp: {}", resp.toPrettyString());
     assertEquals("test3-state-machine", resp.get("name").asText());
     assertEquals(0, resp.get("total").asInt());
@@ -526,7 +526,7 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     batch.add("/test/docFindMe2.json", docMeta, loadFileResource("data/doc2.json"));
     getContentManager().write(batch);
     // find the targets
-    resp = service.createStateMachineExecutions("test3-state-machine", 100, null);
+    resp = service.createStateMachineExecutions("test3-state-machine", 100, null, null);
     logger.info("resp: {}", resp.toPrettyString());
     assertEquals("test3-state-machine", resp.get("name").asText());
     assertEquals(2, resp.get("total").asInt());
@@ -546,14 +546,14 @@ public class StateConductorServiceTest extends AbstractStateConductorTest {
     assertEquals("/test/docFindMe2.json", executionDoc.getUri());
     assertEquals("test3-state-machine", executionDoc.getName());
     // subsequent calls don't find these docs
-    resp = service.createStateMachineExecutions("test3-state-machine", 100, null);
+    resp = service.createStateMachineExecutions("test3-state-machine", 100, null, null);
     logger.info("resp: {}", resp.toPrettyString());
     assertEquals("test3-state-machine", resp.get("name").asText());
     assertEquals(0, resp.get("total").asInt());
     // cleanup
     deleteCollections(getDatabaseClient(), randCollection);
     // no targets
-    resp = service.createStateMachineExecutions("test3-state-machine", 100, null);
+    resp = service.createStateMachineExecutions("test3-state-machine", 100, null, null);
     logger.info("resp: {}", resp.toPrettyString());
     assertEquals("test3-state-machine", resp.get("name").asText());
     assertEquals(0, resp.get("total").asInt());

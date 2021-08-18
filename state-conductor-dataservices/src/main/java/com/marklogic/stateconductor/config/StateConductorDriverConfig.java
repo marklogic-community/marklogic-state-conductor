@@ -5,6 +5,7 @@ import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.ext.DatabaseClientConfig;
 import com.marklogic.client.ext.SecurityContextType;
 import com.marklogic.client.ext.modulesloader.ssl.SimpleX509TrustManager;
+import com.marklogic.stateconductor.tasks.CreateExecutionsTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import javax.net.ssl.SSLContext;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class StateConductorDriverConfig {
@@ -68,6 +71,12 @@ public class StateConductorDriverConfig {
   private String names;
   @Value("${status:#{null}}")
   private String status;
+  @Value("${createExecutions}")
+  private String createExecutions;
+  @Value("${createExecutionsInterval}")
+  private Long createExecutionsInterval;
+  @Value("${createExecutionsCount}")
+  private Integer createExecutionsCount;
 
   public DatabaseClientConfig getAppServicesDatabaseClientConfig() {
     DatabaseClientConfig clientConfig = new DatabaseClientConfig();
@@ -115,6 +124,34 @@ public class StateConductorDriverConfig {
       clientConfig.setTrustManager(new SimpleX509TrustManager());
     }
     return clientConfig;
+  }
+
+  public static class CreateExecutionsConfig {
+    public String stateMachine;
+    public String database;
+    public String modules;
+
+    public CreateExecutionsConfig(String stateMachine, String database, String modules) {
+      this.stateMachine = stateMachine;
+      this.database = database;
+      this.modules = modules;
+    }
+  }
+
+  public List<CreateExecutionsConfig> getCreateExecutionsConfigs() {
+    List<CreateExecutionsConfig> configs = new ArrayList<>();
+    String createExString = getCreateExecutions();
+    if (createExString != null && createExString.length() > 0) {
+      String[] tokens = createExString.split(",");
+      for (String token : tokens) {
+        String[] parts = token.split(":");
+        if (parts.length % 3 != 0) {
+          throw new RuntimeException(String.format("Invalid createExecutions configuration string: \"%s\"", token));
+        }
+        configs.add(new CreateExecutionsConfig(parts[0], parts[1], parts[2]));
+      }
+    }
+    return configs;
   }
 
   public boolean useFixedThreadCount() {
@@ -319,5 +356,29 @@ public class StateConductorDriverConfig {
 
   public void setExpiredExecutionsSeconds(Long expiredExecutionsSeconds) {
     this.expiredExecutionsSeconds = expiredExecutionsSeconds;
+  }
+
+  public String getCreateExecutions() {
+    return createExecutions;
+  }
+
+  public void setCreateExecutions(String createExecutions) {
+    this.createExecutions = createExecutions;
+  }
+
+  public Long getCreateExecutionsInterval() {
+    return createExecutionsInterval;
+  }
+
+  public void setCreateExecutionsInterval(Long createExecutionsInterval) {
+    this.createExecutionsInterval = createExecutionsInterval;
+  }
+
+  public Integer getCreateExecutionsCount() {
+    return createExecutionsCount;
+  }
+
+  public void setCreateExecutionsCount(Integer createExecutionsCount) {
+    this.createExecutionsCount = createExecutionsCount;
   }
 }

@@ -10,10 +10,12 @@ const sc = require('/state-conductor/state-conductor.sjs');
 var name;
 var count;
 var databaseName;
+var modulesDatabase;
 
 // initialize variables
 count = count || 1000;
 const databaseId = databaseName ? xdmp.database(databaseName) : xdmp.database();
+const modulesDbId = modulesDatabase ? xdmp.database(modulesDatabase) : xdmp.modulesDatabase();
 
 xdmp.trace(
   sc.TRACE_EVENT,
@@ -43,6 +45,7 @@ sc.invokeOrApplyFunction(
   },
   {
     database: databaseId,
+    modules: modulesDbId,
   }
 );
 

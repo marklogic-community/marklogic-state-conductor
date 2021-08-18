@@ -108,7 +108,7 @@ public interface StateConductorService {
 
 
             @Override
-            public com.fasterxml.jackson.databind.node.ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName) {
+            public com.fasterxml.jackson.databind.node.ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName, String modulesDatabase) {
               return BaseProxy.ObjectType.toObjectNode(
                 baseProxy
                 .request("createStateMachineExecutions.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
@@ -116,7 +116,8 @@ public interface StateConductorService {
                 .withParams(
                     BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)),
                     BaseProxy.atomicParam("count", true, BaseProxy.UnsignedIntegerType.fromInteger(count)),
-                    BaseProxy.atomicParam("databaseName", true, BaseProxy.StringType.fromString(databaseName)))
+                    BaseProxy.atomicParam("databaseName", true, BaseProxy.StringType.fromString(databaseName)),
+                    BaseProxy.atomicParam("modulesDatabase", true, BaseProxy.StringType.fromString(modulesDatabase)))
                 .withMethod("POST")
                 .responseSingle(false, Format.JSON)
                 );
@@ -228,9 +229,10 @@ public interface StateConductorService {
    * @param name	The name of the State Machine
    * @param count	The number of executions to create
    * @param databaseName	The database of the named State Machine
+   * @param modulesDatabase	The modules database that contains the named State Machine's modules
    * @return	as output
    */
-    com.fasterxml.jackson.databind.node.ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName);
+    com.fasterxml.jackson.databind.node.ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName, String modulesDatabase);
 
   /**
    * Returns the status and states of one or more State Conductor state machines.

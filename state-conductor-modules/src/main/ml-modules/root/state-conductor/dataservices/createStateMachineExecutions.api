@@ -19,6 +19,12 @@
       "datatype": "string",
       "desc": "The database of the named State Machine",
       "nullable": true
+    },
+    {
+      "name": "modulesDatabase",
+      "datatype": "string",
+      "desc": "The modules database that contains the named State Machine's modules",
+      "nullable": true
     }
   ],
   "return": {

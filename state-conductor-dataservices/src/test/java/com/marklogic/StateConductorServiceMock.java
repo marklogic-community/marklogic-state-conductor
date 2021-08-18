@@ -72,7 +72,7 @@ public class StateConductorServiceMock implements StateConductorService {
   }
 
   @Override
-  public ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName) {
+  public ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName, String modulesDatabase) {
     ObjectNode obj = new ObjectNode(JsonNodeFactory.instance);
     obj.set("name", JsonNodeFactory.instance.textNode(name));
     obj.set("total", JsonNodeFactory.instance.numberNode(count));

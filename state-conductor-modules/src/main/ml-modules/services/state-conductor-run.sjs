@@ -9,7 +9,7 @@ function returnError(statusCode, statusMsg, body) {
 /**
  * Lists documents matching the given state machine definition's context
  */
-function get(context, { name = '', includeAlreadyProcessed = false, limit = 1000 }) {
+function get(context, { name = '', includeAlreadyProcessed = false, start = 1, count = 1000 }) {
   includeAlreadyProcessed = includeAlreadyProcessed === 'true';
   if (name === '') {
     returnError(400, 'Bad Request', 'Missing required parameter "name"');
@@ -19,7 +19,11 @@ function get(context, { name = '', includeAlreadyProcessed = false, limit = 1000
   }
 
   context.outputStatus = [200, 'Success'];
-  let resp = sc.findStateMachineTargets(name, includeAlreadyProcessed, limit);
+  let resp = sc.findStateMachineTargets(name, {
+    includeAlreadyProcessed,
+    start,
+    count,
+  });
   return resp.toArray();
 }
 

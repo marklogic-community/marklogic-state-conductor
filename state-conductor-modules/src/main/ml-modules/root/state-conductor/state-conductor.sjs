@@ -384,7 +384,10 @@ function getAllStateMachinesContextQuery() {
  * @param {number} [limit=1000] - the number of documents to find
  * @returns a sequence of matching document URIs
  */
-function findStateMachineTargets(name, includeAlreadyProcessed = false, limit = 1000) {
+function findStateMachineTargets(name, options) {
+  const start = options.start || 1;
+  const count = options.count || 1000;
+  includeAlreadyProcessed = options.includeAlreadyProcessed === true;
   const sm = getStateMachineFromDatabase(name, xdmp.database());
 
   // find documents matching the state machine's context query,
@@ -406,7 +409,7 @@ function findStateMachineTargets(name, includeAlreadyProcessed = false, limit = 
     );
   }
 
-  const uris = fn.subsequence(cts.uris(null, null, cts.andQuery(queries)), 1, limit);
+  const uris = fn.subsequence(cts.uris(null, 'document', cts.andQuery(queries)), start, count);
   return uris;
 }
 
@@ -1531,15 +1534,19 @@ function batchCreateStateConductorExecution(name, uris = [], context = {}, optio
  *
  * @param {*} name - the name of the flow
  * @param {boolean} [includeAlreadyProcessed=false] - should we include documents which have already been processed by this flow
- * @param {number} [limit=1000] - the number of documents to process
+ * @param {number} [count=1000] - the number of documents to process
  * @returns an object describing the documents found and jobs created
  */
 function gatherAndCreateExecutionsForStateMachine(
   name,
   includeAlreadyProcessed = false,
-  limit = 1000
+  count = 1000
 ) {
-  const targets = findStateMachineTargets(name, includeAlreadyProcessed, limit).toArray();
+  const targets = findStateMachineTargets(name, {
+    includeAlreadyProcessed,
+    start: 1,
+    count: count,
+  }).toArray();
   const executions = targets.reduce((acc, uri) => {
     acc[uri] = createStateConductorExecution(name, uri);
     return acc;
@@ -1747,6 +1754,7 @@ module.exports = {
   DEFAULT_MAX_RETRY_ATTEMPTS,
   STATE_MACHINE_COLLECTION,
   STATE_MACHINE_DIRECTORY,
+  STATE_MACHINE_EXECUTIONID_PROP_NAME,
   STATE_MACHINE_ITEM_COLLECTION,
   STATE_MACHINE_STATUS_NEW,
   STATE_MACHINE_STATUS_WORKING,

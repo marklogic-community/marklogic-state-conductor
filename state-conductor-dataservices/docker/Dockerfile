@@ -28,6 +28,9 @@ ENV threadsPerHost=16
 ENV maxThreadCount=128
 ENV retryCount=3
 ENV expiredExecutionsSeconds=3600
+ENV createExecutions=
+ENV createExecutionsInterval=1000
+ENV createExecutionsCount=5000
 # expose web service port
 EXPOSE 9000
 # runs application

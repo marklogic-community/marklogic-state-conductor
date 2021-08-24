@@ -9,6 +9,12 @@
       "nullable": false
     },
     {
+      "name": "start",
+      "datatype": "unsignedInt",
+      "desc": "Return records starting from this position.",
+      "nullable": true
+    },
+    {
       "name": "count",
       "datatype": "unsignedInt",
       "desc": "The number of uris to return",

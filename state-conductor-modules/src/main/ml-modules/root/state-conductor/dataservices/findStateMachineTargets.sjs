@@ -7,16 +7,18 @@ const sc = require('/state-conductor/state-conductor.sjs');
 
 // external variables
 var name;
+var start;
 var count;
 var databaseName;
 
 // initialize variables
+start = start || 1;
 count = count || 1000;
 const databaseId = databaseName ? xdmp.database(databaseName) : xdmp.database();
 
 xdmp.trace(
   sc.TRACE_EVENT,
-  `findStateMachineTargets - name: "${name}", count: ${count}, db: ${databaseId}`
+  `findStateMachineTargets - name: "${name}", start: ${start}, count: ${count}, db: ${databaseId}`
 );
 
 let uris = [];
@@ -31,7 +33,11 @@ sc.invokeOrApplyFunction(
       );
     }
 
-    uris = sc.findStateMachineTargets(name, false, count);
+    uris = sc.findStateMachineTargets(name, {
+      start: start,
+      count: count,
+      includeAlreadyProcessed: false,
+    });
   },
   {
     database: databaseId,

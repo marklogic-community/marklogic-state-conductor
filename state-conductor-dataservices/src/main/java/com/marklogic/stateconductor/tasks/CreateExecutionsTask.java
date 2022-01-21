@@ -1,58 +1,46 @@
 package com.marklogic.stateconductor.tasks;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.StateConductorService;
-import com.marklogic.stateconductor.config.StateConductorDriverConfig;
+import com.marklogic.stateconductor.exceptions.CreateExecutionsTaskException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CreateExecutionsTask implements Runnable {
+import java.util.List;
+import java.util.concurrent.Callable;
+
+public class CreateExecutionsTask implements Callable<List> {
 
   private static Logger logger = LoggerFactory.getLogger(CreateExecutionsTask.class);
-
-  private StateConductorDriverConfig config;
   private StateConductorService service;
   private String stateMachine;
   private String database;
   private String modules;
+  private List<String> targetUris;
 
-  public CreateExecutionsTask(StateConductorService service, StateConductorDriverConfig config, String stateMachine, String database, String modules) {
+  public CreateExecutionsTask(StateConductorService service, String stateMachine, String database, String modules, List<String> targetUris) {
     this.service = service;
-    this.config = config;
     this.stateMachine = stateMachine;
     this.database = database;
     this.modules = modules;
+    this.targetUris = targetUris;
   }
 
   @Override
-  public void run() {
-    int created = 0;
-
-    while (true) {
-      created = 0;
-
-      try {
-        ObjectNode resp = service.createStateMachineExecutions(stateMachine, config.getCreateExecutionsCount(), database, modules);
-        created = resp.get("total").asInt();
-        logger.info("Created {} executions for state-machine '{}' in database '{}'", created, stateMachine, database);
-      } catch (Exception ex) {
-        logger.error("An error occurred creating execution documents for state-machine '{}' in database '{}': {}", stateMachine, database, ex.getMessage());
-        ex.printStackTrace();
-      }
-
-      // wait for next interval
-      try {
-        if (created > 0) {
-          Thread.sleep(config.getCreateExecutionsInterval());
-        } else {
-          logger.debug("CreateExecutionsTask cooldown...");
-          Thread.sleep(config.getCooldownMillis());
-        }
-      } catch (InterruptedException e) {
-        logger.info("Stopping CreateExecutionsTask Thread...");
-        Thread.currentThread().interrupt();
-        break;
-      }
+  public List<String> call() throws CreateExecutionsTaskException {
+    logger.info("creating batch executions for state-machine: {} [count: {}]", stateMachine, targetUris.size());
+    if (logger.isDebugEnabled()) {
+      logger.debug("uris: {}", targetUris.toString());
     }
+
+    try {
+      ArrayNode resp = service.createExecutions(targetUris.stream(), stateMachine, database, modules);
+      // TODO we could immediately schedule these for processing
+      logger.debug("CreateExecutionsTask resp: {}", resp.toPrettyString());
+    } catch (Exception ex) {
+      throw new CreateExecutionsTaskException(targetUris, ex);
+    }
+
+    return targetUris;
   }
 }

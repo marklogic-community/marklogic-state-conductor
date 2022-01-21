@@ -84,11 +84,11 @@ public class StateConductorDriver implements Runnable, Destroyable {
     getExecutionsTask.start();
 
     // start the thread(s) for creating executions
-    ThreadGroup createExecutionsTasks = new ThreadGroup("CreateExecutionsGroup");
+    ThreadGroup findTargetsTasks = new ThreadGroup("FindTargetsGroup");
     List<StateConductorDriverConfig.CreateExecutionsConfig> createExecutionsConfigs = config.getCreateExecutionsConfigs();
     if (createExecutionsConfigs.size() > 0) {
       for (StateConductorDriverConfig.CreateExecutionsConfig exConfig : createExecutionsConfigs) {
-        Thread task = new Thread(createExecutionsTasks, new CreateExecutionsTask(service, config, exConfig.stateMachine, exConfig.database, exConfig.modules));
+        Thread task = new Thread(findTargetsTasks, new FindStateMachineTargetsTask(service, config, pool, exConfig.stateMachine, exConfig.database, exConfig.modules));
         task.start();
       }
     } else {
@@ -121,23 +121,26 @@ public class StateConductorDriver implements Runnable, Destroyable {
         urisBuffer.clear();
       }
 
-      // submit any retry tasks to the executor pool
-      for (RetryExecutionTask bucket : retryBuckets) {
-        Future<JsonNode> future = pool.submit(bucket);
-        results.add(future);
-      }
-      if (retryBuckets.size() > 0) {
-        logger.info("Populated thread pool with {} retry tasks", retryBuckets.size());
-      }
-      retryBuckets.clear();
+      // add tasks to the queue
+      synchronized (pool) {
+        // submit any retry tasks to the executor pool
+        for (RetryExecutionTask bucket : retryBuckets) {
+          Future<JsonNode> future = pool.submit(bucket);
+          results.add(future);
+        }
+        if (retryBuckets.size() > 0) {
+          logger.info("Populated thread pool with {} retry tasks", retryBuckets.size());
+        }
+        retryBuckets.clear();
 
-      // submit the batch tasks to the executor pool
-      for (ProcessExecutionTask bucket : executionBuckets) {
-        Future<JsonNode> future = pool.submit(bucket);
-        results.add(future);
-      }
-      if (executionBuckets.size() > 0) {
-        logger.info("Populated thread pool with {} batches", executionBuckets.size());
+        // submit the batch tasks to the executor pool
+        for (ProcessExecutionTask bucket : executionBuckets) {
+          Future<JsonNode> future = pool.submit(bucket);
+          results.add(future);
+        }
+        if (executionBuckets.size() > 0) {
+          logger.info("Populated thread pool with {} batches", executionBuckets.size());
+        }
       }
 
       // process any results that have come in
@@ -207,7 +210,7 @@ public class StateConductorDriver implements Runnable, Destroyable {
         pool.shutdown();
         // stop fetching tasks
         logger.info("Stopping driver threads...");
-        createExecutionsTasks.interrupt();
+        findTargetsTasks.interrupt();
         getExecutionsTask.interrupt();
         metricsThread.interrupt();
         configThread.interrupt();

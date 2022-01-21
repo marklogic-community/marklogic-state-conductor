@@ -72,7 +72,7 @@ public class StateConductorServiceMock implements StateConductorService {
   }
 
   @Override
-  public ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName, String modulesDatabase) {
+  public ObjectNode findAndCreateExecutions(String name, Integer count, String databaseName, String modulesDatabase) {
     ObjectNode obj = new ObjectNode(JsonNodeFactory.instance);
     obj.set("name", JsonNodeFactory.instance.textNode(name));
     obj.set("total", JsonNodeFactory.instance.numberNode(count));
@@ -81,11 +81,22 @@ public class StateConductorServiceMock implements StateConductorService {
   }
 
   @Override
-  public Stream<String> findStateMachineTargets(String name, Integer count, String databaseName) {
+  public Stream<String> findStateMachineTargets(String name, Integer start, Integer count, String databaseName) {
     List<String> uris = new ArrayList<>();
     for (int i = 1; i <= count; i++) {
       uris.add(String.format("/test/test%s.json", i));
     }
     return uris.stream();
+  }
+
+  @Override
+  public ArrayNode createExecutions(Stream<String> uris, String name, String databaseName, String modulesDatabase) {
+    ArrayNode arr = new ArrayNode(JsonNodeFactory.instance);
+
+    uris.forEach(value -> {
+      arr.add(UUID.randomUUID().toString());
+    });
+
+    return arr;
   }
 }

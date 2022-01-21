@@ -108,10 +108,10 @@ public interface StateConductorService {
 
 
             @Override
-            public com.fasterxml.jackson.databind.node.ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName, String modulesDatabase) {
+            public com.fasterxml.jackson.databind.node.ObjectNode findAndCreateExecutions(String name, Integer count, String databaseName, String modulesDatabase) {
               return BaseProxy.ObjectType.toObjectNode(
                 baseProxy
-                .request("createStateMachineExecutions.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+                .request("findAndCreateExecutions.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
                 .withSession()
                 .withParams(
                     BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)),
@@ -157,17 +157,35 @@ public interface StateConductorService {
 
 
             @Override
-            public Stream<String> findStateMachineTargets(String name, Integer count, String databaseName) {
+            public Stream<String> findStateMachineTargets(String name, Integer start, Integer count, String databaseName) {
               return BaseProxy.StringType.toString(
                 baseProxy
                 .request("findStateMachineTargets.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
                 .withSession()
                 .withParams(
                     BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)),
+                    BaseProxy.atomicParam("start", true, BaseProxy.UnsignedIntegerType.fromInteger(start)),
                     BaseProxy.atomicParam("count", true, BaseProxy.UnsignedIntegerType.fromInteger(count)),
                     BaseProxy.atomicParam("databaseName", true, BaseProxy.StringType.fromString(databaseName)))
                 .withMethod("POST")
                 .responseMultiple(true, null)
+                );
+            }
+
+
+            @Override
+            public com.fasterxml.jackson.databind.node.ArrayNode createExecutions(Stream<String> uris, String name, String databaseName, String modulesDatabase) {
+              return BaseProxy.ArrayType.toArrayNode(
+                baseProxy
+                .request("createExecutions.sjs", BaseProxy.ParameterValuesKind.MULTIPLE_ATOMICS)
+                .withSession()
+                .withParams(
+                    BaseProxy.atomicParam("uris", false, BaseProxy.StringType.fromString(uris)),
+                    BaseProxy.atomicParam("name", false, BaseProxy.StringType.fromString(name)),
+                    BaseProxy.atomicParam("databaseName", true, BaseProxy.StringType.fromString(databaseName)),
+                    BaseProxy.atomicParam("modulesDatabase", true, BaseProxy.StringType.fromString(modulesDatabase)))
+                .withMethod("POST")
+                .responseSingle(false, Format.JSON)
                 );
             }
 
@@ -232,7 +250,7 @@ public interface StateConductorService {
    * @param modulesDatabase	The modules database that contains the named State Machine's modules
    * @return	as output
    */
-    com.fasterxml.jackson.databind.node.ObjectNode createStateMachineExecutions(String name, Integer count, String databaseName, String modulesDatabase);
+    com.fasterxml.jackson.databind.node.ObjectNode findAndCreateExecutions(String name, Integer count, String databaseName, String modulesDatabase);
 
   /**
    * Returns the status and states of one or more State Conductor state machines.
@@ -258,10 +276,22 @@ public interface StateConductorService {
    * Finds target documents for the given state machine.
    *
    * @param name	The name of the State Machine
+   * @param start	Return records starting from this position.
    * @param count	The number of uris to return
    * @param databaseName	The database of the named State Machine
    * @return	as output
    */
-    Stream<String> findStateMachineTargets(String name, Integer count, String databaseName);
+    Stream<String> findStateMachineTargets(String name, Integer start, Integer count, String databaseName);
+
+  /**
+   * Creates a MarkLogic State Conductor Execution document for the given uris and state machine name.
+   *
+   * @param uris	The uris of a document to be processed by the state machine
+   * @param name	The name of the State Machine
+   * @param databaseName	The database of the named State Machine
+   * @param modulesDatabase	The modules database that contains the named State Machine's modules
+   * @return	as output
+   */
+    com.fasterxml.jackson.databind.node.ArrayNode createExecutions(Stream<String> uris, String name, String databaseName, String modulesDatabase);
 
 }

@@ -2,7 +2,6 @@
  * DATA SERVICES MODULE
  */
 'use strict';
-declareUpdate();
 
 const sc = require('/state-conductor/state-conductor.sjs');
 
@@ -24,18 +23,30 @@ if (Array.isArray(uris)) {
   uris = uris.split(',');
 }
 
-if (!sc.getStateMachine(name)) {
-  fn.error(
-    null,
-    'STATE-CONDUCTOR-ERROR',
-    Sequence.from([400, 'Bad Request', `State Machine "${name}" not found.`])
-  );
-}
+let id = [];
 
-const id = sc.batchCreateStateConductorExecution(
-  name,
-  uris,
-  {},
+sc.invokeOrApplyFunction(
+  () => {
+    declareUpdate();
+
+    if (!sc.getStateMachine(name)) {
+      fn.error(
+        null,
+        'STATE-CONDUCTOR-ERROR',
+        Sequence.from([400, 'Bad Request', `State Machine "${name}" not found.`])
+      );
+    }
+
+    id = sc.batchCreateStateConductorExecution(
+      name,
+      uris,
+      {},
+      {
+        database: databaseId,
+        modules: modulesDbId,
+      }
+    );
+  },
   {
     database: databaseId,
     modules: modulesDbId,

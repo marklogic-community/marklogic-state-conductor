@@ -1,6 +1,6 @@
 {
   "database-name": "state-conductor-executions",
-  "maintain-last-modified": true,
+  "maintain-last-modified": false,
   "range-element-index": [
     {
       "invalid-values": "reject",

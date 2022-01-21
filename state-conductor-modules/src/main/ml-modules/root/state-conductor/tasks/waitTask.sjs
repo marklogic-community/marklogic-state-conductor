@@ -15,10 +15,12 @@ sc.invokeOrApplyFunction(
         'limit=1000',
         cts.andQuery([
           cts.collectionQuery(sc.EXECUTION_COLLECTION),
-          cts.jsonPropertyScopeQuery(
-            'currentlyWaiting',
-            cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
-          ),
+          cts.jsonPropertyValueQuery('status', sc.STATE_MACHINE_STATUS_WAITING),
+          cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime()),
+          //cts.jsonPropertyScopeQuery(
+          //  'currentlyWaiting',
+          //  cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
+          //),
         ]),
         1,
         excsForestsOnHost

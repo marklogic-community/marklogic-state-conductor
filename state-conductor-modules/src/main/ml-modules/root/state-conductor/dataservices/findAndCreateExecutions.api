@@ -1,5 +1,5 @@
 {
-  "functionName": "createStateMachineExecutions",
+  "functionName": "findAndCreateExecutions",
   "desc": "Given a state machine, find and create executions for documents matching its context.",
   "params": [
     {

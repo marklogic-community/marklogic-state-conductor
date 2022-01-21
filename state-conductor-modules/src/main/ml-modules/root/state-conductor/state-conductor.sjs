@@ -387,7 +387,7 @@ function getAllStateMachinesContextQuery() {
 function findStateMachineTargets(name, options) {
   const start = options.start || 1;
   const count = options.count || 1000;
-  includeAlreadyProcessed = options.includeAlreadyProcessed === true;
+  const includeAlreadyProcessed = options.includeAlreadyProcessed === true;
   const sm = getStateMachineFromDatabase(name, xdmp.database());
 
   // find documents matching the state machine's context query,
@@ -1698,10 +1698,12 @@ function getExecutionDocuments(options) {
           ctsQuery,
           cts.andQuery([
             cts.collectionQuery('stateConductorExecution'),
-            cts.jsonPropertyScopeQuery(
-              'currentlyWaiting',
-              cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
-            ),
+            cts.jsonPropertyValueQuery('status', STATE_MACHINE_STATUS_WAITING),
+            cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime()),
+            //cts.jsonPropertyScopeQuery(
+            //  'currentlyWaiting',
+            //  cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
+            //),
           ]),
         ]);
       }

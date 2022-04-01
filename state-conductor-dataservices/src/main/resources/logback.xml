@@ -32,5 +32,9 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
+  <logger name="com.marklogic.stateconductor.tasks.FindStateMachineTargetsTask" level="DEBUG" additivity="false">
+    <appender-ref ref="STDOUT" />
+  </logger>
+
 </configuration>
 

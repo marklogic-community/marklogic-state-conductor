@@ -17,10 +17,6 @@ sc.invokeOrApplyFunction(
           cts.collectionQuery(sc.EXECUTION_COLLECTION),
           cts.jsonPropertyValueQuery('status', sc.STATE_MACHINE_STATUS_WAITING),
           cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime()),
-          //cts.jsonPropertyScopeQuery(
-          //  'currentlyWaiting',
-          //  cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
-          //),
         ]),
         1,
         excsForestsOnHost

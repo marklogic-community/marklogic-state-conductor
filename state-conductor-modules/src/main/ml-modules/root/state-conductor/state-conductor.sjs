@@ -1700,10 +1700,6 @@ function getExecutionDocuments(options) {
             cts.collectionQuery('stateConductorExecution'),
             cts.jsonPropertyValueQuery('status', STATE_MACHINE_STATUS_WAITING),
             cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime()),
-            //cts.jsonPropertyScopeQuery(
-            //  'currentlyWaiting',
-            //  cts.jsonPropertyRangeQuery('nextTaskTime', '<=', fn.currentDateTime())
-            //),
           ]),
         ]);
       }

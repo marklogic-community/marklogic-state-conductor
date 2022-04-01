@@ -35,8 +35,17 @@ public class GetConfigTask implements Runnable {
 
   protected void setPoolSize(int size) {
     synchronized (pool) {
-      pool.setMaximumPoolSize(size);
-      pool.setCorePoolSize(size);
+      // TODO just set max pool size to Integer.MAX_VALUE and don't bother changing - need to research how workers are managed
+      // must set the core pool sizes in proper order for scale-up vs down
+      if (pool.getCorePoolSize() > size) {
+        // scale down
+        pool.setCorePoolSize(size);
+        pool.setMaximumPoolSize(size);
+      } else {
+        // scale up
+        pool.setMaximumPoolSize(size);
+        pool.setCorePoolSize(size);
+      }
     }
   }
 
